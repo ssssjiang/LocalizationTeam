@@ -99,3 +99,321 @@
 | ------------------------------- | ------------------------------------------------------------ | ------------------ |
 | ~~`signal_flow_architecture.jpeg`~~ | 来源确认：`004_架构文档/001_信号流总结/信号流总结.md`（原始文件 `Ox3NbWIuAokohexrcihcLZRgnKd.jpeg`） | ✓ 已引用：`tech.md` 第五节「系统接口」 |
 | ~~`debug_keyword_filter.png`~~  | 全局扫描 inbox（003_多线激光 + 0412新增）均无 `keyword` 字样，来源无法溯源 | ✓ 已删除（2026-04-12，C 类调试截图，无文档记录，无决策价值） |
+
+---
+
+## 多线组会周报飞书链接（2025-11~2026-04）
+
+
+### 回环（明坤/廖炳鑫）
+
+### G-36 回环测试模组文档
+
+- **链接**：https://roborock.feishu.cn/wiki/R8HQwynmOizAgSkKfM4cxP0knde
+- **首次提及**：多线组会周报
+
+### G-37 回环优化
+
+- **链接**：https://roborock.feishu.cn/wiki/C2Z8w8sYzij0BXkaVtbcQop7n8b
+- **首次提及**：多线组会周报
+
+### G-38 回环在线计算方案
+
+- **链接**：https://roborock.feishu.cn/wiki/IE81wrYIHiNw60kyM8dcMbrdn0b
+- **首次提及**：多线组会周报
+
+### G-39 **&#x20;回环现阶段情况 > 画板**
+
+- **链接**：https://roborock.feishu.cn/docx/YpFHdkC29oggsPxntLVctg4mn6d
+- **首次提及**：多线组会周报
+
+### G-40 回环匹配度不足问题优化
+
+- **链接**：https://roborock.feishu.cn/docx/E7kpdG5bDoSJbmxDTlPckJ2RnLc
+- **首次提及**：多线组会周报
+
+### G-41 回环调试记录
+
+- **链接**：https://roborock.feishu.cn/wiki/UxO1wtyWXiNFXCkKOsrc8o5YnJg
+- **首次提及**：多线组会周报
+
+
+### 重定位（周士伟/孙昂熙/闫冬）
+
+### G-42 重定位优化
+
+- **链接**：https://roborock.feishu.cn/wiki/Ij8fw319Ii8CKkkI0DvcHHWWnzh
+- **首次提及**：多线组会周报
+
+### G-43 取消重定位算法流程及测试结果
+
+- **链接**：https://roborock.feishu.cn/wiki/FQ2hwK73YizmxIkNIepc802DnNd
+- **首次提及**：多线组会周报
+
+### G-44 割草机重定位工作记录
+
+- **链接**：https://roborock.feishu.cn/wiki/NOzkwmsgDiUcYdkWpcNc3qdunzh
+- **首次提及**：多线组会周报
+
+### G-45 工作目标整理（重定位模块）
+
+- **链接**：https://roborock.feishu.cn/wiki/LsA7wx97liDNbMkRTF7cyLYmnch
+- **首次提及**：多线组会周报
+
+### G-46 局部重定位测试结果
+
+- **链接**：https://roborock.feishu.cn/wiki/DH9RwuTxxiqi7LkYlcqcA4G6n3b
+- **首次提及**：多线组会周报
+
+### G-47 ~~ 重定位点位图~~
+
+- **链接**：https://roborock.feishu.cn/wiki/MbEOw7fE0iETHXkLIdFc1ejrng5
+- **首次提及**：多线组会周报
+
+### G-48 Tio重定位方案分析
+
+- **链接**：https://roborock.feishu.cn/wiki/HeDIwDdz8iUU6qkZxp2cZWwmnId
+- **首次提及**：多线组会周报
+
+### G-49 Tio重定位适配Minislam地图格式
+
+- **链接**：https://roborock.feishu.cn/wiki/WxCWw1ZrMi90XJk5sOocYjZtngQ
+- **首次提及**：多线组会周报
+
+
+### 断流 & 暂停恢复（王亚萌）
+
+### G-50 断流2.0
+
+- **链接**：https://roborock.feishu.cn/wiki/JaCtwQThGiyt6ik0u9wccoGlnne
+- **首次提及**：多线组会周报
+
+
+### 新项目 & 器件（李鹏飞）
+
+### G-51 bug分析系统（定位建图）
+
+- **链接**：https://roborock.feishu.cn/wiki/HfV6wYZG9iJTi5kYMWjcnGwdnbe
+- **首次提及**：多线组会周报
+
+### G-52 速腾airy和mid360对比分析
+
+- **链接**：https://roborock.feishu.cn/wiki/GI8uwkO2ViDRm2k9akLcQk00nUc
+- **首次提及**：多线组会周报
+
+### G-53 速腾airy和mid360
+
+- **链接**：https://roborock.feishu.cn/wiki/Cm19wyo8hi6W8okHpJ5cAs4ynYf
+- **首次提及**：多线组会周报
+
+
+### 精度评估 & 工具（通用）
+
+### G-54 激光SLAM精度对比测试结论
+
+- **链接**：https://roborock.feishu.cn/wiki/NOZywcVXjif8XUkrNtDcapcanNd
+- **首次提及**：多线组会周报
+
+### G-55 激光 SLAM 数据采集规范、场景与精度评估说明
+
+- **链接**：https://roborock.feishu.cn/wiki/FOzYwfsuIixF2bkvSLkc8zgNnFc
+- **首次提及**：多线组会周报
+
+### G-56 mid360及mid360s数据采集说明
+
+- **链接**：https://roborock.feishu.cn/wiki/VXm1wnFCxiEg5HkTAfocda0snGd
+- **首次提及**：多线组会周报
+
+### G-57 单发版MID360s性能对比评估报告
+
+- **链接**：https://roborock.feishu.cn/wiki/ISGcwlWTVizetbkbxknc4C0Ynx6
+- **首次提及**：多线组会周报
+
+### G-58 激光 (flollow rtk)定位精度对比测试
+
+- **链接**：https://roborock.feishu.cn/wiki/U2eKwFiBZiCSy0krwnScAUz2nBd
+- **首次提及**：多线组会周报
+
+### G-59 mid360降频/降角度分辨率仿真
+
+- **链接**：https://roborock.feishu.cn/wiki/Et0Uwjf45igViHkTt8Lc0zL5ntc
+- **首次提及**：多线组会周报
+
+### G-60 算法精度评估对比
+
+- **链接**：https://roborock.feishu.cn/wiki/OvoQwABxni7m7zkdOJJcHuyxn7d
+- **首次提及**：多线组会周报
+
+### G-61 建图及定位评估方案
+
+- **链接**：https://roborock.feishu.cn/wiki/RdBDwIPKKiqPz1kCOFscWZ9cnrd
+- **首次提及**：多线组会周报
+
+
+### 其他
+
+### G-62 多线预研方案：
+
+- **链接**：https://roborock.feishu.cn/wiki/AxJZwSQbgij3W2kUvt9cVkN9nje
+- **首次提及**：多线组会周报
+
+### G-63 历史周任务
+
+- **链接**：https://roborock.feishu.cn/wiki/WXFowtQT2ihROQkVt8UchcTDnhb
+- **首次提及**：多线组会周报
+
+### G-64 代码review
+
+- **链接**：https://roborock.feishu.cn/wiki/FxGrwjqDIiT08fk998jc9mnIn6c
+- **首次提及**：多线组会周报
+
+### G-65 多线TodoList
+
+- **链接**：https://roborock.feishu.cn/wiki/L5rQwWqi8iwo32kJzBVcHmT2nVh
+- **首次提及**：多线组会周报
+
+### G-66 信号流总结
+
+- **链接**：https://roborock.feishu.cn/wiki/LPBEwYvQ3iw8mlk9KaIc0hJdnhc
+- **首次提及**：多线组会周报
+
+### G-67 bug分析步骤-多线slam项目
+
+- **链接**：https://roborock.feishu.cn/wiki/ZrXmwnmyGiFYKKkY9BUcanvrnbd
+- **首次提及**：多线组会周报
+
+### G-68 国外五组数据分析
+
+- **链接**：https://roborock.feishu.cn/wiki/VGn0woXXIiuuJ5kkmxjc8StJn9U
+- **首次提及**：多线组会周报
+
+### G-69 自驾常用激光雷达性能统计
+
+- **链接**：https://roborock.feishu.cn/wiki/ScQfwho11ieNtlkH3vjcpfARngg
+- **首次提及**：多线组会周报
+
+### G-70 bug跟踪
+
+- **链接**：https://roborock.feishu.cn/wiki/Il2TwrRDeieEJ7kLgW3cWSyNnbf
+- **首次提及**：多线组会周报
+
+### G-71 2026年4月2日 ～ 2026年4月8日
+
+- **链接**：https://roborock.feishu.cn/wiki/FmNZwXkZOiHfrMksbOCc6KTmn4b
+- **首次提及**：多线组会周报
+
+### G-72 本周工作概览
+
+- **链接**：https://roborock.feishu.cn/wiki/EXnpwXdUei16a3kTdHUcs7N7nun
+- **首次提及**：多线组会周报
+
+### G-73 **&#x20;03.25-04.01**
+
+- **链接**：https://roborock.feishu.cn/wiki/HXHuwX7NWivE45k7dFxcedTZnZf
+- **首次提及**：多线组会周报
+
+### G-74 2026年3月26日 ～ 2026年4月1日
+
+- **链接**：https://roborock.feishu.cn/wiki/EMUFwkhcAiQdcZkSuQ8c3QdCncf
+- **首次提及**：多线组会周报
+
+### G-75 2026年3月19日 ～ 2026年3月25日
+
+- **链接**：https://roborock.feishu.cn/wiki/GUqiwuxBni2vZjkb8gJcwlxBnkg
+- **首次提及**：多线组会周报
+
+### G-76 ML\_slam学习
+
+- **链接**：https://roborock.feishu.cn/wiki/SrRVwwLGYi8sNMkCsQjcblDfnjh
+- **首次提及**：多线组会周报
+
+### G-77 新器件slam采集需求数据分析
+
+- **链接**：https://roborock.feishu.cn/wiki/LWxjwwpCsiaVYxkWumDcI9Lvnbf
+- **首次提及**：多线组会周报
+
+### G-78 MultiLine SLAM Learning
+
+- **链接**：https://roborock.feishu.cn/wiki/YRWswk0WBinI0xkO5fmcb0RVnxh
+- **首次提及**：多线组会周报
+
+### G-79 定位抖动
+
+- **链接**：https://roborock.feishu.cn/wiki/BaTsw7mzOiucQ6kB1ufcKxcZn8s
+- **首次提及**：多线组会周报
+
+### G-80 *&#x20;外场采集可用数据*
+
+- **链接**：https://roborock.feishu.cn/wiki/AZ4EwI7psiUa84k4QNDcpM4mn4g
+- **首次提及**：多线组会周报
+
+### G-81 地图更新测试
+
+- **链接**：https://roborock.feishu.cn/wiki/FJgYwmtziiFI2Ak8nkCcDZQBn8b
+- **首次提及**：多线组会周报
+
+### G-82 lightning-lm 内容整理
+
+- **链接**：https://roborock.feishu.cn/wiki/RZktwRLvDidjd4kqfgvcrOnnn2m
+- **首次提及**：多线组会周报
+
+### G-83 ~~ 轮速事宜代码review~~
+
+- **链接**：https://roborock.feishu.cn/wiki/C27Ew1XdCiGxFlkS54OcuSaJnqh
+- **首次提及**：多线组会周报
+
+### G-84 地图扩展和补图模式
+
+- **链接**：https://roborock.feishu.cn/wiki/K8DywoUlXiLCw1kvsTVcwCnxnBc
+- **首次提及**：多线组会周报
+
+### G-85 JT16在105场地不同线数的表现效果
+
+- **链接**：https://roborock.feishu.cn/wiki/HqmlwrhdHioJUekTvtEcZal7nhe
+- **首次提及**：多线组会周报
+
+### G-86 第一阶段时间安排
+
+- **链接**：https://roborock.feishu.cn/wiki/YIblwU46kiRHuQkCrnTcaGiIn2d
+- **首次提及**：多线组会周报
+
+### G-87 开源数据集整理
+
+- **链接**：https://roborock.feishu.cn/wiki/IBzGwlIiiitUogkrnsScnaWgnff
+- **首次提及**：多线组会周报
+
+### G-88 地面点对slam影响实验
+
+- **链接**：https://roborock.feishu.cn/wiki/N1gswy2LsiNNLtkaufNcg6Gonmb
+- **首次提及**：多线组会周报
+
+### G-89 2D-mapping模块代码
+
+- **链接**：https://roborock.feishu.cn/wiki/UmC0wTpb2iHIm0kIpJOc0p7ancO
+- **首次提及**：多线组会周报
+
+### G-90 苏州场地
+
+- **链接**：https://roborock.feishu.cn/wiki/Vs2Fw5Fnmi4rVakd88LcxtsEnGb
+- **首次提及**：多线组会周报
+
+### G-91 slam采集需求
+
+- **链接**：https://roborock.feishu.cn/wiki/A1YewlrXVikKI1kbzGSc6guXnfe
+- **首次提及**：多线组会周报
+
+### G-92 基于点云地图定位（初版）
+
+- **链接**：https://roborock.feishu.cn/wiki/VbS7wh689iBJF0kaVrdc1K0KnXZ
+- **首次提及**：多线组会周报
+
+### G-93 mslam-jenkins构建
+
+- **链接**：https://roborock.feishu.cn/wiki/XnouwO3eFiOiYGkKiHIcYK5vnjd
+- **首次提及**：多线组会周报
+
+### G-94 三种特征点提取方式效果对比
+
+- **链接**：https://roborock.feishu.cn/wiki/GUtxwtrrKiXn4HkLXIAcUXT9ntf
+- **首次提及**：多线组会周报
+
