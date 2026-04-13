@@ -98,6 +98,12 @@
 - **建议确认人**：IoT 平台负责人 / 产品
 - **优先级**：中（影响国际化部署）
 
+### Q-006 搬动轻定位方案一/二最终选型
+
+- **问题**：D-031 已对比方案一（pause 切模式）与方案二（slam 自检抬起），但文档未给出最终选型结论
+- **建议确认人**：范超（搬动重定位负责人）
+- **优先级**：高（直接影响用户体验——减少误重定位）
+
 ---
 
 ## 参考文档（C 类，按需查阅）
@@ -356,10 +362,9 @@
 - **链接**：https://roborock.feishu.cn/wiki/XH77wGL0FiVHAUkMPeucBwfanQb
 - **首次提及**：融合组开发进展周报
 
-### G-057 FAST-LIVO2 硬件加速
+### ~~G-057 FAST-LIVO2 硬件加速~~
 
-- **链接**：https://roborock.feishu.cn/wiki/DEdlw2gmTils8ikoTzPcydnSnud
-- **首次提及**：融合组开发进展周报
+> ✓ 本地已有：`inbox/0413新增/FAST-LIVO2 硬件加速.md`；内容已提取到 `fastlivo/decisions.md D-009`
 
 ### G-058 点云渲染调研
 

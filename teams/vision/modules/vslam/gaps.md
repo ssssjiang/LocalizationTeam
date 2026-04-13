@@ -211,3 +211,18 @@
 | G-085 | 泳池机器人okvis测试             | [链接](https://roborock.feishu.cn/wiki/MF1ewBTbWiUeNUkOKlzcsyJGnEh) | 泳池项目        |
 | G-086 | 售后标定筛掉lidar掉头路线的数据       | [链接](https://roborock.feishu.cn/wiki/V5dDwFHtkiobsLkBjb3c01axn0b) | 标定×VSLAM    |
 | G-087 | 售后标定合入prebuild dev的bug列表 | [链接](https://roborock.feishu.cn/wiki/TQmawZ0FJiHEgbkJAXicX6GPnsh) | 标定×VSLAM    |
+| G-088 | 割草机 RGBD 数据采集表（飞书 wiki） | [链接](https://roborock.feishu.cn/wiki/NaxUwrkQhiMkxwkQdBcclXLOnuf?sheet=921f6d) | 小场地预研 |
+| G-089 | 割草机 RGBD 数据采集 bag 包存储（飞书云盘） | [链接](https://roborock.feishu.cn/drive/folder/LTiNf1wYIlN659dajKbcAQUPn8d) | 小场地预研 |
+
+
+---
+
+## 五、Q-xxx：小场地预研 Open 问题（来自 0413新增）
+
+> 来源：`inbox/0413新增/割草机-小场地光电方案预研（双目_RGBD）_2026-04-13-10-56-27`
+
+| ID    | 问题描述 | 来源 | 建议确认人 | 优先级 |
+| ----- | ------- | ---- | --------- | --- |
+| Q-005 | 小场地光电方案 RGBD vs 双目实测对比结论（3.4 数据分析、3.5 对比结论章节均为空白，数据采集中） | 小场地预研文档 §3.4/3.5 | 视觉/小场地负责人 | 高 |
+| Q-006 | RGB-D 方案参数最终定版（第 4 章空白）——量程/分辨率/帧率最终选型未完成 | 小场地预研文档 §4 | 视觉/小场地负责人 | 高 |
+| Q-007 | 小场地模组开发计划（第 5 章空白）——开发排期/里程碑未填写 | 小场地预研文档 §5 | 项目/小场地负责人 | 中 |
