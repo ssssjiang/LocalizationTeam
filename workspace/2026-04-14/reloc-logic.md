@@ -147,5 +147,5 @@ message NavToSlamMsg {
   `teams/fusion/inbox/004_融合定位/002_算法文档/008_重定位/001_导航-slam重定位接口/导航-slam重定位接口.md`  
    内容：三场景 protobuf 接口定义、导航/SLAM 交互逻辑、状态机交互（2025-11-11 新增）
 3. **状态机流程图**（场景一：割草中定位差）
-  原图 Image Token: `IUP6bdbSxo3TR6xumKNcBjnInFg`，本地副本：`reloc-state-machine-bad-location.png`
+  原图 Image Token: `IUP6bdbSxo3TR6xumKNcBjnInFg`，本地副本：`images/reloc-state-machine-bad-location.png`
 
