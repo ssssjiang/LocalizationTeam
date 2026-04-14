@@ -31,3 +31,4 @@
 ## 原始材料
 - [feishu-summary-0411-0414.md](inbox/feishu-summary-0411-0414.md) — 飞书群消息汇总，覆盖VSLAM建图/融合定位/多线/全景地图预研，2026-04-11至14
 - [reloc-logic.md](reloc-logic.md) — 重定位逻辑梳理（三场景/接口/状态机/待确认项），引用融合组产品+接口文档
+- [underwater-robot-analysis.md](underwater-robot-analysis.md) — 水下机器人定位方案梳理（传感器对比/泳池三场景/李哲方案/风险），引用0414新增飞书文档
