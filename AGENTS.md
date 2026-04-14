@@ -7,6 +7,8 @@
 - After curation, user may ask follow-up queries about specific documents; search within structured module docs (`decisions.md`, `gaps.md`) first before scanning raw inbox files.
 - When analyzing weekly meeting reports: summarize 已完成 items briefly (归纳概括); record 待办 items with full details including sub-tasks.
 - User (宋姝) is the localization team lead and does not personally take on specific execution work items in weekly tracking.
+- Daily workspace (`workspace/YYYY-MM-DD/daily.md`) todo section has two subsections: 「跟进/派发」and 「我的工作项」; both are the user's own work. Uncompleted 「跟进/派发」items (unchecked) carry over to the next day's daily.md verbatim until explicitly marked done.
+- MR review ownership: vision team MRs → 宋姝 reviews (goes into 跟进 list); fusion team MRs → 林子越 reviews; laser team MRs → 明坤 reviews. Non-vision MRs are recorded in 团队进展 table only, not in 跟进 list.
 
 ## Learned Workspace Facts
 
