@@ -44,11 +44,16 @@ LocalizationTeam/
 │       ├── people.md
 │       └── inbox/
 │
-└── projects/                    ← 项目横切视角（4～6 个项目平铺）
-    └── <project-name>/
-        ├── overview.md          ← 项目背景、定位组职责、关键节点
-        ├── status.md            ← 当前进展、风险、跨组依赖
-        └── inbox/               ← 该项目原始资料
+├── projects/                    ← 项目横切视角（4～6 个项目平铺）
+│   └── <project-name>/
+│       ├── overview.md          ← 项目背景、定位组职责、关键节点
+│       ├── status.md            ← 当前进展、风险、跨组依赖
+│       └── inbox/               ← 该项目原始资料
+│
+└── workspace/                   ← TL 个人日粒度工作空间
+    └── YYYY-MM-DD/
+        ├── inbox/               ← 当日原始材料，直接拖入，不加工
+        └── daily.md             ← 当日加工输出（待办 / 团队进展 / 排期 / 知识积累）
 ```
 
 ---
@@ -134,6 +139,7 @@ YYYY-MM-DD_来源或类型_简短描述.扩展名
 
 | 频率 | 动作 |
 |------|------|
+| 每日 | 新建 `workspace/$(date +%F)/inbox/`，拖入当天材料；有时间时填 `daily.md` |
 | 每周 | 更新 `overview/tasks.md`、`overview/risks.md` |
 | 每次 1:1 或例会后 | 更新相关 `teams/*/people.md`，补充 inbox |
 | 有新信息时随时 | 丢入对应 inbox，打上日期 |
