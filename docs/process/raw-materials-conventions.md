@@ -133,5 +133,8 @@ teams/<group>/modules/<mod>/   ← 结构化输出
 | 2026-04-13 | overview/modules/common/           | laser/inbox/0413新增（充电站移位策略，跨模块归档）             | ✓ 完成 |
 | 2026-04-13 | fusion/modules/fastlivo/ + fusion/ | fusion/inbox/0413新增（增量，3 个文件）                 | ✓ 完成 |
 | 2026-04-13 | overview/modules/common/           | inbox/0413新增/双目盲区相关文档（增量，3 个文件）                 | ✓ 完成 |
+| 2026-04-14 | fusion/modules/fusion/             | fusion/inbox/0414新增/启动时RTK 信号差讨论.md（增量，1 个文件）  | ✓ 完成 |
+| 2026-04-15 | overview/modules/common/           | laser/inbox/0412新增（暂停恢复/局部重定位/断流/重定位条件梳理，专题文档模式） | ✓ 完成 |
+| 2026-04-15 | overview/modules/common/           | inbox/0414新增/智能割草机安规策略功能（专题文档模式）             | ✓ 完成 |
 
 
