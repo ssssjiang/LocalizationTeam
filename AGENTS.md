@@ -20,6 +20,7 @@
 - Project conventions are documented in `docs/process/raw-materials-conventions.md`.
 - Images from inbox documents are copied to the corresponding module's `images/` directory with descriptive names; whiteboard/design figures are kept, raw test screenshots are skipped.
 - `raw-materials-curation` is the primary skill used in this workspace for converting inbox documents into structured team knowledge.
-- Vision team weekly meeting records live under `teams/vision/weekly/YYYY-WXX.md` (one file per ISO week); each file is organized per-person with 「本周完成」 + 「待办」 sections.
+- Vision team weekly meeting records live under `teams/vision/weekly/YYYY-WXX.md` (one file per ISO week); filename should annotate the covered date range; each file is organized per-person with 「本周完成」 + 「待办」 sections.
+- Team uses 飞书多维表格 to manage two parallel tracking tables: (1) bug 跟踪表 — bug id / 责任人 / 分配时间 / 当前状态（用于组内进度与工作量跟踪）; (2) 代码合入与发版表 — bug id / 功能 / 涉及代码库 / 合入人 / 合入 dev 时间 / 发版版本（用于对外输出给 SPM 指导 cherry-pick，以及内部按版本追踪 bug 关联代码）。
 - Channel mapping specialized docs are organized under `teams/vision/modules/vslam/通道建图/`; cross-team special topic reports go under `overview/modules/common/` as standalone `.md` files.
 - Temperature test documents for the stereo camera are located at `teams/vision/inbox/005_视觉slam/005_测试文档/006_温补测试情况更新/温补测试情况更新.md`.
