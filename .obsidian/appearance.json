@@ -1,1 +1,9 @@
-{}
+{
+  "theme": "obsidian",
+  "cssTheme": "Obsidian gruvbox",
+  "interfaceFontFamily": "Ayuthaya",
+  "textFontFamily": "Ayuthaya",
+  "monospaceFontFamily": "Andale Mono",
+  "baseFontSize": 14,
+  "translucency": true
+}
