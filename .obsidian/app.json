@@ -1,0 +1,15 @@
+{
+  "useMarkdownLinks": true,
+  "newLinkFormat": "relative",
+  "attachmentFolderPath": "./images",
+  "alwaysUpdateLinks": true,
+  "showLineNumber": true,
+  "strictLineBreaks": true,
+  "showUnsupportedFiles": false,
+  "promptDelete": true,
+  "trashOption": "local",
+  "newFileLocation": "current",
+  "showInlineTitle": true,
+  "readableLineLength": true,
+  "spellcheck": false
+}

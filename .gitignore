@@ -1,0 +1,44 @@
+# ===== macOS =====
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# ===== Obsidian =====
+# 用户态/本机相关，不进版本库
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/workspace.json.bak
+.obsidian/cache
+.obsidian/plugins/*/data.json.bak
+
+# 插件代码本身不进库：clone 后 Obsidian 会按 community-plugins.json 提示安装
+# 但保留每个插件的 data.json（用户/团队配置）
+.obsidian/plugins/*/main.js
+.obsidian/plugins/*/styles.css
+.obsidian/plugins/*/manifest.json
+.obsidian/plugins/*/*.wasm
+.obsidian/plugins/obsidian-excalidraw-plugin/lib/
+.obsidian/plugins/obsidian-excalidraw-plugin/scripts/
+
+# Obsidian 回收站
+.trash/
+
+# ===== 编辑器/IDE 临时文件 =====
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# ===== Python（如果有脚本） =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# ===== 其他 =====
+*.log
+.env
+.env.local
