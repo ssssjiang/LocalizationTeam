@@ -46,7 +46,7 @@ function listDailyDirs() {
 
 function extractFollowUpUnchecked(content) {
   // 匹配「### 跟进 / 派发」直到下一个「### 」或「## 」
-  const m = content.match(/###\s*跟进\s*\/\s*派发\s*\n([\s\S]*?)(?=\n##\s|\n###\s|$)/);
+  const m = content.match(/###\s*跟进\s*\s*派发\s*\n([\s\S]*?)(?=\n##\s|\n###\s|$)/);
   if (!m) return [];
   const section = m[1];
   const lines = section.split("\n");
@@ -54,7 +54,7 @@ function extractFollowUpUnchecked(content) {
   const carry = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/^\s*-\s*\[\s\]/.test(line)) {
+    if (/^\s*-\s*\s/.test(line)) {
       carry.push(line);
       // 把后面的子缩进行也带上
       let j = i + 1;
@@ -86,27 +86,37 @@ for (const dir of listDailyDirs()) {
 if (carriedLines.length > 0) {
   const carryBlock = `\n> 以下条目从 ${sourceDate} 顺延而来，未完成项请继续跟进或明确标注完成。\n\n${carriedLines.join("\n")}\n`;
   skeleton = skeleton.replace(
-    /(###\s*跟进\s*\/\s*派发\s*\n)([\s\S]*?)(?=\n###\s)/,
+    /(###\s*跟进\s*\s*派发\s*\n)([\s\S]*?)(?=\n###\s)/,
     `$1${carryBlock}\n`
   );
 }
 
-// ---- 5. 写入 daily.md（如已存在则不覆盖，仅打开） ----
+// ---- 5. 写入 daily.md（如已存在则不覆盖）----
 const dailyPath = `${targetDir}/daily.md`;
-if (!(await vault.adapter.exists(dailyPath))) {
+const dailyAlreadyExists = await vault.adapter.exists(dailyPath);
+if (!dailyAlreadyExists) {
   await vault.create(dailyPath, skeleton);
   new Notice(`✅ 已创建 ${dailyPath}` + (sourceDate ? `\n顺延 ${carriedLines.filter(l => /^-\s*\[\s\]/.test(l)).length} 条来自 ${sourceDate}` : ""));
-} else {
-  new Notice(`ℹ️ ${dailyPath} 已存在，直接打开`);
 }
+// 已存在的情况下安静失败：不打 Notice、不打开（避免 startup 启动时打断当前笔记）
 
-// ---- 6. 删除 Templater 自动新建的空文件，并打开真正的 daily.md ----
+// ---- 6. 安全清理 Templater 中间产物 ----
+// 关键：startup 触发场景下 tp.file 是当前打开的笔记，绝不能删
+// 仅当 createdFile 同时满足：① 不是 daily.md ② 不在 workspace/ 下 ③ 是 Untitled* 默认名 时才删
 const createdFile = tp.file.find_tfile(tp.file.title);
-if (createdFile && createdFile.path !== dailyPath) {
+const isTemplaterScratch =
+  createdFile
+  && createdFile.path !== dailyPath
+  && !createdFile.path.startsWith(workspaceDir + "/")
+  && /^Untitled( \d+)?$/i.test(createdFile.basename);
+
+if (isTemplaterScratch) {
   await vault.delete(createdFile);
+  // 手动触发场景：清理后打开真正的 daily
+  const dailyFile = vault.getAbstractFileByPath(dailyPath);
+  if (dailyFile) {
+    await app.workspace.getLeaf(false).openFile(dailyFile);
+  }
 }
-const dailyFile = vault.getAbstractFileByPath(dailyPath);
-if (dailyFile) {
-  await app.workspace.getLeaf(false).openFile(dailyFile);
-}
+// startup 场景：不主动打开任何文件，让用户自己继续看他正在看的笔记
 -%>

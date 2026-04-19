@@ -32,7 +32,7 @@
     ""
   ],
   "startup_templates": [
-    ""
+    "templates/daily-bootstrap.md"
   ],
   "intellisense_render": 1
 }

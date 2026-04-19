@@ -3,28 +3,34 @@
 本仓库有**两类**模板，分工明确：
 
 
-| 类型              | 位置                                                   | 引擎              | 用途                             |
-| --------------- | ---------------------------------------------------- | --------------- | ------------------------------ |
-| **Daily 工作流模板** | `workspace/TEMPLATE-daily.md`                        | 纯 markdown（手维护） | 每日 daily.md 的"源真理"骨架           |
-| **Daily 自动化**   | `templates/daily-bootstrap.md`                       | Templater (JS)  | 一键建当天目录 + 顺延未完成跟进项             |
-| **结构化片段**       | `templates/{decision,problem,competitor,inbox}-*.md` | 纯 markdown 骨架   | 在任意文件里快速插入符合 conventions 的章节骨架 |
+| 类型              | 位置                                                   | 引擎              | 用途                                                                     |
+| --------------- | ---------------------------------------------------- | --------------- | ---------------------------------------------------------------------- |
+| **Daily 工作流模板** | `workspace/TEMPLATE-daily.md`                        | 纯 markdown（手维护） | 每日 daily.md 的"源真理"骨架                                                   |
+| **Daily 自动化**   | `templates/daily-bootstrap.md`                       | Templater (JS)  | **每次启动 Obsidian 自动跑** + 可手动触发；建当天目录 + 顺延未完成跟进项                          |
+| **Weekly 自动化**  | `templates/weekly-bootstrap.md`                      | Templater (JS)  | 周五/周一手动触发；聚合本周 daily + 跨模块决策/问题，生成 `weekly/YYYY-Www.md`                |
+| **结构化片段**       | `templates/{decision,problem,competitor,inbox}-*.md` | 纯 markdown 骨架   | 在任意文件里快速插入符合 conventions 的章节骨架                                         |
 
 
 ---
 
 ## 一、每日开工：daily-bootstrap
 
-### 用法
+### 触发方式
 
-`Cmd+P` → 输入 `Templater: Create new note from template` → 选 `daily-bootstrap`
+| 场景 | 触发 |
+|---|---|
+| **早上打开 Obsidian** | ✨ **自动跑**（已在 Templater Settings → Startup Templates 配置） |
+| **任何时候手动触发** | `Cmd+P` → `Templater: Create new note from template` → 选 `daily-bootstrap` |
 
 ### 它会做什么
 
 1. 在 `workspace/YYYY-MM-DD/` 下建好 `daily.md`、`inbox/`、`images/`
 2. 套用 `workspace/TEMPLATE-daily.md` 骨架（替换标题日期）
 3. 自动找最近一份 `workspace/<历史日期>/daily.md`，**把「跟进/派发」章节里所有未勾选的 `- [ ]` 项（含子缩进）复制过来**
-4. 顺延块前会加注释：`> 以下条目从 YYYY-MM-DD 顺延而来`
-5. 自动打开新建的 daily.md（Templater 中间产物会被清理）
+4. 顺延块前加注释：`> 以下条目从 YYYY-MM-DD 顺延而来`
+5. 行为差异：
+   - **手动触发**：建好后自动打开新 daily.md，并清理 Templater 中间产物
+   - **startup 自动触发**：建好后**安静返回**，不打断你正在看的笔记。如果今天的 daily 已存在，连 Notice 都不弹
 
 ### 约定
 
@@ -33,9 +39,44 @@
 - 想中止某条但保留记录，可以改成 `- [~]` 或加注释，**只要不是 `- [ ]` 就不会被顺延**
 - 「我的工作项」章节**不顺延**（设计上每天重新规划）
 
-### 推荐绑定快捷键
+### 推荐绑定快捷键（手动触发场景）
 
 `Settings → Templater → Template Hotkeys` → 给 `daily-bootstrap` 绑定（如 `Cmd+Alt+D`）
+
+---
+
+## 一·B、周报：weekly-bootstrap
+
+### 触发方式
+
+`Cmd+P` → `Templater: Create new note from template` → 选 `weekly-bootstrap`
+
+**推荐时机**：
+- **周五下班前**跑一次 → 周末品一品 → 周一交
+- 或**周一早上**跑一次复盘上周
+
+### 它会做什么
+
+生成 `weekly/YYYY-Www.md`（如 `weekly/2026-W17.md`），自动聚合：
+
+| 章节 | 数据源 | 说明 |
+|---|---|---|
+| 一、本周已完成 | 本周内所有 daily 的 `- [x]` 项 | 按日期分组 |
+| 二、未完成 / 顺延到下周 | 本周末最后一份 daily 的「跟进/派发」未勾选项 | 自动识别"周末" |
+| 三、本周新增决策 | 扫所有 `*/modules/*/decisions.md`，找日期落在本周的 D-xxx | 通过条目里的日期字段过滤 |
+| 四、本周新增问题 | 扫所有 `*/modules/*/problems.md`，找日期落在本周的 P-xxx | 同上 |
+| 五、团队进展（聚合） | 各 daily 的「团队进展」节合并 | 跳过空骨架 |
+| 六、排期变动 | 各 daily 的「排期更新」节合并 | 跳过空骨架 |
+| 七、知识 & 信息沉淀 | 各 daily 的「知识 & 信息积累」节合并 | 跳过空骨架 |
+| 八、本周复盘（手写） | 留白 | 你周末手填：做得好/不好/下周重点/给团队的话 |
+
+### 行为约定
+
+- ISO 周编号（周一为周首），如 `2026-W17` 对应 `2026-04-20 ~ 2026-04-26`
+- **如果当周 weekly 文件已存在，不会覆盖**（保护你已写的复盘）—— 想重新聚合请先手动删除
+- 决策/问题靠"条目里有日期字段（YYYY-MM-DD）"识别，请保持 conventions：
+  - `**决策日期** | YYYY-MM-DD`
+  - `**首次发现**：YYYY-MM-DD`
 
 ---
 
