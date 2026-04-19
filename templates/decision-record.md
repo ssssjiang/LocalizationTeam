@@ -1,16 +1,19 @@
-## D-<% await tp.system.prompt("决策编号（三位数字，如 042）") %> <% await tp.system.prompt("决策标题") %>【<% await tp.system.suggester(["已定案", "待确认"], ["已定案", "待确认"], false, "状态") %>】
+<!-- 决策记录骨架 · 追加到 <group>/modules/<mod>/decisions.md -->
+<!-- 使用：在目标 decisions.md 里光标定位 → Cmd+P → "Templates: Insert template" → 选 decision-record -->
+
+## D-XXX 决策标题【已定案 / 待确认】
 
 **背景**
 
-<% await tp.system.prompt("为什么需要这个决策？当前问题是什么？", "", true, true) %>
+<!-- 为什么需要这个决策？当前问题是什么？ -->
 
 **选定方案**
 
-<% await tp.system.prompt("最终采用的方案描述", "", true, true) %>
+<!-- 最终采用的方案描述 -->
 
 **理由**
 
-<% await tp.system.prompt("为什么选这个方案，而不是替代方案", "", true, true) %>
+<!-- 为什么选这个方案，而不是替代方案 -->
 
 **替代方案（可选）**
 
@@ -22,8 +25,8 @@
 - 受影响模块：
 - 受影响接口/参数：
 
-**来源** | <% await tp.system.prompt("来源文档路径，如 inbox/0418新增/xxx.md") %>
+**来源** | inbox/<路径>
 
-**决策日期** | <% tp.date.now("YYYY-MM-DD") %>
+**决策日期** | YYYY-MM-DD
 
 ---

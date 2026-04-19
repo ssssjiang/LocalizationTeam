@@ -1,58 +1,106 @@
 # Templates 模板使用说明
 
-本目录为 [Templater 插件](https://silentvoid13.github.io/Templater/) 模板。模板严格遵循团队已有规范，详见 [`docs/process/raw-materials-conventions.md`](../docs/process/raw-materials-conventions.md) 和 [`docs/process/special-report-template.md`](../docs/process/special-report-template.md)。
+本仓库有**两类**模板，分工明确：
+
+
+| 类型              | 位置                                                   | 引擎              | 用途                             |
+| --------------- | ---------------------------------------------------- | --------------- | ------------------------------ |
+| **Daily 工作流模板** | `workspace/TEMPLATE-daily.md`                        | 纯 markdown（手维护） | 每日 daily.md 的"源真理"骨架           |
+| **Daily 自动化**   | `templates/daily-bootstrap.md`                       | Templater (JS)  | 一键建当天目录 + 顺延未完成跟进项             |
+| **结构化片段**       | `templates/{decision,problem,competitor,inbox}-*.md` | 纯 markdown 骨架   | 在任意文件里快速插入符合 conventions 的章节骨架 |
+
 
 ---
 
-## 模板清单
+## 一、每日开工：daily-bootstrap
 
-| 模板文件 | 用途 | 输出位置建议 |
-|---|---|---|
-| `inbox-raw-material.md` | 录入新的原始素材（飞书/微信/会议纪要） | `inbox/MMDD新增/<主题>/<主题>.md` |
-| `decision-record.md` | 单条决策记录（D-xxx 格式） | 追加到 `<group>/modules/<mod>/decisions.md` |
-| `problem-record.md` | 单条问题记录（P-xxx 格式） | 追加到 `<group>/modules/<mod>/problems.md` |
-| `competitor-test-report.md` | 竞品测试报告（含建图/定位/边界场景对比） | `inbox/MMDD新增/<竞品名>-竞品测试/` |
-| `weekly-note.md` | 周报梳理入口（汇总各组进展） | `weekly/YYYY-Www.md`（配合 Periodic Notes） |
+### 用法
 
----
+`Cmd+P` → 输入 `Templater: Create new note from template` → 选 `daily-bootstrap`
 
-## 使用方式
+### 它会做什么
 
-### 方法 1：命令面板（推荐）
+1. 在 `workspace/YYYY-MM-DD/` 下建好 `daily.md`、`inbox/`、`images/`
+2. 套用 `workspace/TEMPLATE-daily.md` 骨架（替换标题日期）
+3. 自动找最近一份 `workspace/<历史日期>/daily.md`，**把「跟进/派发」章节里所有未勾选的 `- [ ]` 项（含子缩进）复制过来**
+4. 顺延块前会加注释：`> 以下条目从 YYYY-MM-DD 顺延而来`
+5. 自动打开新建的 daily.md（Templater 中间产物会被清理）
 
-1. `Cmd+P` 打开命令面板
-2. 输入 `Templater: Open Insert Template modal`（或 `Templater: 创建新文件`）
-3. 选择模板 → 按提示输入参数
+### 约定
 
-### 方法 2：快捷键
+- 跟进/派发章节统一用 `- [ ]` 复选框（与 Tasks 插件联动）
+- 完成的项标 `- [x]`
+- 想中止某条但保留记录，可以改成 `- [~]` 或加注释，**只要不是 `- [ ]` 就不会被顺延**
+- 「我的工作项」章节**不顺延**（设计上每天重新规划）
 
-可在 `Settings → Templater → Template Hotkeys` 为常用模板（如 `inbox-raw-material`）绑定快捷键。
+### 推荐绑定快捷键
 
-### 方法 3：文件夹自动应用
-
-在 `Settings → Templater → Folder Templates` 中可配置：
-- `inbox/` → 自动应用 `inbox-raw-material.md`
-- `weekly/` → 自动应用 `weekly-note.md`
-
-这样在对应文件夹新建文件时，会自动套用模板并弹出参数输入框。
+`Settings → Templater → Template Hotkeys` → 给 `daily-bootstrap` 绑定（如 `Cmd+Alt+D`）
 
 ---
 
-## 模板设计原则
+## 二、骨架片段：decision / problem / competitor / inbox
 
-1. **严格对齐 conventions**：D-xxx / P-xxx / Q-xxx / G-xxx / R-xxx 编号体系，✅⚠️🔴❓ 状态标记
-2. **强制写关键字段**：用 `tp.system.prompt` 让用户在创建时就填好来源、日期、负责人，避免事后补
-3. **预留 TODO checklist**：原始素材模板里嵌入「待提取要点」清单，方便后续 Cursor 跑 `raw-materials-curation` skill 时识别
-4. **与 Cursor 协作**：所有模板产出的都是标准 markdown，Cursor 跑 skill 时无需特殊处理
+### 用法（两种）
+
+**方式 A：在 Obsidian 里插入到当前光标**
+
+1. 用 Obsidian **核心** Templates 插件（不是 Templater）：`Settings → Templates → Template folder` 设为 `templates`
+2. 光标定位到目标位置 → `Cmd+P` → `Insert template` → 选骨架
+
+**方式 B：直接复制粘贴**
+打开对应的 `templates/xxx.md`，全选复制即可（这些文件本身就是干净 markdown）。
+
+### 骨架清单
+
+
+| 文件                          | 用途         | 输出位置建议                                               |
+| --------------------------- | ---------- | ---------------------------------------------------- |
+| `decision-record.md`        | D-XXX 决策记录 | 追加到 `<group>/modules/<mod>/decisions.md`             |
+| `problem-record.md`         | P-XXX 问题记录 | 追加到 `<group>/modules/<mod>/problems.md`              |
+| `competitor-test-report.md` | 竞品测试完整报告   | `inbox/MMDD新增/<竞品名>-竞品测试/` 下新建                       |
+| `inbox-raw-material.md`     | 原始素材录入     | `workspace/YYYY-MM-DD/inbox/` 或 `inbox/MMDD新增/<主题>/` |
+
+
+### 设计原则
+
+- 严格对齐 `[docs/process/raw-materials-conventions.md](../docs/process/raw-materials-conventions.md)`：D/P/Q/G/R 编号、状态标记（✅⚠️🔴❓）
+- 占位符用 HTML 注释 `<!-- ... -->`，渲染时不显示，但提示填什么
+- 字段位置统一，便于 Cursor 跑 `raw-materials-curation` skill 时识别
 
 ---
 
-## 修改模板
+## 三、协作模型
 
-直接编辑本目录下的 `.md` 文件即可。Templater 语法参考：https://silentvoid13.github.io/Templater/syntax.html
+```
+┌──────────────────────────────────────────────┐
+│ workspace/TEMPLATE-daily.md  ← 你手维护      │
+│         │                                    │
+│         ▼                                    │
+│ templates/daily-bootstrap.md (Templater)     │
+│         │                                    │
+│         ▼                                    │
+│ workspace/YYYY-MM-DD/daily.md                │
+│   - 含顺延的跟进项                           │
+│   - 在里面用 templates/*.md 骨架插决策/问题  │
+└──────────────────────────────────────────────┘
+                    │
+                    ▼ （阶段性）
+            Cursor 跑 raw-materials-curation
+                    │
+                    ▼
+        <group>/modules/<mod>/{timeline,decisions,problems,gaps}.md
+```
 
-常用变量：
-- `<% tp.date.now("YYYY-MM-DD") %>` — 当前日期
-- `<% tp.file.title %>` — 当前文件名
-- `<% await tp.system.prompt("提示语") %>` — 弹窗输入
-- `<% await tp.system.suggester(["显示A","显示B"], ["返回值A","返回值B"]) %>` — 下拉选择
+- **Obsidian 端**：daily-bootstrap 一键开工 → 用骨架快速记录
+- **Cursor 端**：周期性把 `inbox/` 和 `workspace/*/inbox/` 的素材结构化提取到各模块文档
+
+---
+
+## 四、修改 / 扩展模板
+
+- **改 daily 骨架** → 编辑 `workspace/TEMPLATE-daily.md`（daily-bootstrap 自动读最新版）
+- **改片段骨架** → 直接编辑 `templates/*.md`（纯 markdown，所见即所得）
+- **改 daily-bootstrap 的逻辑**（如改顺延范围、加新步骤）→ 编辑 `templates/daily-bootstrap.md` 里的 JS
+
+Templater 语法参考：[https://silentvoid13.github.io/Templater/syntax.html](https://silentvoid13.github.io/Templater/syntax.html)
