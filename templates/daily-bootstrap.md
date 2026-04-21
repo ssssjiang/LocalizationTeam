@@ -50,19 +50,34 @@ function extractFollowUpUnchecked(content) {
   if (!m) return [];
   const section = m[1];
   const lines = section.split("\n");
-  // 收集 - [ ] 行；同时保留紧跟在它之后的二级缩进子项（以两个空格或 tab 开头）
+
+  const openCheckboxRe = /^\s*-\s*\s/;
+  const doneCheckboxRe = /^\s*-\s*[xX]/;
+  const anyCheckboxRe = /^\s*-\s*[^]+/;
+  const plainBulletRe = /^\s*-\s+(?!)/;
+
+  // 优先顺延标准未完成复选框；如果没有复选框，则兼容普通 "-" 项
+  const hasOpenCheckbox = lines.some((line) => openCheckboxRe.test(line));
+
   const carry = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (/^\s*-\s*\s/.test(line)) {
-      carry.push(line);
-      // 把后面的子缩进行也带上
-      let j = i + 1;
-      while (j < lines.length && /^\s{2,}|\t/.test(lines[j]) && lines[j].trim() !== "") {
-        carry.push(lines[j]);
-        j++;
-      }
-    }
+    const shouldCarry = hasOpenCheckbox
+      ? openCheckboxRe.test(line)
+      : (plainBulletRe.test(line) && !doneCheckboxRe.test(line) && !anyCheckboxRe.test(line));
+
+```
+if (shouldCarry) {
+  carry.push(line);
+  // 把后面的子缩进行也带上
+  let j = i + 1;
+  while (j < lines.length && /^\s{2,}|\t/.test(lines[j]) && lines[j].trim() !== "") {
+    carry.push(lines[j]);
+    j++;
+  }
+}
+```
+
   }
   return carry;
 }
