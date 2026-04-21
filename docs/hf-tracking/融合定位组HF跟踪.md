@@ -1,4 +1,4 @@
-# 融合定位组 HF 跟踪
+# 定位组 HF 跟踪
 
 > 数据源：`module_fusion` 全量 commit + 激光 SLAM 重点合入跟踪表  
 > 时间窗口：2026-03-23 ~ 2026-04-19（最近 4 周）  
@@ -48,5 +48,3 @@
 | 2026-03-24 ~ 2026-03-26 | 488228                                             | 适配versa的取消重定位；修复了488228中的线程锁问题              | Versa                      | -        |
 | 2026-03-25              | Butchart: 468769 ButchartPro: 491679 Monet: 491678 | 通道外假固定解判断，vio和RTK切换逻辑                       | Butchart/ButchartPro/Monet | -        |
 | 2026-03-26              | Butchart: 492173 ButchartPro: 492172 Monet: 490452 | 修复了多帧对齐的问题：对齐时视觉和融合位姿都转换到SE2；使用历史对齐结果增加次数上限 | Butchart/ButchartPro/Monet | -        |
-
-
