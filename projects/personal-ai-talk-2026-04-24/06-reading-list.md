@@ -64,6 +64,25 @@
   - 只读 Abstract + Introduction + Results
   - 投入：10 min
   - 学到：AlexNet 凭什么引爆深度学习
+3. **Zeiler & Fergus — Visualizing and Understanding CNNs** (ECCV 2014) ⭐ 机制档新增
+  [https://arxiv.org/abs/1311.2901](https://arxiv.org/abs/1311.2901)
+  - **CNN 学到层级特征第一次被可视化证实**——这张可视化图本身就值得讲（演讲投影候选）
+  - 只看 Figure 2 + 简单读 §2 deconvnet 思路
+  - 投入：10 min
+  - 学到：为什么"layer 1 边缘 → layer 2 纹理 → layer 3 部件 → layer 4 物体"不是猜测、是被实证的
+4. **Hochreiter & Schmidhuber — Long Short-Term Memory** (1997) ⭐ 机制档新增
+  [https://www.bioinf.jku.at/publications/older/2604.pdf](https://www.bioinf.jku.at/publications/older/2604.pdf)
+  - **不需要细读**——知道"cell state 加法路径不衰减梯度"这个机制即可
+  - 投入：5 min（看 Abstract + Figure 1）
+5. **Sutskever et al. — Sequence to Sequence Learning with Neural Networks** (NeurIPS 2014) ⭐ 机制档新增
+  [https://arxiv.org/abs/1409.3215](https://arxiv.org/abs/1409.3215)
+  - **RNN 真正爆发的论文** — 一个端到端 RNN 在英→法翻译上 BLEU 34.8 超过所有 pipeline 系统
+  - 只读 Abstract + Section 1 + Table 1
+  - 投入：10 min
+6. **Bahdanau et al. — Neural Machine Translation by Jointly Learning to Align and Translate** (ICLR 2015) ⭐ 机制档新增
+  [https://arxiv.org/abs/1409.0473](https://arxiv.org/abs/1409.0473)
+  - **attention 机制最早出现的地方**——讲 Transformer 时回看这篇会有"原来 attention 早就有"的视角
+  - 投入：10 min（Abstract + Section 3）
 
 ### ⭐ 时间允许（额外 30 min）
 
@@ -147,12 +166,18 @@
 
 ### ⭐⭐ 2026 新增（必看 — 挑战 Transformer 的 Mamba 路线）
 
-1. **Mamba-3: Improved Sequence Modeling using State Space Principles** (arXiv 2603.15569, 2026.03)
+1. **Gu & Dao — Mamba: Linear-Time Sequence Modeling with Selective State Spaces** (2023.12) ⭐ 机制档新增
+  [https://arxiv.org/abs/2312.00752](https://arxiv.org/abs/2312.00752)
+  - **Mamba 原论文**——讲清 selective SSM 为什么让 **B/C/Δ 输入相关而 A 矩阵保持固定**
+  - 必读 Abstract + Section 1 + Section 3.2（selection mechanism 的关键讨论）
+  - 投入：30 min
+  - 学到：① 为什么 A 不能 input-dependent（hardware-aware parallel scan 的限制）② B/C/Δ 怎么做"软选择" ③ 为什么这是"控制论 + 深度学习"的合体
+2. **Mamba-3: Improved Sequence Modeling using State Space Principles** (arXiv 2603.15569, 2026.03)
   [https://arxiv.org/abs/2603.15569v1](https://arxiv.org/abs/2603.15569v1)
   - 必读 Abstract + Section 1
   - 投入：30 min
   - 学到：① SSM vs Transformer 的本质权衡 O(n) vs O(n²) ② Mamba-3 的 3 个新机制（指数-梯形离散化 / 复数值状态跟踪 / MIMO formulation）
-2. **Goomba Lab — Mamba-3 Part 1 博客**
+3. **Goomba Lab — Mamba-3 Part 1 博客**
   [https://goombalab.github.io/blog/2026/mamba3-part1/](https://goombalab.github.io/blog/2026/mamba3-part1/)
   - Mamba 团队官方博客解读
   - 投入：20 min
@@ -174,6 +199,12 @@
   - 必读 Abstract + Section 1 + Section 2 + Figure 2/3
   - 投入：30 min
   - 学到："涌现"的精确定义和典型例子（这是面对追问最容易被打的概念）
+3. **Schaeffer et al. — Are Emergent Abilities of LLMs a Mirage?** (NeurIPS 2023 Outstanding Paper) ⭐ 机制档新增
+  [https://arxiv.org/abs/2304.15004](https://arxiv.org/abs/2304.15004)
+  - **必读**——演讲里讲"涌现争议"的依据
+  - 只读 Abstract + Section 1 + Figure 1（不连续指标导致幻觉的核心图）
+  - 投入：15 min
+  - 学到：为什么很多"突然涌现"的曲线在换连续指标（log-prob）后就变平滑——这是面对追问"涌现是真现象吗"的标准答案
 
 ### ⭐⭐ 强烈建议（额外 60 min）
 
@@ -268,17 +299,27 @@
 
 ### ⭐⭐ 强烈建议（额外 60 min）
 
-1. **Rombach et al. — High-Resolution Image Synthesis with Latent Diffusion Models** (Stable Diffusion, CVPR 2022)
+1. **Rombach et al. — High-Resolution Image Synthesis with Latent Diffusion Models** (Stable Diffusion, CVPR 2022) ⭐ 机制档重读
   [https://arxiv.org/abs/2112.10752](https://arxiv.org/abs/2112.10752)
   - 必读 Abstract + Section 1 + Section 3 + Figure 3
   - 投入：30 min
-  - 学到：为什么 latent space 比 pixel space 更高效
-2. **Ramesh et al. — Hierarchical Text-Conditional Image Generation with CLIP Latents** (DALL-E 2, 2022)
+  - 学到：为什么 latent space 比 pixel space 更高效——**Stable Diffusion 能开源跑起来的真正机制核心，演讲里要讲清这一段**
+2. **Song et al. — Denoising Diffusion Implicit Models (DDIM)** (ICLR 2021) ⭐ 机制档新增
+  [https://arxiv.org/abs/2010.02502](https://arxiv.org/abs/2010.02502)
+  - **采样加速的关键**——把 SDE 重写成 ODE，1000 步采样压到 20-50 步
+  - 只读 Abstract + Section 1（知道为什么能跳步即可，不要陷数学）
+  - 投入：10 min
+3. **Ho & Salimans — Classifier-Free Diffusion Guidance** (2022) ⭐ 机制档新增
+  [https://arxiv.org/abs/2207.12598](https://arxiv.org/abs/2207.12598)
+  - **SD 用户都见过的 "CFG scale 7.5" 参数的由来**——演讲里讲 SD 工业落地时会提到
+  - 只读 Abstract + Algorithm 1（训练时随机 drop condition 那一段）
+  - 投入：10 min
+4. **Ramesh et al. — Hierarchical Text-Conditional Image Generation with CLIP Latents** (DALL-E 2, 2022)
   [https://arxiv.org/abs/2204.06125](https://arxiv.org/abs/2204.06125)
   - 只读 Abstract + Section 1
   - 投入：15 min
   - 学到：text-to-image 的 prior + decoder 架构
-3. **Yang Song — Generative Modeling by Estimating Gradients of the Data Distribution**
+5. **Yang Song — Generative Modeling by Estimating Gradients of the Data Distribution**
   [https://yang-song.net/blog/2021/score/](https://yang-song.net/blog/2021/score/)
   - score-based 视角讲 diffusion，更深刻
   - 投入：30 min
@@ -349,11 +390,24 @@
   - 只读 Abstract + Section 1 + Figure 1
   - 投入：20 min
   - 学到：Dreamer 系列开山，从玩具任务走向真实控制
-2. **LeCun — A Path Towards Autonomous Machine Intelligence** (JEPA 路线, 2022)
+2. **LeCun — A Path Towards Autonomous Machine Intelligence** (JEPA 路线, 2022) ⭐ 机制档重读
   [https://openreview.net/pdf?id=BZ5a1r-kVsf](https://openreview.net/pdf?id=BZ5a1r-kVsf)
   - LeCun 的 AGI 路线图，强调 world model 是 AGI 核心
-  - 只读 Section 1 + Section 2
+  - 必读 Section 1 + Section 2——**演讲里讲"JEPA 之争"那段直接基于这两节**
   - 投入：30 min
+3. **Assran et al. — I-JEPA: Image-based JEPA** (CVPR 2023) ⭐ 机制档新增
+  [https://arxiv.org/abs/2301.08243](https://arxiv.org/abs/2301.08243)
+  - **JEPA 路线第一个具体落地**——只看 Figure 1 + Abstract，知道"在表示空间预测"是怎么实现的
+  - 投入：10 min
+4. **Bardes et al. — V-JEPA: Video JEPA** (Meta 2024.02) ⭐ 机制档新增
+  [https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/)
+  - **JEPA 推到视频域的版本**——Meta 官方 blog 比论文好读
+  - 投入：10 min
+5. **Bardes / Ponce / LeCun — VICReg** (ICLR 2022) ⭐ 机制档新增
+  [https://arxiv.org/abs/2105.04906](https://arxiv.org/abs/2105.04906)
+  - **解释 JEPA 怎么避免 collapse**——variance / invariance / covariance 三项正则
+  - **不要细读**，知道"三项正则避免所有 embedding 塌陷成同一个向量"即可
+  - 投入：5 min（只看 Abstract + Figure 1）
 
 ### ⭐ 时间允许
 
@@ -368,10 +422,12 @@
 
 ### ⭐⭐⭐ 必读（20 min）
 
-1. **Esser et al. — Structure and Content-Guided Video Synthesis with Diffusion Models** (Runway GEN-1, 2023)
-  [https://arxiv.org/abs/2302.03011](https://arxiv.org/abs/2302.03011)
+1. **Esser et al. — Structure and Content-Guided Video Synthesis with Diffusion Models** (Runway GEN-1, **ICCV 2023**) ⭐ 引用修正
+  - **ICCV 2023 正式发表版**：[https://openaccess.thecvf.com/content/ICCV2023/papers/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.pdf](https://openaccess.thecvf.com/content/ICCV2023/papers/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.pdf)
+  - arXiv preprint: [https://arxiv.org/abs/2302.03011](https://arxiv.org/abs/2302.03011)
   - 必读 Abstract + Section 1 + Figure 2
   - 投入：15 min
+  - 学到：① structure（深度图）+ content（CLIP embedding）解耦 ② temporal attention 怎么插入 spatial attention 之后
 2. **Runway Research — Gen-1 / Gen-2 / Gen-3 Pages**
   [https://research.runwayml.com/gen2](https://research.runwayml.com/gen2)
   - 官方介绍，看产品形态和能力 demo

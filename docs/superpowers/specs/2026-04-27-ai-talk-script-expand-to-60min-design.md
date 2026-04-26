@@ -112,7 +112,8 @@
   h_t = A·h_{t-1} + B·x_t
   y_t = C·h_t
   ```
-  讲清这就是控制论的状态空间模型 / Mamba 关键 = ABC 输入相关（selective）/ "attention 是软查表精确但 O(n²)，SSM 是状态压缩高效但有损"
+  讲清这就是控制论的状态空间模型 / Mamba 关键 = **B、C、Δ 输入相关（selective），A 矩阵保持固定** / "attention 是软查表精确但 O(n²)，SSM 是状态压缩高效但有损"
+  > **F1.a 修正（2026-04-27 第二轮核查）**：原写 "ABC 输入相关" 是错误的。Mamba 论文 §3.2 明确说只有 B/C/Δ 是 input-dependent，A 保留 HiPPO 初始化作为 time-invariant 参数，是为了让 hardware-aware parallel scan 可行。
 
 **新增公式骨架**：3 行（attention + scaling law + SSM）
 
@@ -148,7 +149,8 @@
   - 采样加速：DDIM / DPM-Solver
   - **Latent Diffusion**：SD 在 64×64 latent 上扩散，不在 512×512 像素上——SD 工业落地的真正机制核心
 
-- **B. CLIP 对比学习机制段（+60s）**：N×N 相似度矩阵 / InfoNCE 直觉（N 选 1 分类）/ 4 亿对的负样本质量 / 零样本 ImageNet 76% top-1 = ResNet-50
+- **B. CLIP 对比学习机制段（+60s）**：N×N 相似度矩阵 / InfoNCE 直觉（N 选 1 分类）/ 4 亿对的负样本质量 / **零样本在原始 ImageNet validation 上达到和监督训练 ResNet-50 持平**
+  > **F1.b 修正（2026-04-27 第二轮核查）**：不再报具体 76% 数字。CLIP 论文 Table 1 报的是 76.2%，但社区一直有 "是否过拟合到 LAION 评估集" 的争议，OpenAI 官方 blog 措辞是 "matches ResNet-50 zero-shot"。保守起见改用定性表述。
 
 - **C. Diffusion + CLIP 合体段（+60s）**：text-to-image 流程拆开：CLIP encoder → cross-attention → diffusion U-Net / **classifier-free guidance** 公式 `ε_cond - ε_uncond` 解释 SD 的 "CFG scale 7.5" 参数由来
 
@@ -190,7 +192,8 @@
 
 - **B. GEN-1 视频时间一致性（+60s）**：
   - 难点 = 时间一致性（物体跨帧不漂）
-  - Esser 2023 解法：structure（深度图）+ content（文本/参考图）解耦 / temporal attention 插入 spatial attention 之后 / 微调而非从头训
+  - **Esser et al. ICCV 2023** 解法：structure（深度图）+ content（文本/参考图）解耦 / temporal attention 插入 spatial attention 之后 / 微调而非从头训
+  > **F1.c 修正（2026-04-27 第二轮核查）**：引用以 ICCV 2023 正式发表版本为准（之前写 arXiv preprint），演讲里报学术发表更专业。
   - 直觉："2D U-Net 拉伸成 3D"
   - 现状对照：Sora / Veo / Veo 3 是同范式工业化
 

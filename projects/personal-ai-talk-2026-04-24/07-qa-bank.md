@@ -404,3 +404,59 @@
 3. **周五现场前**：再快速过一遍每个节点的 Q1（"是什么"）——保证最基础的事实答得上来。
 
 **最高优先级**：节点 3 Transformer + 节点 4 LLM + 节点 9 推理 + 节点 10 VLA + 节点 11 World Models 突破——这 5 个节点的 Q&A **必须吃透**，它们是被追问概率最高的。
+
+---
+
+# 附录 M：机制档新增追问（2026-04-27 扩充版）
+
+> **背景**：稿件从 ~34 min 扩到 50 min 的"机制档"——讲了 self-attention QKV、scaling law 公式、Mamba SSM、DDPM L_simple、CLIP InfoNCE、V+M+C、JEPA 等更多机制和公式骨架。
+> **这一段专门覆盖机制档新增内容引发的追问**——**这些是听众在听到公式骨架后最可能追问的问题**，必须自己先答得清楚。
+> **本场（前 4 阶段）才会被问的**：M1–M9。**延伸段如果被现场拉出来讲才会被问的**：M10–M12（保底准备，不重点演练）。
+
+## M1：Transformer 里 attention 公式那个 √d_k 是干嘛的？
+
+**A**：是为了**防止 softmax 饱和**。Q 和 K 都是 d_k 维向量，点积 QKᵀ 的方差会随 d_k 增大——维度越大，点积值越大。如果不除 √d_k，softmax 输出会接近 one-hot（最大值的概率几乎是 1，其他都接近 0），这时候**梯度直接消失**，模型学不到东西。除以 √d_k 让点积保持在合理量级（约 N(0, 1)），softmax 输出"软选择"而不是"硬选择"。这是 Vaswani 2017 论文 §3.2.1 专门讨论的工程细节，不是数学优雅，是工程必要。
+
+## M2：为什么 GPT 系把 encoder 拿掉了？只用 decoder 不会丢信息吗？
+
+**A**：不会丢。原始 Transformer 的 encoder–decoder 是为机器翻译设计的——encoder 看源语言，decoder 看目标语言加 cross-attention 看源语言。GPT 系做的是**单一语言建模**（next-token prediction），没有"两种语言"的概念，所以**不需要 cross-attention，也不需要 encoder**。**关键好处是数据规模**：causal mask + next-token prediction 让任意一段文本都自带监督信号——下一个词就是 label。这把训练数据从"标注的语料"扩到了**全互联网**——这是 GPT 路线能 scale 到 175B 的根本原因。Encoder–decoder 路线（T5、BART）至今没 scale 到 GPT 量级，根本原因不是架构差，是它们更难找到这么大规模的"配对数据"。
+
+## M3：Chinchilla 修正了 Kaplan 什么？这个修正后来的影响是什么？
+
+**A**：**Kaplan 2020 认为算力主要应该堆给模型规模，data 是次要的**——所以 OpenAI 当时做了 GPT-3 175B + 300B token，认为这是最优。**Chinchilla 2022 用更细的实验告诉大家：模型规模和数据应该同步 scale，每翻一倍参数，data 也应该翻一倍**——他们用 70B + 1.4T token，**性能反而超过 GPT-3 175B 和 Megatron-Turing 530B**。**后来的影响很大**：① Llama-2 70B 用 2T token、Llama-3 70B 用 **15T token**——都是 Chinchilla 配比的延续；② 行业意识到"data 才是真护城河"，开源社区开始疯狂囤数据（C4、RedPajama、FineWeb 这些都是 Chinchilla 之后才出现的大规模 open dataset）。
+
+## M4：你说"涌现"可能是评估幻觉，那它到底是真的还是假的？
+
+**A**：**两边都有一部分**——这是 NeurIPS 2023 那篇 Schaeffer "Are Emergent Abilities of LLMs a Mirage?" 之后的共识。**Schaeffer 的论点**：如果用 0/1 准确率（要么全对要么 0 分），就会看到"突然涌现"的曲线；但用 token-level log-prob（连续指标），曲线就变平滑、可预测。这部分"涌现"是评估指标不连续造成的幻觉。**但同时**：某些能力（比如 chain-of-thought 推理、in-context learning）即使用连续指标也确实有相对清晰的"出现阈值"——这部分是真现象。**我现场会用的安全表述**：「'涌现'在科普语境里被讲得有点神秘，但学界本身还在争论它是真现象还是评估幻觉，我倾向于'两者都有'，但这是个 open question。」——**不下定论 = 不犯错**。
+
+## M5：Mamba 的 selective SSM 关键创新到底是什么？为什么 A 矩阵不动而 B、C、Δ 动？
+
+**A**：**关键创新是让 B、C、Δ 三个参数 input-dependent**——也就是**根据当前 token 的内容动态决定"保留还是丢弃信息"**——这其实就是 attention 的"软选择"思想，但保留了 SSM 的 O(n) 复杂度。**Δ（离散化步长）尤其关键**——它控制状态更新的速度，input-dependent 之后就能根据 token 重要性动态加快/放慢状态变化。**为什么 A 不能 input-dependent**？因为 Mamba 的训练效率依赖一个叫 **hardware-aware parallel scan** 的算法——这个算法要求 A 矩阵在序列上是 time-invariant（每一步用同一个 A），否则 GPU 上没法并行计算。**这是工程约束，不是数学美感**——A 矩阵保持 HiPPO 初始化、time-invariant，是为了"训得动"。
+
+## M6：DDPM 那个 L_simple 损失为什么这么简单？这就是个 L2 回归吧？
+
+**A**：**对，就是个 L2 回归**——给 (x_t, t) 预测加进去的噪声 ε。论文里 Ho et al. 也确实从 ELBO（变分下界）推导过更复杂的形式，但**最后实验发现，简化成这个 L2 回归反而效果更好、更稳定**。这是 Diffusion 的优雅之处——**训练目标极简，没有 GAN 的 min-max 博弈，没有 VAE 的高斯单峰假设**——两边的痛点同时被绕开。**为什么预测 ε 不预测 x_0**？两种参数化都试过，**预测噪声 loss 更平滑、训练更稳**——这是工程发现，不是数学必然。**为什么稳**？因为每一步只学一个"小的噪声差"——任务被切成 1000 个简单子任务，每个都很容易。
+
+## M7：Stable Diffusion 和原始 DDPM 最大的区别是什么？为什么 SD 能在消费级 GPU 跑、DDPM 不能？
+
+**A**：**最大区别是 latent diffusion** ——SD 不在像素空间扩散，先用一个 VAE 把 512×512 RGB 压到 64×64 latent，**在 latent 空间扩散，最后再 decode 回像素**。**计算量降一个数量级**：512×512×3 ≈ 79 万维 vs 64×64×4 ≈ 1.6 万维。**这是 Rombach 2022 那篇 CVPR 论文的核心贡献**，也是 SD 能开源跑起来的真正机制核心。**还有第二件事是 DDIM 采样加速**：DDPM 训练时 1000 步、推理也要 1000 步，慢；DDIM 把 SDE 重写成 ODE，可以**跳步采样**——20-50 步达到 1000 步同等质量。**两件事合起来**——latent + DDIM——SD 才能在 RTX 3060 上 5 秒出图。
+
+## M8：CLIP 的对比学习训练时，N×N 矩阵里负样本怎么挑？为什么 4 亿对数据是关键？
+
+**A**：**negative sample 不需要专门挑**——对比学习的优雅之处就是**一个 batch 里 N 对 (图, 文)**，对角线是真实配对，**所有非对角线 N²−N 个组合自动就是负样本**。所以一个 batch N=32K 时，每张图自动就有 ≈32K 个负样本去对比，**完全免费**。**为什么 4 亿对是关键**？因为对比学习的负样本质量决定一切——你能从多大的池子里挑出多难的负样本，模型就能学到多细的语义区分。4 亿对覆盖了互联网各种长尾概念（"a photo of a quagga"、"a sketch of a 1960s Cadillac"），所以 CLIP 能 zero-shot 识别这些罕见概念。**数据规模本身就是模型质量**——这是后来所有 VLM 都遵循的规律。
+
+## M9：JEPA 路线 LeCun 提了 4 年了，至今没有 GPT 量级的爆点产品，是不是这条路有问题？
+
+**A**：**两个事实必须同时承认**：① JEPA 至今确实没有 GPT 量级的爆点产品（V-JEPA、I-JEPA 都是研究 demo 级别）；② 但 JEPA 的核心思想——**在表示空间预测、不在像素/token 空间预测**——已经渗透到 2025-2026 最强的几个 world model 里：Genie 3 在 latent 上做世界模拟而不是直接预测像素、NVIDIA Cosmos Reason 是个 reasoning over latent 的模型、GR00T N1.6 把 Cosmos VLM 集成进 VLA 也是这条思路。**我的态度**：「JEPA 这条路'独立成军'还没成功，但它的核心机制其实已经被借鉴去和 LLM 路线汇合。'谁替代谁'不是 LeCun 期待的剧本，但'两条路汇合'可能是真实的剧本。」——**不站队，但承认 JEPA 影响力**。
+
+## M10：Helix 02 的"三级架构"具体是哪三级？为什么要做三级而不是两级？（仅在被现场拉出延伸段时才会问）
+
+**A**：① **System 0** — 1 kHz 实时平衡控制（关节级 PID 类控制）；② **System 1** — 200 Hz 视觉运动控制（端到端神经网络出关节力矩）；③ **System 2** — 高层任务规划（LLM 级推理）。**为什么三级而不是两级**？借鉴 Kahneman 《Thinking, Fast and Slow》——**人脑也有这种分层**：脊髓反射（System 0）、潜意识动作（System 1）、显意识思考（System 2）。**工程上的好处**是**把不同时间尺度的控制隔离开**——平衡需要 1 kHz、视觉运动 200 Hz 够、推理 1-10 Hz 就行——同一个网络做不到这种跨 3 个数量级的频率，必须分层。
+
+## M11：DeepSeek R2 既然是 32B dense，那为什么之前传言是 670B MoE？传言是怎么来的？（仅在被追问时）
+
+**A**：**670B MoE 是 2025 年的 DeepSeek 内部 rumor + 一些泄漏**——当时业界普遍预测 R2 会沿用 V3 的 671B MoE 架构、用 37B 激活做推理。但 2026.04 实际发布的 R2 走的是完全不同的路线——**32B dense transformer，单张 24GB GPU 可部署**，AIME 2025 92.7%。**这是 DeepSeek 团队的产品判断**——他们认为"小而精的 dense + 后训练优化" 在推理任务上比"大 MoE" 更有市场（部署成本低 + 微调容易）。**我的安全表述**：「2025 年的传言数字大家可能记得是 670B MoE，但 2026.04 实际 release 是 32B dense——产品形态变了，团队选了'部署友好'路线。」
+
+## M12：VGGT 真的能完全取代 SfM/SLAM 吗？bundle adjustment 的精度优势怎么办？（你的 SLAM 主业被追问时）
+
+**A**：**短期不能取代精度敏感场景**——VGGT 是 feed-forward transformer，1 秒内出相机参数+点云，**速度碾压、精度还差一截**。在测绘、文物数字化、AR 厘米级定位这些精度敏感场景，bundle adjustment 仍然是 ground truth。**但 VGGT 给了一条新路**——**先用 VGGT 在 1 秒内出粗解，再用传统 BA 在这个粗解上精化**——比传统从零做 SfM 快 10-100 倍。**长期看**——transformer + 海量预训练数据这条路，在精度上追上 BA 是迟早的事，因为 BA 只用单序列内的几何信息，transformer 可以借用整个互联网的几何先验。**我的判断**：「BA 还有 3-5 年优势，但 VGGT 已经在'速度 + 鲁棒性'上完胜——下一代 SLAM 系统大概率是混合架构。」——**这是你 SLAM 主业的核心立场，必须答得稳**。

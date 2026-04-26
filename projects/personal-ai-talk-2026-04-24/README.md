@@ -1,8 +1,10 @@
 # AI Talk Topic B 准备材料
 
 **Talk 时间**：2026-04-24 周五 19:30–21:30
-**我的 topic**：B「AI 技术演进探讨」
-**形式**：偏分享型（讲 40 min + 讨论 15 min）
+**我的 topic**：B「AI 技术演进探讨（上篇）」
+**形式**：偏分享型（讲 50 min + 讨论 10 min）
+**本场范围**：4 老阶段（RNN/CNN → ResNet → Transformer/LLM → Diffusion/VLM → World Models 起源 + GEN-1）
+**下次分享**：3 个新方向（推理大模型 / 具身 VLA / World Models 突破）—— 稿件 05 末尾 "[⏭️ 下次分享内容]" 段保留完整版，本场不讲
 
 ---
 
@@ -21,23 +23,27 @@
 
 | 项 | 决定 |
 |---|---|
-| 认领 topic | B：AI 技术演进探讨 |
+| 认领 topic | B：AI 技术演进探讨（上篇） |
 | 目标优先级 | a 兜底 > b 立人设 > c 自我升级 |
-| 时长结构 | 偏分享型 40 min + 讨论 15 min |
-| 节点覆盖 | 11 节点（8 老 + 3 新延伸：推理大模型 / 具身 VLA / World Models 突破） |
-| 国内副线 | 贯穿全场（节点 4 国内 LLM 段、节点 9 R2/K2.5/Qwen3-Max、节点 10 国内具身段、收尾国内格局判断） |
-| 重建侧 | 节点 11 加入 3DGS / DUSt3R / VGGT，作为"重建 vs 生成对照线"，是全场立人设核心抓手 |
+| 时长结构 | 偏分享型 50 min + 讨论 10 min |
+| 本场覆盖 | **4 老阶段（节点 1–8）**：判别式 AI / Transformer 范式 / 生成式 AI / World Models 起源 |
+| 下次覆盖 | 3 新方向（节点 9–11）：推理大模型 / 具身 VLA / World Models 突破 — 稿件保留完整内容 |
+| 技术深度 | **机制档** — 讲核心机制 + 关键公式骨架（5 行公式分散全场），不展开推导 |
+| 国内副线 | 节点 4 国内 LLM 段保留（一线模型）；节点 10 国内具身段在延伸段（下次讲），但收尾国内格局判断段全文保留作为为下次分享的钩子 |
+| 重建侧 | 节点 11 重建 vs 生成对照（3DGS / DUSt3R / VGGT）保留在延伸段，下次完整展开 |
 
 ---
 
-## 4 晚学习节奏
+## 4 晚学习节奏（按本场前 4 阶段重新组织）
 
 | 晚上 | 主攻节点 | 时长 | 备注 |
 |---|---|---|---|
-| 周一晚 | 节点 3 Transformer + 节点 4 LLM（含国内 LLM 副线） | 3h | 先读 09 核查日志，然后开始 |
-| 周二晚 | 节点 10 VLA（含国内具身段，**全场命门**） | 3h | 一晚专攻 |
-| 周三晚 | 节点 5 Diffusion + 节点 6 VLM + 节点 9 推理大模型（含 R2/K2.5/Qwen3-Max） | 3h |  |
-| 周四晚 | 节点 11 World Models + 重建侧（3DGS/DUSt3R/VGGT）+ 节点 1/2/7/8 + **完整空讲 + 录音** | 3h | 重建侧是立人设核心 |
+| 周一晚 | **节点 3 Transformer + 节点 4 LLM** — 全场技术峰值，必须吃透 self-attention QKV 机制 + scaling law / Chinchilla / 涌现争议 | 3h | 先读 09 核查日志定锚事实；然后必读 Jay Alammar Illustrated Transformer + Karpathy GPT 视频前 30 min |
+| 周二晚 | **节点 5 Diffusion + 节点 6 VLM** — 阶段三的两个机制重头：DDPM L2 回归目标 + Latent Diffusion 工程化 + CLIP InfoNCE 对比学习 + cross-attention 合体造 SD | 3h | 必读 Lilian Weng diffusion 综述 + CLIP 论文 + Latent Diffusion 论文 |
+| 周三晚 | **节点 1/2 RNN/CNN/ResNet + 节点 7/8 World Models 起源 + GEN-1** — 阶段一的 CNN 层级特征机制 + ResNet 梯度高速公路；阶段四 V+M+C 三件套 + JEPA 之争（为下次留钩子） | 3h | 必读 Ha&Schmidhuber 交互式博客 + LeCun JEPA 立场文（Section 1+2） |
+| 周四晚 | **完整空讲 + 录音 + 改写口语化 + 准备投影** — 把稿件改成自己的语言，重点挑出 5 行公式怎么写在板上 | 3h | 录音听一遍，把"念稿感"的地方改掉；把开场风险缓冲过渡句念熟（避免现场被追问 VLA / 具身一线时慌） |
+
+> **延伸段（下次分享）的预读不做硬性要求**——保留 09 核查日志和延伸段事实即可，等下次再深读。
 
 ---
 

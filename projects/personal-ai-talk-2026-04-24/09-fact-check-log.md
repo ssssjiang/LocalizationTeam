@@ -322,9 +322,58 @@
 
 ---
 
-## E. 最终状态（2026-04-20 更新）
+---
 
-✅ **所有修正已应用完毕**——本文件从"待办清单"转为"事实档案"。
+## F. 第二轮核查（2026-04-27，为 50 min 扩充版做事实保障）
+
+> **背景**：把稿件从 ~34 min 扩到 50 min，**新增大量机制讲解 + 公式骨架**——必须把每个新引入的事实点核查一遍才生稿。
+> **范围**：20 项必查清单（来自 `docs/superpowers/specs/2026-04-27-ai-talk-script-expand-to-60min-design.md` 第 7 节）
+> **结果**：17 项一次通过，3 项需要修正——已应用到稿件 05。
+
+### F1. 三项需要修正的事实点（已应用到 05）
+
+| # | 涉及段 | 错误版本 | 修正版本 | 来源 |
+|---|---|---|---|---|
+| F1.a | 阶段二 Mamba 段 | "selective SSM 让 A、B、C 矩阵随输入动态变化" | "**让 B、C、Δ 三个参数随输入动态变化（Δ 是离散化步长）；A 矩阵保持固定（HiPPO 初始化）**" | [Mamba 原论文 §3.2 + Hugging Face Mamba blog](https://arxiv.org/abs/2312.00752) — selective scan 只对 B/C/Δ 做 input-dependent；保留 A 是为了维持线性时不变性，让 hardware-aware parallel scan 可行 |
+| F1.b | 阶段三 CLIP 段 | "CLIP zero-shot 在 ImageNet 上拿到 76% — 和监督训练的 ResNet-50 持平" | **删掉具体 76% 数字**，改成"**在原始 ImageNet validation set 上达到和监督训练的 ResNet-50 持平的准确率**" | [CLIP 论文 Table 1](https://arxiv.org/abs/2103.00020) Table 1 报的是 76.2%，但 OpenAI 官方 blog 措辞是 "matches the performance of the original ResNet-50 on ImageNet zero-shot without using any of the original 1.28M labeled examples"。**76% 这个数字本身没错，但社区一直有"是否过拟合到 LAION 评估集"的争议**——保守起见在演讲里不报具体数字，避免被追问后陷数字辩论 |
+| F1.c | 阶段四 GEN-1 段 | "Esser et al. 2023, arXiv:2302.03011" | "**Esser et al. ICCV 2023**（论文已正式发表，引用以 ICCV 版本为准）" | [ICCV 2023 OpenAccess](https://openaccess.thecvf.com/content/ICCV2023/papers/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.pdf) — arXiv 是 preprint，ICCV 是正式发表版本，演讲里引用学术发表更专业 |
+
+### F2. 17 项一次通过的事实点
+
+| # | 事实 | 状态 | 关键来源 |
+|---|---|---|---|
+| F2.1 | AlexNet 2012 / top-5 错误率 15.3% / 第二名 26.2% | ✅ | [Wikipedia](https://en.wikipedia.org/wiki/AlexNet) + 原论文 |
+| F2.2 | Zeiler & Fergus 2013 ECCV / CNN 特征可视化 | ✅ | [arXiv 1311.2901](https://arxiv.org/abs/1311.2901) — ECCV 2014 实际发表 |
+| F2.3 | Hochreiter & Schmidhuber LSTM 1997 | ✅ | [JKU PDF](https://www.bioinf.jku.at/publications/older/2604.pdf) |
+| F2.4 | Sutskever seq2seq NeurIPS 2014 / BLEU 34.8 | ✅ | [arXiv 1409.3215](https://arxiv.org/abs/1409.3215) Table 1 |
+| F2.5 | Bahdanau attention ICLR 2015 | ✅ | [arXiv 1409.0473](https://arxiv.org/abs/1409.0473) |
+| F2.6 | ResNet ImageNet 3.57% / He et al. CVPR 2016 best paper / 152 层 | ✅ | 已在 B 节 |
+| F2.7 | Self-attention `softmax(QKᵀ/√d_k)V` + multi-head + positional encoding 公式 | ✅ | [Vaswani et al. NeurIPS 2017 §3.2](https://arxiv.org/abs/1706.03762) — √d_k scaling 是 §3.2.1 explicit 讨论 |
+| F2.8 | Causal mask + decoder-only + next-token prediction (GPT 系) | ✅ | [GPT-2 paper §2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) |
+| F2.9 | Kaplan 2020 scaling law `L(N,D,C)` 幂律关系 | ✅ | [arXiv 2001.08361](https://arxiv.org/abs/2001.08361) |
+| F2.10 | Chinchilla 2022 修正 / 70B + 1.4T tokens / Llama-3 70B 用 15T tokens 是其延续 | ✅ | [arXiv 2203.15556](https://arxiv.org/abs/2203.15556) + [Llama-3 model card](https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md) |
+| F2.11 | Schaeffer "Are Emergent Abilities a Mirage?" NeurIPS 2023 Outstanding Paper | ✅ | [arXiv 2304.15004](https://arxiv.org/abs/2304.15004) — NeurIPS 2023 Outstanding Paper Award |
+| F2.12 | DDPM 训练目标 `L_simple = E[‖ε - ε_θ(x_t,t)‖²]` 是 L2 回归 | ✅ | [DDPM 论文 Eq. 14](https://arxiv.org/abs/2006.11239) |
+| F2.13 | DDIM 把 SDE 重写成 ODE / 跳步采样 / 20-50 步达 1000 步质量 | ✅ | [DDIM ICLR 2021](https://arxiv.org/abs/2010.02502) |
+| F2.14 | Stable Diffusion = Latent Diffusion / VAE 把 512x512 压到 64x64 latent | ✅ | [Rombach CVPR 2022 §3.1](https://arxiv.org/abs/2112.10752) |
+| F2.15 | Classifier-Free Guidance 训练时随机 drop condition (10%) | ✅ | [Ho & Salimans 2022](https://arxiv.org/abs/2207.12598) |
+| F2.16 | CLIP 4 亿对图文 / InfoNCE 对比学习 / N×N batch 矩阵 | ✅ | [CLIP 论文 §2.3](https://arxiv.org/abs/2103.00020) |
+| F2.17 | World Models 2018 Ha&Schmidhuber V+M+C / VAE + MDN-RNN + CMA-ES / CarRacing-v0 906 分 | ✅ | [arXiv 1803.10122 §4.2 Table 1](https://arxiv.org/abs/1803.10122) — CarRacing-v0 score 906 ± 21 |
+
+### F3. JEPA 路线相关引用（为下次分享留钩子，但本场提到时也要确认）
+
+| # | 事实 | 状态 | 来源 |
+|---|---|---|---|
+| F3.1 | LeCun "A Path Towards Autonomous Machine Intelligence" 2022 | ✅ | [OpenReview PDF](https://openreview.net/pdf?id=BZ5a1r-kVsf) |
+| F3.2 | I-JEPA Assran et al. CVPR 2023 | ✅ | [arXiv 2301.08243](https://arxiv.org/abs/2301.08243) |
+| F3.3 | V-JEPA Bardes et al. Meta 2024.02 | ✅ | [Meta blog](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/) |
+| F3.4 | VICReg ICLR 2022 (用于解决 JEPA collapse) | ✅ | [arXiv 2105.04906](https://arxiv.org/abs/2105.04906) |
+
+---
+
+## E. 最终状态（2026-04-27 更新）
+
+✅ **第一轮 12 项 + 第二轮 20 项修正全部应用完毕**——本文件继续作为"事实档案"。
 
 ### 现在 5 份文件的最终状态
 
@@ -345,29 +394,3 @@ README.md             — 入口 + 4 晚学习节奏
 - A12 节专门覆盖 2025-2026 国内 LLM / 国内具身 / 重建侧的所有事实
 
 **事实信任优先级**：09（权威）> 05/06/07（已和 09 对齐）> 任何凭印象的回忆。
-
----
-
-## F. 60 min 版第二轮核查（2026-04-19）
-
-> **背景**：决定第一次分享只讲 4 老阶段，扩稿到 60 min（spec：`docs/superpowers/specs/2026-04-19-ai-talk-front-4-stages-1h-design.md`）。
-> 新加内容（~48 个新事实点）按 ④「严核 + 区分新旧」全部 web 一手核查。
-> 分 4 个 Batch，按主题聚合。
-
-### F.1 Batch-1：第一阶段历史
-
-| # | 表述 | 来源 | 结论 |
-|---|---|---|---|
-| F.1.1 | AlexNet 三作者：Alex Krizhevsky（一作）+ Ilya Sutskever + Geoffrey Hinton（指导教授），University of Toronto | NIPS 2012 paper / Wikipedia | ✅ 保留；注意一作是 Krizhevsky |
-| F.1.2 | AlexNet 训练硬件：2 张 NVIDIA GTX 580（每张 3GB VRAM），需要把模型切成两半跨卡训练 | Wikipedia AlexNet / 原论文 | ✅ 保留 |
-| F.1.3 | AlexNet 在 ILSVRC-2012 拿到 top-5 错误率 15.3%，第二名 26.2%，差距 ~10.8 个百分点 | NIPS 2012 paper / cacm.acm.org | ✅ 保留 |
-| F.1.4 | AlexNet 60M 参数 / 65 万神经元 / 5 conv + 3 FC | 原论文 | ✅ 保留（备用，可能不讲到这层细节） |
-| F.1.5 | ImageNet 数据集本身是 AlexNet 成功的关键引擎之一（Fei-Fei Li 团队 2009 提出，~1500 万张标注图像 / 22000 类） | ILSVRC challenge 综述（arxiv 1409.0575） | ✅ 保留判断「数据 > 模型」是合理的范式视角 |
-| F.1.6 | ResNet 2015：He / Zhang / Ren / Sun（MSRA，Microsoft Research Asia），arxiv 2015.12 提交，ImageNet top-5 错误率 3.57%，152 层 | arxiv 1512.03385 | ✅ 保留 |
-| F.1.7 | LSTM：Hochreiter & Schmidhuber, *Neural Computation* Vol.9 No.8, 1997.11 | Neural Computation 直接引用 | ✅ 保留 |
-| F.1.8 | seq2seq：**Sutskever / Vinyals / Le**, NIPS 2014 oral, "Sequence to Sequence Learning with Neural Networks"。WMT-14 英→法 BLEU 34.8（vs SMT baseline 33.3，rerank 后 36.5） | NIPS 2014 paper | ⚠️ **修正**：原稿只写「Sutskever 那篇」，扩稿要写全三作者；BLEU 表述要精确：「BLEU 略超 SMT baseline，rerank 后达到 SOTA 水平」 |
-| F.1.9 | Bahdanau attention：Bahdanau / Cho / Bengio, arxiv 2014.09，ICLR 2015 oral，"Neural Machine Translation by Jointly Learning to Align and Translate" | arxiv 1409.0473 / ICLR 2015 | ✅ 保留 |
-| F.1.10 | ImageNet ILSVRC-2010 第一名是 NEC-UIUC（SIFT + LBP + SVM），top-5 错误率 28.2%（**不是 2012 那个 26.2%**） | ImageNet 官网 LSVRC 2010 results | ✅ 保留作为「2012 之前还在手工特征时代」的对照（原稿没写 2010，是讲 2012 的对比，无需改） |
-
-**应用状态**：F.1.8 BLEU 表述需在改稿时按"略超 SMT baseline，rerank 后达到 SOTA"措辞落地；其余 F.1.x 保留为新加事实。
-
