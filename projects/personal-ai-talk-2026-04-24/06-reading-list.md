@@ -686,3 +686,4 @@
 - **第二选择**：看 ⭐⭐ 的辅助资料
 - **第三选择**：搜 "[concept] explained" + 限定 site:openai.com / site:deepmind.google / site:anthropic.com / site:lilianweng.github.io / site:karpathy.ai
 - **第四选择**：问我（在 chat 里贴具体困惑点）—— 我会帮你诊断到底是哪一层不通
+
