@@ -345,3 +345,29 @@ README.md             — 入口 + 4 晚学习节奏
 - A12 节专门覆盖 2025-2026 国内 LLM / 国内具身 / 重建侧的所有事实
 
 **事实信任优先级**：09（权威）> 05/06/07（已和 09 对齐）> 任何凭印象的回忆。
+
+---
+
+## F. 60 min 版第二轮核查（2026-04-19）
+
+> **背景**：决定第一次分享只讲 4 老阶段，扩稿到 60 min（spec：`docs/superpowers/specs/2026-04-19-ai-talk-front-4-stages-1h-design.md`）。
+> 新加内容（~48 个新事实点）按 ④「严核 + 区分新旧」全部 web 一手核查。
+> 分 4 个 Batch，按主题聚合。
+
+### F.1 Batch-1：第一阶段历史
+
+| # | 表述 | 来源 | 结论 |
+|---|---|---|---|
+| F.1.1 | AlexNet 三作者：Alex Krizhevsky（一作）+ Ilya Sutskever + Geoffrey Hinton（指导教授），University of Toronto | NIPS 2012 paper / Wikipedia | ✅ 保留；注意一作是 Krizhevsky |
+| F.1.2 | AlexNet 训练硬件：2 张 NVIDIA GTX 580（每张 3GB VRAM），需要把模型切成两半跨卡训练 | Wikipedia AlexNet / 原论文 | ✅ 保留 |
+| F.1.3 | AlexNet 在 ILSVRC-2012 拿到 top-5 错误率 15.3%，第二名 26.2%，差距 ~10.8 个百分点 | NIPS 2012 paper / cacm.acm.org | ✅ 保留 |
+| F.1.4 | AlexNet 60M 参数 / 65 万神经元 / 5 conv + 3 FC | 原论文 | ✅ 保留（备用，可能不讲到这层细节） |
+| F.1.5 | ImageNet 数据集本身是 AlexNet 成功的关键引擎之一（Fei-Fei Li 团队 2009 提出，~1500 万张标注图像 / 22000 类） | ILSVRC challenge 综述（arxiv 1409.0575） | ✅ 保留判断「数据 > 模型」是合理的范式视角 |
+| F.1.6 | ResNet 2015：He / Zhang / Ren / Sun（MSRA，Microsoft Research Asia），arxiv 2015.12 提交，ImageNet top-5 错误率 3.57%，152 层 | arxiv 1512.03385 | ✅ 保留 |
+| F.1.7 | LSTM：Hochreiter & Schmidhuber, *Neural Computation* Vol.9 No.8, 1997.11 | Neural Computation 直接引用 | ✅ 保留 |
+| F.1.8 | seq2seq：**Sutskever / Vinyals / Le**, NIPS 2014 oral, "Sequence to Sequence Learning with Neural Networks"。WMT-14 英→法 BLEU 34.8（vs SMT baseline 33.3，rerank 后 36.5） | NIPS 2014 paper | ⚠️ **修正**：原稿只写「Sutskever 那篇」，扩稿要写全三作者；BLEU 表述要精确：「BLEU 略超 SMT baseline，rerank 后达到 SOTA 水平」 |
+| F.1.9 | Bahdanau attention：Bahdanau / Cho / Bengio, arxiv 2014.09，ICLR 2015 oral，"Neural Machine Translation by Jointly Learning to Align and Translate" | arxiv 1409.0473 / ICLR 2015 | ✅ 保留 |
+| F.1.10 | ImageNet ILSVRC-2010 第一名是 NEC-UIUC（SIFT + LBP + SVM），top-5 错误率 28.2%（**不是 2012 那个 26.2%**） | ImageNet 官网 LSVRC 2010 results | ✅ 保留作为「2012 之前还在手工特征时代」的对照（原稿没写 2010，是讲 2012 的对比，无需改） |
+
+**应用状态**：F.1.8 BLEU 表述需在改稿时按"略超 SMT baseline，rerank 后达到 SOTA"措辞落地；其余 F.1.x 保留为新加事实。
+

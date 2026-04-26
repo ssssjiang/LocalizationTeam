@@ -1,4 +1,4 @@
-# 完整逐字稿件（演讲式，约 40 min + 15 min 讨论）
+# 完整逐字稿件（演讲式，约 60 min + 讨论）
 
 > **使用方式**：
 >
@@ -7,12 +7,16 @@
 > - 用 `[投影]` 标记建议在投影上展示什么
 > - 用 `[节奏]` 标记重要的停顿、互动、抛问
 >
+> **本次定位**：第一次分享。**只讲 4 老阶段，扩到 60 min**；3 个新方向（推理大模型 / 具身 VLA / World Models 突破）留作下次。
+>
 > **总结构**：
 >
 > - 开场 3 min
-> - 主体 31 min（4 老阶段）
-> - 延伸 9 min（3 新方向）
-> - 收尾 5 min（含 3 个讨论问题，引出 15 min 讨论）
+> - 第一阶段：判别式 AI 的成熟 —— 8 min
+> - 第二阶段：Transformer 范式的崛起 —— 22 min（重点段）
+> - 第三阶段：生成式 AI 的爆发 —— 15 min
+> - 第四阶段：走向世界模型与具身（起源 + 下次预告）—— 8 min
+> - 收尾 4 min（含 1–2 个讨论问题）
 
 ---
 
@@ -30,7 +34,7 @@
 
 那我能给的"一条主线 + 几个判断"是什么意思？
 
-[投影：主线总览图——8 老节点 + 3 新方向横向时间轴]
+[投影：主线总览图——8 老节点横向时间轴 + 「下次讲新方向」标注]
 
 曹姐原来给的列表是 8 个节点：RNN/CNN、ResNet、Transformer、LLM、Diffusion、VLM、World Models、GEN-1。我把它们按 4 个阶段重新组织：
 
@@ -39,64 +43,91 @@
 - **第三阶段 — 生成式 AI 的爆发**（Diffusion + VLM）
 - **第四阶段 — 走向世界模型与具身**（World Models + GEN-1）
 
-[节奏：在这里停 1 秒，然后语气加重]
+[节奏：这里停 1 秒，然后明确说出「分两次讲」]
+
+我先说一下今天的边界。**今晚 60 分钟我只讲这 4 个老阶段**——把每一个讲透，把每一个里我自己的判断给清楚。**最近 3 年新出来的 3 个方向——推理大模型、具身 VLA、World Models 的真正突破——留到下次再讲**。原因有两个：一是 4 个老阶段是后面所有事的基底，跳过它们直接讲新方向，新东西就没有锚点；二是 3 年里发生的事密度太高，硬塞到今晚只能讲一层皮。所以分两次讲。
+
+[节奏：停 1 秒，语气加重]
 
 ---
 
-# 第一阶段：判别式 AI 的成熟（6 min）
+# 第一阶段：判别式 AI 的成熟（8 min）
 
 > **核心 hook**：奠基视角——AI 第一次能"端到端学特征"，这是后面所有事的前提。
 
 > **小观点**：判别式 AI 这个时代解决的不是"AI 能做多强"，而是"AI 能不能脱离手工特征"。
 
+## 1.1 AlexNet 一夜变天（3.5 min）
 
-
-我们从 2012 年的 AlexNet 说起。
+我们从 **2012 年的 AlexNet** 说起。
 
 在 AlexNet 之前，做图像识别的标准流程是什么？工程师手工设计特征——SIFT、HOG、LBP——然后接一个分类器（SVM 或者浅层神经网络）。**整个 pipeline 的核心创新点在"特征工程"**——一个研究员的专业能力，很大程度上就体现在他能不能为某个任务设计出好特征。
 
-CNN 做了什么？它把"特征工程"这件事**取消**了。**输入图像，模型自己端到端从数据里学出 layer 1 学边缘、layer 2 学纹理、layer 3 学物体部件、layer 4 学整个物体**。这是 AlexNet 在 2012 年 ImageNet 上一举把 top-5 错误率从 26.2% 降到 15.3% 之后，整个学术界突然意识到的事——CNN 学到的特征比人类工程师手工设计的要好得多。
+CNN 做了什么？它把"特征工程"这件事**取消**了。**输入图像，模型自己端到端从数据里学出来——layer 1 学边缘、layer 2 学纹理、layer 3 学物体部件、layer 4 学整个物体**。这是 AlexNet 在 2012 年 ImageNet 上一战成名之后，整个学术界才突然意识到的事——CNN 学到的特征比人类工程师手工设计的要好得多。
 
-> **例子**：AlexNet 之后两年（2014），ImageNet 第一名变成了 GoogLeNet 和 VGG，错误率降到 7%。又过了一年（2015），ResNet 出来，降到 3.57%——**首次低于人类水平**。这中间没有一个工作回到"手工特征"的路线。
+[节奏：这里慢一点，把"现场"讲出来]
 
-*RNN 是平行的故事。在 RNN/LSTM 之前，处理序列（比如机器翻译、语音识别）也是分阶段 pipeline——分词、词性标注、语法树、对齐……每一步都是独立的模型。LSTM 在 1997 年就提出了，但*真正爆发是 2014 年 Sutskever 那篇 seq2seq + Bahdanau attention*——一个端到端的 RNN 直接学会从英文映射到法文，BLEU 分数超过了之前所有 pipeline 系统。*
+具体讲一下当时的现场。**AlexNet 一作是 Alex Krizhevsky**，**Ilya Sutskever 二作**——对，就是后来去 OpenAI 主导 GPT 系列的那个 Sutskever——**指导教授是 Geoffrey Hinton**。整个网络他们用 **2 张 NVIDIA GTX 580 显卡**训练（2012 年的消费级游戏卡，每张 3GB 显存），模型大到一张卡放不下，得切成两半跨卡跑。
+
+ILSVRC-2012 比赛揭晓那天——**top-5 错误率 15.3%，第二名 26.2%**——一口气把第二名甩开了**接近 11 个百分点**。在此之前，每年的进步是 1–2 个百分点。整个 CV 圈在 NIPS 2012 之后**一两个月**就开始大规模转向 CNN，往后**没有一个工作回到"手工特征"的路线**。
+
+> **例子**：AlexNet 之后两年（2014），ImageNet 第一名变成了 GoogLeNet 和 VGG，错误率降到 ~7%。又过了一年（2015），ResNet 出来，降到 3.57%——**首次接近甚至超过人类水平**。这中间没有一个工作回到"手工特征"的路线。
+
+[节奏：这里抛一个常被忽视的判断]
+
+> **我的判断（小观点）**：很多人讲 AlexNet 只讲"CNN 赢了"——但其实背后有**两件更深的事**。第一是 **GPU**——AlexNet 是第一个证明"用 GPU 做深度学习训练在工业上可行"的工作；第二是 **ImageNet 数据集本身**——李飞飞团队 2009 年开始建的这个 1500 万张标注图像 / 22000 类的数据集，没有这个数据规模，多深的 CNN 也学不出来。**GPU + 大数据 + 端到端学习——这三件事在 2012 年第一次合在一起。后面 LLM 的所有故事，都是在这个范式下展开的**。
+
+## 1.2 RNN 这条平行线（1.5 min）
+
+RNN 是平行的故事。
+
+在 RNN/LSTM 之前，处理序列（比如机器翻译、语音识别）也是**分阶段 pipeline**——分词、词性标注、语法树、对齐……每一步都是独立训练的模型。**LSTM 在 1997 年就提出了**——Hochreiter 和 Schmidhuber 当时发的——但 LSTM 提出后将近 17 年都没真正大放异彩。
+
+真正让 RNN 在 NLP 圈引爆的是 **2014 年 Sutskever / Vinyals / Le 那篇 Sequence to Sequence Learning**——他们用 LSTM 直接做端到端的英→法翻译，BLEU 略超传统统计机器翻译 baseline；同年 **Bahdanau / Cho / Bengio** 提出 attention 机制，把这个 baseline 进一步压过 SOTA。
 
 [节奏：这里抛一个连接点]
 
-但 RNN 有一个致命问题——它必须**按时间步串行计算**。GPU 的并行能力用不上，长序列还会有梯度消失。*这个问题 LSTM 只是缓解*，没有根本解决。**这个问题最后是被 Transformer 解决的，2017 年。我们等下会讲到**。
+但 RNN 有一个**致命问题**——它必须**按时间步串行计算**。GPU 的并行能力用不上，长序列还会有梯度消失。**LSTM 只是缓解了梯度问题，没有解决并行问题**。这个问题最后是被 **Transformer 在 2017 年**解决的——下一段我们就讲到。
 
-> **我的判断（小结）**：第一阶段的真正意义，不在于 RNN/CNN 的架构本身——它们今天已经被 Transformer 在大部分任务上替代。它的意义在于**第一次证明了"端到端从数据里学特征"这条路是 work 的**。这个范式确立之后，AI 才有了规模化的可能。这之前的 AI 是"工程师设计 + 数据训练"，这之后的 AI 是"架构 + 数据 + 算力"——人退到了二线。
+## 1.3 ResNet：跨架构复用的"基础设施"（2 min）
+
+![](images/Pasted%20image%2020260427001825.png)
+[投影：ResNet 残差连接示意图，y = F(x) + x]
+
+ResNet 在 2015 年出来。它解决的问题在当时看起来很**反直觉**——**网络越深，效果应该越好对吧？但 2015 年之前，网络深到 30 层之后，效果反而开始变差**。这不是过拟合（训练误差也在升高），是**优化层面的退化（degradation）**——网络太深之后，梯度根本传不下去。
+
+[节奏：这里慢一点讲优雅的方案]
+
+何恺明的方案**优雅得不像话**：让某一层的输入可以"跳过"中间几层**直接加到后面**——公式上是 `y = F(x) + x` 而不是 `y = F(x)`。这样做的好处是——**最差情况下中间层只要学到恒等映射（什么都不做），网络就不会变差**。优化器有了一个**保底退路**，可以放心做深。
+
+ResNet 之后，152 层、上千层都成了可能。ILSVRC-2015 错误率降到 **3.57%**。论文是**何恺明 / 张祥雨 / 任少卿 / 孙剑**——全部**微软亚洲研究院（MSRA）**——这是华人团队在 AI 圈最早、影响最大的工作之一。
+
+[节奏：这里抛出贯穿全场的"复用机制"判断]
+
+> **我的判断**：ResNet 表面上是给 CNN 用的，但**残差连接这个机制后来被 Transformer 也用了**——你打开任何一篇 Transformer 的论文，都能看到 "Add & Norm" 那个标签，那个 "Add" 就是残差。**今天 LLM、Diffusion、VLA 全部在用残差连接**。它已经成为深度学习的**底层基础设施**，**跨架构通用**。这告诉我一件事——**真正重要的创新往往不是一个具体架构，而是一个可以跨架构复用的机制**。这个判断后面我们讲 Transformer 的时候还会再用到。
+
+## 1.4 第一阶段总结（1 min）
+
+> **我的判断（小结）**：第一阶段的真正意义，不在于 RNN/CNN 这些架构本身——它们今天已经被 Transformer 在大部分任务上替代。它的意义在于**第一次证明了"端到端从数据里学特征"这条路是 work 的**——而且**确立了"GPU + 大数据 + 深网络"这个三件套**。这个范式确立之后，AI 才有了规模化的可能。
+>
+> **这之前的 AI 是"工程师设计 + 数据训练"，这之后的 AI 是"架构 + 数据 + 算力"——人退到了二线**。这是后面所有事情的起点。
 
 参考资料：
 
-- [https://cs231n.github.io/convolutional-networks/](https://cs231n.github.io/convolutional-networks/)
-- [https://colah.github.io/posts/2015-08-Understanding-LSTMs/](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+- AlexNet 原论文（Krizhevsky / Sutskever / Hinton, NIPS 2012）：[https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html](https://papers.nips.cc/paper_files/paper/2012/hash/c399862d3b9d6b76c8436e924a68c45b-Abstract.html)
+- CS231n 卷积网络教材：[https://cs231n.github.io/convolutional-networks/](https://cs231n.github.io/convolutional-networks/)
+- Colah — Understanding LSTMs：[https://colah.github.io/posts/2015-08-Understanding-LSTMs/](https://colah.github.io/posts/2015-08-Understanding-LSTMs/)
+- Sutskever / Vinyals / Le — Sequence to Sequence Learning, NIPS 2014：[https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks](https://papers.nips.cc/paper/5346-sequence-to-sequence-learning-with-neural-networks)
+- Bahdanau / Cho / Bengio — Neural Machine Translation by Jointly Learning to Align and Translate, ICLR 2015：[https://arxiv.org/abs/1409.0473](https://arxiv.org/abs/1409.0473)
+- ResNet 原论文（He / Zhang / Ren / Sun, MSRA, 2015）：[https://arxiv.org/abs/1512.03385](https://arxiv.org/abs/1512.03385)
 
 ---
 
-# ResNet 这个节点单独说 1 分钟 —— 它有点特殊（包含在第一阶段 6 min 内）
-
-
-
-ResNet 在 2015 年出来。它解决的问题在当时看起来很反直觉——**网络越深，效果应该越好对吧？但 2015 年之前，网络深到 30 层之后，效果反而开始变差**。这不是过拟合（训练误差也在升高），是**优化层面的退化（degradation）**。
-
-何恺明的方案优雅得不像话：让某一层的输入可以"跳过"中间几层直接加到后面，公式上是 `y = F(x) + x` 而不是 `y = F(x)`。这样做的好处是——**最差情况下中间层只要学到恒等映射，网络就不会变差**。优化器有了一个保底退路，可以放心做深。
-
-ResNet 之后，152 层、上千层都成了可能。ImageNet 错误率降到 3.57%。
-
-> **我的判断**：ResNet 表面上是给 CNN 用的，但**残差连接这个机制后来被 Transformer 也用了**——你打开任何一篇 Transformer 的论文，都能看到 "Add & Norm" 那个标签，那个 "Add" 就是残差。它已经成为深度学习的**底层基础设施**，跨架构通用。这告诉我一件事——**真正重要的创新往往不是一个具体架构，而是一个可以跨架构复用的机制**。
-
-参考资料：
-
-- [https://arxiv.org/abs/1512.03385](https://arxiv.org/abs/1512.03385)
-
----
-
-# 第二阶段：Transformer 范式的崛起（10 min，重点段）
+# 第二阶段：Transformer 范式的崛起（22 min，重点段）
 
 > **核心 hook**：这是全场最重要的转折点。Transformer 的真正意义不是 attention 本身，是它打开了"工业化堆规模"这条路。
 
-
+![](images/Pasted%20image%2020260427001425.png)
 
 进入第二阶段。
 
