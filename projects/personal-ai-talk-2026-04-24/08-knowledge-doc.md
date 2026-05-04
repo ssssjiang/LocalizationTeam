@@ -410,54 +410,94 @@ VLM 的标准化为 VLA（V-base = VLM）与 World Models（Cosmos-Reason 系列
 
 ---
 
-## 第四阶段：走向世界模型与具身（起源篇）
+## 第四阶段：World Models 起源 (2018-2023)
 
-### 业界公认的意义
+2018 年 Ha & Schmidhuber 提出 V+M+C 架构是 world model 在深度学习时代的现代起点；2023 年 Runway GEN-1 把 diffusion 推向视频生成工程化。两条路线在 2024-2026 收敛为 latent video → 可交互 world model（详见 §4.7）；本节是后续延伸 1（具身 VLA）+ 延伸 2（World Models 近期形态）的两条根。
 
-- 这阶段两个节点都不是当时最强技术，但事后看都指出了下一阶段会爆发的方向
-- World Models = 概念领先实践 6 年的代表
-- GEN-1 = 工程落地推动技术普及的代表
+### World Models 2018 (Ha & Schmidhuber)
 
-### World Models（2018, Ha & Schmidhuber）
+Ha & Schmidhuber (NeurIPS 2018)[1] 提出 agent 在内部 world model 中 "dream" rollout，用 dream 训 policy，而非每步与真实环境交互。该工作沿用 Schmidhuber 早期 (1990, 1991) RL with world model 的思路[2]，在深度学习时代以 V+M+C 三模块实现。
 
-#### 核心思想
+#### V+M+C 三模块[1]
 
-- 让 AI 在内部建立"世界的模拟器"
-- agent 在脑内想象 / 规划 / 推演，而非只在真实世界试错
+- **V (Vision)**：VAE encoder 把高维 observation 压缩到 latent z（32 维）
+- **M (Memory)**：MDN-RNN（mixture density net + RNN）在 latent space 预测下一时刻 `z_{t+1} | z_t, a_t`
+- **C (Controller)**：简单 linear policy `a = W [z_t; h_t]`，h_t 是 RNN hidden state；用 evolution strategy (CMA-ES) 训练，不需要 backprop 透 V / M
 
-#### V + M + C 架构
+#### 关键实验[1]
 
-- V：VAE 把环境观察压缩成 latent
-- M：RNN 预测下一个 latent
-- C：简单 controller 在 latent space 决策
-- Demo：CarRacing 完全在"梦里"训练，真实环境也 work
+- **CarRacing-v0** (OpenAI Gym)：agent 完全在 dream rollout 中训练 policy，直接 deploy 到真实 environment 取得 906 ± 21 分（vs 当时 best published 591），首次在 reward 上证明 dream-based policy training 可行
+- **ViZDoom Take Cover**：类似 setup，agent 在 dream 中训练后真实 env 中 sample 上 1100 step（baseline ~280 step）
 
-#### 6 年停滞
+#### 6 年实践停滞 (2018-2024)
 
-- 2018-2024 基本停留在 Atari 游戏 / 玩具机器人
-- 无法 scale，画质差，不通用
+V+M+C 在玩具 task 上验证后，2018-2024 间未出现规模化 successful application：
 
-#### 学界路线分歧（仍未有定论）
+- VAE 表示能力受限，无法 scale 到复杂场景 / 高分辨率
+- MDN-RNN 长 horizon 推演 drift 严重
+- 训练数据规模与 LLM / Diffusion 时代不匹配
 
-- LeCun 长期主张 AGI 核心是 world model，提出 JEPA 路线
-- 主流 LLM 阵营则相信预训练 + 推理 scaling 可以走得很远
-- 这是 AI 领域一条公开的、未解决的路线分歧
+实际突破等到 2024-2025 大模型时代（Cosmos / Genie 系列），详见 §4.7。
 
-### GEN-1（2023.02, Runway）
+#### 路线分歧：JEPA vs LLM 主线
 
-#### 它是什么
+LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，提出 JEPA (Joint Embedding Predictive Architecture, 2022)[3] 路线：在 embedding space 做 predictive learning，不做 pixel-level reconstruction。后续 V-JEPA (Bardes et al., 2024)[4]、V-JEPA-2 (Meta 2025-06)[5] 用于 video understanding。
 
-- 第一个把 diffusion 思路系统用到视频生成的工业级产品
+主流 LLM / VLA 阵营则相信预训练 + 推理 scaling + RL fine-tune 路线（GPT / Gemini / Claude / DeepSeek 全部此路线）。这是 AI 领域一条公开未解决的路线分歧。
 
-#### 它证明了什么
+<!-- REVIEW: 此处建议补 V/M/C 三模块 architecture 图（Ha 2018 Fig. 1）。来源 [1]。 -->
 
-- 技术上不是最先进（后来 Sora、Veo 都更强）
-- 但证明 diffusion 范式可扩展到视频，能处理时间一致性
+### Runway GEN-1 与视频生成
 
-#### 商业化意义
+GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到视频生成的工程产品。技术上不是最强（后续 Sora / Veo 3 性能远超），但是 video diffusion 工程化的早期里程碑，提出了 "条件生成视频" 的若干 design choice。
 
-- 做成 SaaS，让非技术用户也能用
-- AI 商业化的早期代表案例
+#### GEN-1 设计[6]
+
+- **输入**：source video + reference image / text prompt
+- **输出**：stylized video（depth / mask / structure 保留 + appearance 替换）
+- **架构**：latent diffusion 扩展到 video，depth + structure 作为 conditioning
+- **应用**：商业视频后期 / 风格迁移；SaaS 形态，非技术用户可用
+
+#### 后续视频生成主线 (2023-2024)
+
+- **Stable Video Diffusion** (Blattmann et al., 2023-11)[7]：开源 video diffusion，1.5B-3.5B param，14-25 frames @ 576×1024
+- **Sora** (OpenAI 2024-02 technical report)[8]：spacetime patch + Diffusion Transformer (DiT, Peebles & Xie, ICCV 2023)[9]，60s 长视频；2024-12 公开 release 名 Sora Turbo
+- **Veo / Veo 3** (Google DeepMind 2024-05 / 2024-12)[10]：闭源，高质量 + 长片段 + 物理一致性；集成进 Vertex AI
+- **Pika / Runway Gen-3** (2024)：商业向，偏短片 / 创意
+
+#### 三种范式
+
+视频生成 = 3D tensor (frame × H × W) 上的生成任务，主流三种范式：
+
+- **Diffusion**：image diffusion 扩展（SVD / Sora / Veo）；当前主流
+- **Autoregressive**：VideoPoet (Google 2023-12) 用 LLM 范式生成 video token；长 horizon 强但慢
+- **Hybrid**：latent autoregressive + diffusion refinement；探索阶段
+
+#### 与 World Models 收敛 (2024-2025)
+
+视频生成主线在 2024-2025 与 World Models 路线收敛：
+
+- 视频生成 model 是 implicit world model（隐式学环境动力学）
+- DeepMind Genie 系列把 video generation 改造为 user-action-controllable，即 explicit world model（详见 §4.7）
+- NVIDIA Cosmos Predict 直接以 "world model 工具链" 命名其 video diffusion model（详见 §4.7）
+
+第四阶段（2018 V+M+C / 2023 GEN-1）是后续延伸 1（具身 VLA）与延伸 2（World Models 近期形态）的两条根：
+
+- VLA training 用 World Model dream 替代部分真机数据（§4.6 +WM 节）
+- World Models 近期形态在 2024-2026 通过 latent video diffusion + interactive control 实现产品级（§4.7）
+
+### References
+
+- [1] Ha & Schmidhuber, World Models, NeurIPS 2018. arXiv:1803.10122 (worldmodels.github.io)
+- [2] Schmidhuber, On Learning to Think: Algorithmic Information Theory for Novel Combinations of RL Controllers and Recurrent Neural World Models, arXiv 2015. arXiv:1511.09249（含 1990 / 1991 RL+world-model 早期工作回顾）
+- [3] LeCun, A Path Towards Autonomous Machine Intelligence (JEPA position paper), Open Review 2022.
+- [4] Bardes et al., V-JEPA: Latent Video Prediction for Visual Representation Learning, arXiv 2024. arXiv:2404.08471
+- [5] Meta AI, V-JEPA-2 release, ai.meta.com 2025-06.
+- [6] Esser et al., Structure and Content-Guided Video Synthesis with Diffusion Models (GEN-1), Runway research 2023-02. arXiv:2302.03011
+- [7] Blattmann et al., Stable Video Diffusion, arXiv 2023. arXiv:2311.15127
+- [8] OpenAI, Video generation models as world simulators (Sora technical report), 2024-02.
+- [9] Peebles & Xie, Scalable Diffusion Models with Transformers (DiT), ICCV 2023. arXiv:2212.09748
+- [10] Google DeepMind, Veo 3 release, deepmind.google 2024-12.
 
 ---
 
