@@ -21,7 +21,7 @@
 
 ### 2.1 CNN：视觉端到端特征学习
 
-AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 16.4%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，在大规模数据（ImageNet 1.2M 图像）+ GPU 算力下扩展。
+AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 15.3%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，在大规模数据（ImageNet 1.2M 图像）+ GPU 算力下扩展。
 
 #### 2.1.1 关键设计
 
@@ -106,7 +106,7 @@ ResNet 在 ImageNet 上的 top-5 错误率随深度变化（来源：[13] Table 
 | ResNet-152 | 4.49% | 60.2M |
 
 
-ResNet-152 ensemble 后达到 3.57%[13]。同期对照：GoogLeNet 6.67%、VGG 7.32%、AlexNet (2012) 16.4%。ResNet 在一年内取代 VGG / GoogLeNet 成为下游 CV 任务的默认 backbone：COCO 目标检测 mAP 从 33.5（VGG-Faster R-CNN）提升到 37.4（ResNet-101-Faster R-CNN）[13]；ImageNet localization 错误率从 19.4% 降到 9.0%[13]。
+ResNet-152 ensemble 后达到 3.57%[13]。同期对照：GoogLeNet 6.67%、VGG 7.32%、AlexNet (2012) 15.3%[1]。ResNet 在一年内取代 VGG / GoogLeNet 成为下游 CV 任务的默认 backbone：COCO 目标检测 mAP 从 33.5（VGG-Faster R-CNN）提升到 37.4（ResNet-101-Faster R-CNN）[13]；ImageNet localization 错误率从 19.4% 降到 9.0%[13]。
 
 #### 2.3.3 影响
 
@@ -399,7 +399,7 @@ LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，提出 JEP
 
 ### 6.2 Runway GEN-1 与视频生成
 
-GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到视频生成的工程产品。技术上不是最强（后续 Sora / Veo 3 性能远超），但是 video diffusion 工程化的早期里程碑，提出了 "条件生成视频" 的若干 design choice。
+GEN-1 (Esser et al., ICCV 2023)[6] 把 diffusion 思路 extend 到视频生成的工程产品；Runway research blog 公开时间为 2023-02。技术上不是最强（后续 Sora / Veo 3 性能远超），但是 video diffusion 工程化的早期里程碑，提出了 "条件生成视频" 的若干 design choice。
 
 #### 6.2.1 GEN-1 (2023-02)
 
@@ -441,7 +441,7 @@ GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hyb
 - [3] LeCun, A Path Towards Autonomous Machine Intelligence (JEPA position paper), Open Review 2022.
 - [4] Bardes et al., V-JEPA: Latent Video Prediction for Visual Representation Learning, arXiv 2024. arXiv:2404.08471
 - [5] Meta AI, V-JEPA-2 release, ai.meta.com 2025-06.
-- [6] Esser et al., Structure and Content-Guided Video Synthesis with Diffusion Models (GEN-1), Runway research 2023-02. arXiv:2302.03011
+- [6] Esser et al., Structure and Content-Guided Video Synthesis with Diffusion Models, ICCV 2023. openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html（preprint：arXiv:2302.03011）
 - [7] Blattmann et al., Stable Video Diffusion, arXiv 2023. arXiv:2311.15127
 - [8] OpenAI, Video generation models as world simulators (Sora technical report), 2024-02.
 - [9] Peebles & Xie, Scalable Diffusion Models with Transformers (DiT), ICCV 2023. arXiv:2212.09748
@@ -512,6 +512,7 @@ NVIDIA GR00T 是 humanoid foundation model 开源线：
 NVIDIA 路线：open foundation + 与 Cosmos / Isaac Sim 工具链强绑定；与 Boston Dynamics / Agility / Figure 等多家 humanoid 厂商合作。
 
 > **写作时 verify（截至 2026-05-04）**：
+>
 > - 未见 Figure Helix 03 公开 release；留待后续追加
 > - π₀.7 (2026-04-16) 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
 
@@ -630,7 +631,7 @@ DeepMind Genie 系列把 video generation 改造为 user-action-controllable，�
 
 - **Genie 1** (DeepMind, ICML 2024)[1]：第一代 foundation world model，256×256，11B 参数，从 200k+ 小时 unlabeled internet video 学；可生成 2D platform-style world，user 用 action token 控制 agent
 - **Genie 2** (DeepMind 2024-12)[2]：升级到 3D 环境，支持 first-person / third-person 视角，~1 分钟 horizon 一致性
-- **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；60s session 一致性；用户从一张图或一段文字出发实时操控生成的 3D 环境；距 2018 Ha World Models 论文 7 年，是 World Models 公众级 demo 的标志性 release
+- **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；官方表述为在 720p 下可保持「几分钟」级一致性（retaining consistency for a few minutes）[3]；用户从一张图或一段文字出发实时操控生成的 3D 环境；距 2018 Ha World Models 论文 7 年，是 World Models 公众级 demo 的标志性 release
 - **Project Genie** (DeepMind 2026-01-29)[4]：Genie 3 商业化产品，集成 Google AI Ultra（US 18+ 用户）
 
 #### 8.1.2 应用与对比
@@ -732,3 +733,4 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 
 - [1] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
 - [2] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
+

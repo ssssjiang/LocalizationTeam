@@ -332,42 +332,48 @@
 
 ### F1. 三项需要修正的事实点（已应用到 05）
 
-| # | 涉及段 | 错误版本 | 修正版本 | 来源 |
-|---|---|---|---|---|
-| F1.a | 阶段二 Mamba 段 | "selective SSM 让 A、B、C 矩阵随输入动态变化" | "**让 B、C、Δ 三个参数随输入动态变化（Δ 是离散化步长）；A 矩阵保持固定（HiPPO 初始化）**" | [Mamba 原论文 §3.2 + Hugging Face Mamba blog](https://arxiv.org/abs/2312.00752) — selective scan 只对 B/C/Δ 做 input-dependent；保留 A 是为了维持线性时不变性，让 hardware-aware parallel scan 可行 |
-| F1.b | 阶段三 CLIP 段 | "CLIP zero-shot 在 ImageNet 上拿到 76% — 和监督训练的 ResNet-50 持平" | **删掉具体 76% 数字**，改成"**在原始 ImageNet validation set 上达到和监督训练的 ResNet-50 持平的准确率**" | [CLIP 论文 Table 1](https://arxiv.org/abs/2103.00020) Table 1 报的是 76.2%，但 OpenAI 官方 blog 措辞是 "matches the performance of the original ResNet-50 on ImageNet zero-shot without using any of the original 1.28M labeled examples"。**76% 这个数字本身没错，但社区一直有"是否过拟合到 LAION 评估集"的争议**——保守起见在演讲里不报具体数字，避免被追问后陷数字辩论 |
-| F1.c | 阶段四 GEN-1 段 | "Esser et al. 2023, arXiv:2302.03011" | "**Esser et al. ICCV 2023**（论文已正式发表，引用以 ICCV 版本为准）" | [ICCV 2023 OpenAccess](https://openaccess.thecvf.com/content/ICCV2023/papers/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.pdf) — arXiv 是 preprint，ICCV 是正式发表版本，演讲里引用学术发表更专业 |
+
+| #    | 涉及段         | 错误版本                                                      | 修正版本                                                                           | 来源                                                                                                                                                                                                                                                                                                     |
+| ---- | ----------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| F1.a | 阶段二 Mamba 段 | "selective SSM 让 A、B、C 矩阵随输入动态变化"                         | "**让 B、C、Δ 三个参数随输入动态变化（Δ 是离散化步长）；A 矩阵保持固定（HiPPO 初始化）**"                        | [Mamba 原论文 §3.2 + Hugging Face Mamba blog](https://arxiv.org/abs/2312.00752) — selective scan 只对 B/C/Δ 做 input-dependent；保留 A 是为了维持线性时不变性，让 hardware-aware parallel scan 可行                                                                                                                            |
+| F1.b | 阶段三 CLIP 段  | "CLIP zero-shot 在 ImageNet 上拿到 76% — 和监督训练的 ResNet-50 持平" | **删掉具体 76% 数字**，改成"**在原始 ImageNet validation set 上达到和监督训练的 ResNet-50 持平的准确率**" | [CLIP 论文 Table 1](https://arxiv.org/abs/2103.00020) Table 1 报的是 76.2%，但 OpenAI 官方 blog 措辞是 "matches the performance of the original ResNet-50 on ImageNet zero-shot without using any of the original 1.28M labeled examples"。**76% 这个数字本身没错，但社区一直有"是否过拟合到 LAION 评估集"的争议**——保守起见在演讲里不报具体数字，避免被追问后陷数字辩论 |
+| F1.c | 阶段四 GEN-1 段 | "Esser et al. 2023, arXiv:2302.03011"                     | "**Esser et al. ICCV 2023**（论文已正式发表，引用以 ICCV 版本为准）"                            | [ICCV 2023 OpenAccess](https://openaccess.thecvf.com/content/ICCV2023/papers/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.pdf) — arXiv 是 preprint，ICCV 是正式发表版本，演讲里引用学术发表更专业                                                                                |
+
 
 ### F2. 17 项一次通过的事实点
 
-| # | 事实 | 状态 | 关键来源 |
-|---|---|---|---|
-| F2.1 | AlexNet 2012 / top-5 错误率 15.3% / 第二名 26.2% | ✅ | [Wikipedia](https://en.wikipedia.org/wiki/AlexNet) + 原论文 |
-| F2.2 | Zeiler & Fergus 2013 ECCV / CNN 特征可视化 | ✅ | [arXiv 1311.2901](https://arxiv.org/abs/1311.2901) — ECCV 2014 实际发表 |
-| F2.3 | Hochreiter & Schmidhuber LSTM 1997 | ✅ | [JKU PDF](https://www.bioinf.jku.at/publications/older/2604.pdf) |
-| F2.4 | Sutskever seq2seq NeurIPS 2014 / BLEU 34.8 | ✅ | [arXiv 1409.3215](https://arxiv.org/abs/1409.3215) Table 1 |
-| F2.5 | Bahdanau attention ICLR 2015 | ✅ | [arXiv 1409.0473](https://arxiv.org/abs/1409.0473) |
-| F2.6 | ResNet ImageNet 3.57% / He et al. CVPR 2016 best paper / 152 层 | ✅ | 已在 B 节 |
-| F2.7 | Self-attention `softmax(QKᵀ/√d_k)V` + multi-head + positional encoding 公式 | ✅ | [Vaswani et al. NeurIPS 2017 §3.2](https://arxiv.org/abs/1706.03762) — √d_k scaling 是 §3.2.1 explicit 讨论 |
-| F2.8 | Causal mask + decoder-only + next-token prediction (GPT 系) | ✅ | [GPT-2 paper §2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf) |
-| F2.9 | Kaplan 2020 scaling law `L(N,D,C)` 幂律关系 | ✅ | [arXiv 2001.08361](https://arxiv.org/abs/2001.08361) |
-| F2.10 | Chinchilla 2022 修正 / 70B + 1.4T tokens / Llama-3 70B 用 15T tokens 是其延续 | ✅ | [arXiv 2203.15556](https://arxiv.org/abs/2203.15556) + [Llama-3 model card](https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md) |
-| F2.11 | Schaeffer "Are Emergent Abilities a Mirage?" NeurIPS 2023 Outstanding Paper | ✅ | [arXiv 2304.15004](https://arxiv.org/abs/2304.15004) — NeurIPS 2023 Outstanding Paper Award |
-| F2.12 | DDPM 训练目标 `L_simple = E[‖ε - ε_θ(x_t,t)‖²]` 是 L2 回归 | ✅ | [DDPM 论文 Eq. 14](https://arxiv.org/abs/2006.11239) |
-| F2.13 | DDIM 把 SDE 重写成 ODE / 跳步采样 / 20-50 步达 1000 步质量 | ✅ | [DDIM ICLR 2021](https://arxiv.org/abs/2010.02502) |
-| F2.14 | Stable Diffusion = Latent Diffusion / VAE 把 512x512 压到 64x64 latent | ✅ | [Rombach CVPR 2022 §3.1](https://arxiv.org/abs/2112.10752) |
-| F2.15 | Classifier-Free Guidance 训练时随机 drop condition (10%) | ✅ | [Ho & Salimans 2022](https://arxiv.org/abs/2207.12598) |
-| F2.16 | CLIP 4 亿对图文 / InfoNCE 对比学习 / N×N batch 矩阵 | ✅ | [CLIP 论文 §2.3](https://arxiv.org/abs/2103.00020) |
-| F2.17 | World Models 2018 Ha&Schmidhuber V+M+C / VAE + MDN-RNN + CMA-ES / CarRacing-v0 906 分 | ✅ | [arXiv 1803.10122 §4.2 Table 1](https://arxiv.org/abs/1803.10122) — CarRacing-v0 score 906 ± 21 |
+
+| #     | 事实                                                                                   | 状态  | 关键来源                                                                                                                                      |
+| ----- | ------------------------------------------------------------------------------------ | --- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| F2.1  | AlexNet 2012 / top-5 错误率 15.3% / 第二名 26.2%                                           | ✅   | [Wikipedia](https://en.wikipedia.org/wiki/AlexNet) + 原论文                                                                                  |
+| F2.2  | Zeiler & Fergus 2013 ECCV / CNN 特征可视化                                                | ✅   | [arXiv 1311.2901](https://arxiv.org/abs/1311.2901) — ECCV 2014 实际发表                                                                       |
+| F2.3  | Hochreiter & Schmidhuber LSTM 1997                                                   | ✅   | [JKU PDF](https://www.bioinf.jku.at/publications/older/2604.pdf)                                                                          |
+| F2.4  | Sutskever seq2seq NeurIPS 2014 / BLEU 34.8                                           | ✅   | [arXiv 1409.3215](https://arxiv.org/abs/1409.3215) Table 1                                                                                |
+| F2.5  | Bahdanau attention ICLR 2015                                                         | ✅   | [arXiv 1409.0473](https://arxiv.org/abs/1409.0473)                                                                                        |
+| F2.6  | ResNet ImageNet 3.57% / He et al. CVPR 2016 best paper / 152 层                       | ✅   | 已在 B 节                                                                                                                                    |
+| F2.7  | Self-attention `softmax(QKᵀ/√d_k)V` + multi-head + positional encoding 公式            | ✅   | [Vaswani et al. NeurIPS 2017 §3.2](https://arxiv.org/abs/1706.03762) — √d_k scaling 是 §3.2.1 explicit 讨论                                  |
+| F2.8  | Causal mask + decoder-only + next-token prediction (GPT 系)                           | ✅   | [GPT-2 paper §2](https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf)                   |
+| F2.9  | Kaplan 2020 scaling law `L(N,D,C)` 幂律关系                                              | ✅   | [arXiv 2001.08361](https://arxiv.org/abs/2001.08361)                                                                                      |
+| F2.10 | Chinchilla 2022 修正 / 70B + 1.4T tokens / Llama-3 70B 用 15T tokens 是其延续               | ✅   | [arXiv 2203.15556](https://arxiv.org/abs/2203.15556) + [Llama-3 model card](https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md) |
+| F2.11 | Schaeffer "Are Emergent Abilities a Mirage?" NeurIPS 2023 Outstanding Paper          | ✅   | [arXiv 2304.15004](https://arxiv.org/abs/2304.15004) — NeurIPS 2023 Outstanding Paper Award                                               |
+| F2.12 | DDPM 训练目标 `L_simple = E[‖ε - ε_θ(x_t,t)‖²]` 是 L2 回归                                  | ✅   | [DDPM 论文 Eq. 14](https://arxiv.org/abs/2006.11239)                                                                                        |
+| F2.13 | DDIM 把 SDE 重写成 ODE / 跳步采样 / 20-50 步达 1000 步质量                                        | ✅   | [DDIM ICLR 2021](https://arxiv.org/abs/2010.02502)                                                                                        |
+| F2.14 | Stable Diffusion = Latent Diffusion / VAE 把 512x512 压到 64x64 latent                  | ✅   | [Rombach CVPR 2022 §3.1](https://arxiv.org/abs/2112.10752)                                                                                |
+| F2.15 | Classifier-Free Guidance 训练时随机 drop condition (10%)                                  | ✅   | [Ho & Salimans 2022](https://arxiv.org/abs/2207.12598)                                                                                    |
+| F2.16 | CLIP 4 亿对图文 / InfoNCE 对比学习 / N×N batch 矩阵                                            | ✅   | [CLIP 论文 §2.3](https://arxiv.org/abs/2103.00020)                                                                                          |
+| F2.17 | World Models 2018 Ha&Schmidhuber V+M+C / VAE + MDN-RNN + CMA-ES / CarRacing-v0 906 分 | ✅   | [arXiv 1803.10122 §4.2 Table 1](https://arxiv.org/abs/1803.10122) — CarRacing-v0 score 906 ± 21                                           |
+
 
 ### F3. JEPA 路线相关引用（为下次分享留钩子，但本场提到时也要确认）
 
-| # | 事实 | 状态 | 来源 |
-|---|---|---|---|
-| F3.1 | LeCun "A Path Towards Autonomous Machine Intelligence" 2022 | ✅ | [OpenReview PDF](https://openreview.net/pdf?id=BZ5a1r-kVsf) |
-| F3.2 | I-JEPA Assran et al. CVPR 2023 | ✅ | [arXiv 2301.08243](https://arxiv.org/abs/2301.08243) |
-| F3.3 | V-JEPA Bardes et al. Meta 2024.02 | ✅ | [Meta blog](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/) |
-| F3.4 | VICReg ICLR 2022 (用于解决 JEPA collapse) | ✅ | [arXiv 2105.04906](https://arxiv.org/abs/2105.04906) |
+
+| #    | 事实                                                          | 状态  | 来源                                                                                                              |
+| ---- | ----------------------------------------------------------- | --- | --------------------------------------------------------------------------------------------------------------- |
+| F3.1 | LeCun "A Path Towards Autonomous Machine Intelligence" 2022 | ✅   | [OpenReview PDF](https://openreview.net/pdf?id=BZ5a1r-kVsf)                                                     |
+| F3.2 | I-JEPA Assran et al. CVPR 2023                              | ✅   | [arXiv 2301.08243](https://arxiv.org/abs/2301.08243)                                                            |
+| F3.3 | V-JEPA Bardes et al. Meta 2024.02                           | ✅   | [Meta blog](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/) |
+| F3.4 | VICReg ICLR 2022 (用于解决 JEPA collapse)                       | ✅   | [arXiv 2105.04906](https://arxiv.org/abs/2105.04906)                                                            |
+
 
 ---
 
@@ -378,11 +384,12 @@
 ### 现在 5 份文件的最终状态
 
 ```
-README.md             — 入口 + 4 晚学习节奏
-05-full-script.md     — 完整逐字稿件（事实已全部修正）
-06-reading-list.md    — 必读材料清单（事实已全部修正）
-07-qa-bank.md         — 追问 Q&A 储备（事实已全部修正）
-09-fact-check-log.md  — 本文件（事实档案 + 修正历史）
+README.md               — 入口 + 4 晚学习节奏
+05-full-script.md       — 完整逐字稿件（事实已全部修正）
+06-reading-list.md      — 必读材料清单（事实已全部修正）
+07-qa-bank.md           — 追问 Q&A 储备（事实已全部修正）
+08-knowledge-doc.md     — 演进笔记长文（按节 References；重大纠错见 §G）
+09-fact-check-log.md    — 本文件（事实档案 + 修正历史）
 ```
 
 ### 周五现场使用 09 的方式
@@ -394,3 +401,32 @@ README.md             — 入口 + 4 晚学习节奏
 - A12 节专门覆盖 2025-2026 国内 LLM / 国内具身 / 重建侧的所有事实
 
 **事实信任优先级**：09（权威）> 05/06/07（已和 09 对齐）> 任何凭印象的回忆。
+
+---
+
+## G. `08-knowledge-doc.md` 溯源校验（2026-05-05）
+
+### G1. 结论
+
+- **HIGH 冲突**：已对照本文件 **A6（AlexNet）**、**A1（Genie 3）** 与 **F1.c（GEN-1 引用形态）** 修正并写入 `08-knowledge-doc.md`。
+- **可追溯性**：正文数字 / 日期凡标 `[n]` 者，均以该 `##` 章节末尾 `### References` 对应条目为一跳溯源；同节内编号独立重置（见文档内写法）。
+- **机械核对**：建议脚本解析引用时同时识别 `[1, 2]`、`[6, 7]` 等多编号写法（逗号分隔），避免误判「References 未在正文出现」。
+
+### G2. 本次写入 `08-knowledge-doc.md` 的修正
+
+| 位置 | 原表述问题 | 修正 | 依据 |
+| --- | --- | --- | --- |
+| §2.1 AlexNet top-5 | 16.4% | **15.3%**[1, 2] | **A6 / F2.1**；与 Krizhevsky et al. 报告及 ILSVRC 对照叙述一致 |
+| §2.3 对照句 AlexNet | 16.4% | **15.3%**[1] | 同上 |
+| §8.1 Genie 3 | 「60s session 一致性」 | 改为官方措辞：**几分钟级一致性**（附英原文 *a few minutes*）[3] | DeepMind 博客 2025-08-05：`retaining consistency for a few minutes at a resolution of 720p`（同日抓取核对） |
+| §6.2 GEN-1 + §6 References [6] | 强调 arXiv / Runway blog | **ICCV 2023** 正式发表为主条目，arXiv 作 preprint 附注 | **F1.c**；[ICCV 2023 Open Access HTML](https://openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html) |
+
+### G3. 诚实边界（未在本次会话逐项打开的条目）
+
+- **§2–§6 经典工作**：BLEU / WER / ImageNet 表格 / Scaling Law 指数等，默认与所列 arXiv 或会议 PDF **一致**；若现场被抠表格式数字，以对应论文 Table 为准。
+- **§7 具身 VLA / §8 产品与工具链**：表格与叙事中的参数、日期以该节 **References 所列官方 URL / blog / technical report** 为准；文中 blockquote「写作时 verify」项仍为 **开放核对**，不视为已二次独立验证。
+- **全文**：未对每一条 References 做自动化 HTTP 状态码探测；如需更强保证，可对链接跑批次 HEAD/GET 归档。
+
+### G4. `08-knowledge-doc.md` 纳入 E 节文件集合
+
+演进笔记作为演讲配套的 **事实可追溯长文**，与 05/06/07 并列：`08-knowledge-doc.md`（已与 **G2** 对齐修正）。
