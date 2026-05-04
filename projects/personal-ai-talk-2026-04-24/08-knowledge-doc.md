@@ -143,101 +143,148 @@ CNN 的卷积、RNN 的循环是架构特异性的归纳偏置；残差连接不
 
 ---
 
-## 第二阶段：Transformer 范式的崛起
+## 第二阶段：Transformer 范式 (2017-2026)
 
-### 业界公认的意义
+Transformer (Vaswani et al., 2017) 用 self-attention 替代 RNN 循环，解决并行 + 长距离依赖两个硬伤；后续 9 年间经 Scaling Law / RLHF / 多模态 / 推理 scaling 几次范式扩展，演变为 LLM 工业化的统一基底。
 
-- Transformer 的关键贡献不是 attention 本身，而是**第一次让 AI 模型变成可堆规模**
-- LLM 时代发现了 AI 的"摩尔定律"——scaling law
-- AI 由此从「设计聪明的模型」转向「准备数据 / 用好算力 / 训得更稳」的工程化时代
+### Transformer：注意力机制
 
-### Transformer 本体（2017, "Attention Is All You Need"）
+Transformer (Vaswani et al., NeurIPS 2017)[1] 完全用 self-attention + position-wise FFN 取代 RNN 循环结构与 CNN 卷积。在 WMT'14 EN-DE 翻译任务上 BLEU 28.4，超过当时 RNN encoder-decoder baseline 25.16[1]。
 
-#### 做了什么
+#### 关键设计
 
-- 完全抛弃 RNN 循环 + CNN 卷积，只用 self-attention + FFN
+- **Scaled dot-product attention**：`Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]；√d_k 缩放避免 softmax 进入饱和区
+- **Multi-head attention**：把 Q / K / V 线性投影到 h 个子空间各自做 attention 后 concat；让模型在不同 representation subspace 关注不同模式
+- **Position encoding**：self-attention 本身排序无关；用 sinusoidal positional encoding 把绝对位置注入 embedding（后来 RoPE 等替代方案）
+- **Encoder-decoder + residual + LayerNorm**：每个 sub-layer 后 `LayerNorm(x + Sublayer(x))`，残差连接来自 ResNet[2]
 
-#### 解决了两个硬伤
+#### 解决了 RNN 的两个硬伤
 
-- 所有位置可并行（GPU 满载）
-- 任意两位置直接交互，无距离衰减
+- **并行性**：self-attention 矩阵运算所有 step 一次性算出，GPU 满负载；RNN 必须串行
+- **长距离依赖**：任意两 token 直接 O(1) 交互，不经 hidden state 衰减；LSTM 只能稳定捕捉 ~100-1000 step 内信息
 
-#### 真正的贡献
+#### 三派分化与下游影响
 
-- attention 机制 2014 Bahdanau 就有了
-- Transformer 的贡献是**让"更大 = 更强"变成可工程化、可预测的事实**
+Transformer 之后 LLM 主要分三派架构：
 
-### Scaling Law（2020, OpenAI）
+- **encoder-only** (BERT, Devlin et al., NAACL 2019)[3]：masked language modeling，适合 representation / NLU
+- **decoder-only** (GPT, Radford et al., 2018)[4]：causal LM 自回归生成，后续成为 LLM 主线
+- **encoder-decoder** (T5, Raffel et al., JMLR 2020)[5]：text-to-text 统一 framework
 
-#### 核心发现
+attention 机制本身在 Bahdanau et al. (ICLR 2015)[6] 就已用于 NMT；Transformer 的核心贡献是把 "更大 = 更强" 工程化为可预测、可并行 scale 的事实，后续 Scaling Law 在此基础上验证。
 
-- 性能 vs 参数 / 数据 / 算力 = 干净的幂律
-- 含义：给定算力可以预测模型性能
+<!-- REVIEW: 此处建议补 Transformer architecture 图（Vaswani 2017 Fig. 1）。来源 [1]。 -->
 
-#### GPT-3（2020, 175B）
+### Scaling Law 与 GPT-3
 
-- 首次证明：通用模型靠 prompt 就能做翻译/写代码/问答/写诗
-- GPT-2 还做不到的事，GPT-3 突然做到了
+Kaplan et al. (OpenAI 2020)[7] 实验拟合：LLM cross-entropy loss 与参数量 N、数据量 D、计算量 C 呈幂律：
 
-#### 涌现能力（仍未完全理解）
+`L(N) ∝ N^-0.076`、`L(D) ∝ D^-0.095`、`L(C) ∝ C^-0.05`[7]
 
-- 某些任务在小模型完全做不了，到一定规模突然就会
-- 多步推理 / code / in-context learning
-- 学界对涌现的成因和真实性仍有争议
+含义：给定 compute budget 可预测最优 N / D 配比与最终 loss。这是 LLM 工程化的核心依据 — 模型设计从 "试新 architecture" 转向 "scale 现有架构 + 调数据 / 训练流程"。
 
-### ChatGPT（2022.11）
+#### GPT-3 (Brown et al., NeurIPS 2020)[8]
 
-- 技术上 = GPT-3.5 + RLHF
-- 业界共识：真正贡献在产品形态（对话界面 + 对齐到人类偏好），不在底层技术
-- 5 天 100 万用户、2 个月 1 亿用户，AI 第一次出圈
+- 175B 参数，300B token 训练；in-context learning (few-shot) 显示无需 fine-tune 即可做翻译 / QA / 算术 / code
+- 性能曲线随 scale 平滑提升，验证 Kaplan 2020 预测
 
-### 2026 年的拐点
+#### Chinchilla 修正 (Hoffmann et al., DeepMind 2022)[9]
 
-#### 架构开始分化
+Kaplan 2020 的最优配比偏向 "参数大 / 数据少"；Hoffmann et al. 用 400+ 个新实验拟合发现 N 与 D 应同速 scale (compute-optimal: 1B 参数 ↔ 20B token)。Chinchilla 70B (1.4T token) 性能超过 Gopher 280B (300B token)，验证 GPT-3 严重 undertrained。
 
-- Mamba（2023+）状态空间模型，线性复杂度 O(n) + 常数显存
-- Mamba-3（2026.03）：1.5B 上准确率超 Mamba-2 ~2pt，state size 减半
-- 业界共识：Mamba 不取代 Transformer，而是补足；越来越多 hybrid 架构
+#### Emergent abilities 与争议
 
-#### Scaling 范式开始换腿
+Wei et al. (TMLR 2022)[10] 列出 137 个 BIG-Bench 任务的 emergence 曲线：某些任务 (multi-step arithmetic / chain-of-thought) 在小模型几乎随机，到某个 scale 阈值后性能突然提升。
 
-- 业界观察到从「模型规模 scaling」转向「推理 compute scaling」
-- 详见延伸 1
+Schaeffer et al. (NeurIPS 2023)[11] 提出反例：多数 emergence 现象由 metric 选择 (discontinuous metrics like exact-match) 造成的伪迹；换连续 metric 后曲线平滑。Emergence 是否真实仍是开放问题。
 
-#### Frontier 不再被三大厂垄断
+### ChatGPT 与 RLHF
 
-- GPT-5.4（2026.03）：1M 上下文 + 原生电脑使用（OSWorld 75%）
-- Gemini 3.1 Pro（2026.02.19）：1M 输入 / 64K 输出，ARC-AGI-2 拿到 77.1%
-- Claude Opus 4.7（2026.04.16）：长程编码 verification 机制
-- 共同特征：这一代的提升主要靠「思考机制变深」，而非「模型变大」
+ChatGPT (OpenAI 2022-11-30)[12] 的技术基底 = GPT-3.5 + InstructGPT-style RLHF (Ouyang et al., NeurIPS 2022)[13]。
 
-### 国内 LLM 副线（2025-2026 三种差异化打法）
+#### RLHF 三阶段[13]
 
-#### Qwen 系列（阿里）
+- **SFT (supervised fine-tuning)**：用人类示范回复做 supervised learning，让 base model 学会对话格式
+- **Reward model**：让人类对多个候选回复排序，训一个 reward model 模拟人类偏好
+- **PPO RL**：用 reward model 作 reward signal，PPO 优化 policy LM
 
-- 路线：scaling + 全家族开源
-- Qwen3（2025.04 起）开源 0.6B 到 235B MoE + 混合推理
-- Qwen3-Max（2025.10）1T 参数 / SWE-Bench 69.6% / Tau2-Bench 74.8%
-- Qwen3.5 Omni（2026.03）原生多模态 + 256K
+设计目标 = 三 H (helpful / harmless / honest)。RLHF 思想源自 Christiano et al. (NIPS 2017)[14] 的 RL from human preferences。
 
-#### GLM 系列（智谱）
+#### 产品意义
 
-- 路线：小尺寸高性能 + 国产芯片适配
-- GLM-4.6（2025.09）355B MoE / 32B 激活，200K 上下文
-- LMArena 排第 4（国内并列第一），代码能力对标 Claude Sonnet 4
+ChatGPT 5 天 100 万用户、2 个月 1 亿用户。技术上 GPT-3.5 + RLHF 不是飞跃 (InstructGPT 2022-01 已上线)，但产品形态 (对话 UI + alignment to human preference) 是 LLM 第一次被普通用户日常使用的关键节点。后续 Anthropic Claude (Constitutional AI, Bai et al., 2022)[15]、DeepSeek R1 (RL-from-base, 2025-01) 均沿用 RL-from-feedback 思路。
 
-#### Kimi 系列（Moonshot）
+### 2026 主线大模型
 
-- 路线：押 agent
-- Kimi K2（2025.07）1T MoE 开源（Apache 2.0）
-- Kimi K2.5（2026.01.27）self-directed agent swarm：100 sub-agents 并行 + 1500 工具调用同时执行；速度比单 agent 快 4.5×
-- 公开报告中 agent benchmark 上超过 GPT-5.2 / Claude 4.5 Opus / Gemini 3 Pro
+2024-2026 间 LLM frontier 由 OpenAI / Google DeepMind / Anthropic 三家闭源 + Mamba 类替代架构线推进。截至 2026-05-04 主流 release：
 
-#### 业界对国内 LLM 的现状描述
+| 模型             | 公司              | Release    | Context    | 关键特点                                                                     | 价格 (in/out per M) |
+| -------------- | --------------- | ---------- | ---------- | ------------------------------------------------------------------------ | ----------------- |
+| GPT-5.5        | OpenAI          | 2026-04-23 | 1M         | smartest to date；agentic coding / computer use 强化，speed 同 5.4            | TBD               |
+| Gemini 3.1 Pro | Google DeepMind | 2026-02-19 | 1M / 64K out | ARC-AGI-2 77.1%；Deep Think (02-12) / Flash TTS (04-15) / Enterprise Agent Platform (04-22) 配套 | TBD               |
+| Claude Opus 4.7 | Anthropic       | 2026-04-16 | 1M         | 长程编码 verification，长任务 self-check                                          | $5 / $25          |
+| Mamba-3         | Princeton + CMU | 2026-03    | 长序列        | State Space Model，O(n) 时间 + 常数显存                                          | open              |
 
-- 三家选了三种不同的差异化路线
-- 在多个维度（开源生态 / 部署成本 / agent 编排）已经站到 frontier
-- 整体处于「在某些维度领先」而非单纯「追赶」的阶段
+#### 主线方向
+
+- **GPT-5.5** (OpenAI 2026-04-23)[18]：比 GPT-5.4 在 agentic coding / computer use (browser / OS automation) 显著强化；推理 cost / speed 同 5.4
+- **Gemini 3.1 Pro** (Google DeepMind 2026-02-19)[19]：1M 输入 / 64K 输出；配套 Deep Think (2026-02-12 推理模式) + Flash TTS (2026-04-15) + Enterprise Agent Platform (2026-04-22)，Gemini 系列从单一 LLM 扩展为 agent 工具链
+- **Claude Opus 4.7** (Anthropic 2026-04-16)[20]：长程编码 verification 机制 — 模型在长任务中段自检 + 修正；$5 / $25 per M token，定价显著高于 Gemini / DeepSeek 同档
+
+#### 架构线：Mamba 与 SSM
+
+Mamba (Gu & Dao, 2023)[16] 用 selective State Space Model (SSM) 替代 self-attention，推理时间复杂度 O(n) + 常数显存（vs Transformer O(n²) + O(n) KV cache）；在 1B-3B scale 与 Transformer 持平。Mamba-2 (Dao & Gu, ICML 2024)[17] 引入 SSD (state-space duality) 框架，把 SSM 与 attention 统一。Mamba-3 (2026-03) 在 1.5B 上准确率较 Mamba-2 +2pt，state size 减半。
+
+主流 frontier 模型仍以 Transformer 为主干；Mamba / SSM 在长序列 / 长 context / inference cost 敏感场景作为补充，多在 hybrid 架构 (Jamba 等，Mamba + Transformer block 交替) 中出现。
+
+### 国内大模型
+
+国内 frontier LLM 在 2025-2026 出现 4 家主线：Alibaba Qwen / Moonshot Kimi / Zhipu GLM / DeepSeek。截至 2026-05-04 主流 release：
+
+| 模型                    | 公司       | Release    | 参数量              | Context | 开源闭源                  | 定位                |
+| --------------------- | -------- | ---------- | ---------------- | ------- | --------------------- | ----------------- |
+| Qwen3.6-Max-Preview   | Alibaba  | 2026-04-20 | 1T+ MoE 稀疏        | 256K    | API only              | coding agent      |
+| Kimi K2.6             | Moonshot | 2026-04-21 | 1T MoE / 32B active | 256K    | open-weight (Modified MIT) | long-context + agent |
+| GLM-4.6               | Zhipu    | 2025-09    | 355B MoE / 32B active | 200K    | open-weight           | 企业级落地 + 代码        |
+| DeepSeek V4           | DeepSeek | 2026-04    | TBD              | TBD     | open-weight           | base + 推理 cost 优化 |
+
+#### 主线特点
+
+- **Alibaba Qwen 系列**[21]：全家族开源 + scaling 路线。Qwen3 (2025-04 起) 0.6B → 235B MoE 全开源；Qwen3-Max (2025-10) 1T 参数，SWE-Bench 69.6% / Tau2-Bench 74.8%；Qwen3.5 Omni (2026-03) 原生多模态 + 256K；Qwen3.6-Max-Preview (2026-04-20) 进一步扩到 1T+ MoE 稀疏，API-only，主打 coding agent
+- **Moonshot Kimi 系列**[22]：agent 与 long-context 路线。Kimi K2 (2025-07) 1T MoE 开源 (Apache 2.0)；K2.5 (2026-01-27) self-directed agent swarm (100 sub-agents 并行 + 1500 tool 同时调用，速度比 single-agent ~4.5×)；K2.6 (2026-04-21) 1T MoE / 32B active，open-weight Modified MIT，agent benchmark 与 GPT-5 / Claude 同档
+- **Zhipu GLM 系列**[23]：小尺寸高性能 + 国产芯片适配。GLM-4.6 (2025-09) 355B MoE / 32B active，200K context；LMArena 第 4 (国内并列第一)；代码能力对标 Claude Sonnet 4
+- **DeepSeek 系列**[24]：cost / quality 极致优化路线。V3 (2024-12) → V3.5 → V4 (2026-04, base) → R1 (2025-01 推理) → R2 (2026-04 推理 32B dense，单 24GB GPU 可跑)；推理线相关详见 §4.6 +推理融合 节内 inline 简介
+
+#### Frontier 现状
+
+2025-2026 的 frontier release 中，国内 4 家在多个维度站到第一梯队：开源生态 (Qwen / Kimi / GLM 全开源)、agent benchmark (Kimi K2.6)、推理 cost (DeepSeek R2)、coding (Qwen3.6-Max / GLM-4.6)。同期闭源 frontier 仍由 OpenAI / Google / Anthropic 三家把持，绝对差距收窄到月级。
+
+### References
+
+- [1] Vaswani et al., Attention Is All You Need, NeurIPS 2017. arXiv:1706.03762
+- [2] He et al., Deep Residual Learning for Image Recognition, CVPR 2016. arXiv:1512.03385
+- [3] Devlin et al., BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding, NAACL 2019. arXiv:1810.04805
+- [4] Radford et al., Improving Language Understanding by Generative Pre-Training (GPT-1), OpenAI 2018.
+- [5] Raffel et al., Exploring the Limits of Transfer Learning with a Unified Text-to-Text Transformer (T5), JMLR 2020. arXiv:1910.10683
+- [6] Bahdanau et al., Neural Machine Translation by Jointly Learning to Align and Translate, ICLR 2015. arXiv:1409.0473
+- [7] Kaplan et al., Scaling Laws for Neural Language Models, arXiv 2020. arXiv:2001.08361
+- [8] Brown et al., Language Models are Few-Shot Learners (GPT-3), NeurIPS 2020. arXiv:2005.14165
+- [9] Hoffmann et al., Training Compute-Optimal Large Language Models (Chinchilla), NeurIPS 2022. arXiv:2203.15556
+- [10] Wei et al., Emergent Abilities of Large Language Models, TMLR 2022. arXiv:2206.07682
+- [11] Schaeffer et al., Are Emergent Abilities of Large Language Models a Mirage?, NeurIPS 2023. arXiv:2304.15004
+- [12] OpenAI, Introducing ChatGPT, openai.com/blog 2022-11-30.
+- [13] Ouyang et al., Training Language Models to Follow Instructions with Human Feedback (InstructGPT), NeurIPS 2022. arXiv:2203.02155
+- [14] Christiano et al., Deep Reinforcement Learning from Human Preferences, NIPS 2017. arXiv:1706.03741
+- [15] Bai et al., Constitutional AI: Harmlessness from AI Feedback, arXiv 2022. arXiv:2212.08073
+- [16] Gu & Dao, Mamba: Linear-Time Sequence Modeling with Selective State Spaces, arXiv 2023. arXiv:2312.00752
+- [17] Dao & Gu, Transformers are SSMs (Mamba-2), ICML 2024. arXiv:2405.21060
+- [18] OpenAI, Introducing GPT-5.5, openai.com/index/introducing-gpt-5-5 2026-04-23.
+- [19] Google DeepMind, Gemini 3.1 Pro Model Card, deepmind.google/models/model-cards/gemini-3-1-pro 2026-02-19.
+- [20] Anthropic, Claude Opus 4.7, anthropic.com/news/claude-opus-4-7 2026-04-16.
+- [21] Alibaba Qwen team, Qwen3.6-Max-Preview release, qwenlm.github.io 2026-04-20.
+- [22] Moonshot AI, Kimi K2.6 release, deeplearning.ai/the-batch 2026-04-21.
+- [23] Zhipu, GLM-4.6 release, zhipu.ai 2025-09.
+- [24] DeepSeek, DeepSeek V4 release, deepseek.com 2026-04.
 
 ---
 
