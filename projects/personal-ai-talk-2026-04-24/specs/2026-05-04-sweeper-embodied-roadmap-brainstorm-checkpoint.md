@@ -28,7 +28,7 @@
 
 ## 3. 待决问题
 
-### Q3：具身新项目的目标形态（核心 — 决定整个方案空间）
+### 3.1 Q3：具身新项目的目标形态（核心 — 决定整个方案空间）
 
 | 选项 | 描述 | 影响 |
 | --- | --- | --- |
@@ -41,7 +41,7 @@
 
 **user 当前态度**：还没想好，待下次讨论决定。
 
-### Q4：算力 / 硬件平台预算（未问）
+### 3.2 Q4：算力 / 硬件平台预算（未问）
 
 候选方向：
 - 端侧 SoC：高通 RB5 / RB6、地平线 J5/J6、瑞芯微 RK3588 / RK3576、NVIDIA Jetson Orin（NX / AGX）、海思
@@ -49,14 +49,14 @@
 - 功耗 / 散热 / BOM cost 约束
 - 是否允许云端协同（mobile robot + cloud inference）
 
-### Q5：时间节点（未问）
+### 3.3 Q5：时间节点（未问）
 
 - 短期 demo（3-6 月）
 - 中期 product（1-2 年）
 - 长期 platform（3+ 年）
 - 是否对标某个具体的展会 / 发布节点
 
-### Q6：团队能力 gap（未问）
+### 3.4 Q6：团队能力 gap（未问）
 
 已知：user 是 SLAM / 定位建图算法工程师；公司有扫地 / 割草机量产 SLAM 能力。
 
@@ -66,7 +66,9 @@
 - 是否已有抓取 / 操作 / dexterous manipulation 团队
 - 数据采集能力（家居场景遥操作 / 仿真 sim2real）
 
-## 4. 候选 doc 大纲（待 Q3-Q6 决定后填充）
+## 4. 候选 doc 设计（待 Q3-Q6 决定后填充）
+
+### 4.1 章节大纲
 
 `09-sweeper-embodied-roadmap.md` 草拟章节（~8-12K 字）：
 
@@ -88,6 +90,11 @@
    - 短期 / 中期 / 长期 milestone
    - 优先级 + risk
 
+### 4.2 命名与引用
+
+- 路径：`projects/personal-ai-talk-2026-04-24/09-sweeper-embodied-roadmap.md`
+- 现 doc（08-knowledge-doc.md）作为 reference，新 doc 用脚注 / inline 引用现 doc 的 §X.Y
+
 ## 5. 接续 instruction
 
 下次 session 开场直接：
@@ -98,8 +105,3 @@
 4. 进入 doc 大纲 fill-in 阶段
 5. 落盘 final spec 至 `projects/personal-ai-talk-2026-04-24/specs/2026-05-04-sweeper-embodied-roadmap-design.md`
 6. 进入 implementation（writing-plans 或直接写 doc）
-
-## 6. 候选 doc 命名
-
-- 路径：`projects/personal-ai-talk-2026-04-24/09-sweeper-embodied-roadmap.md`
-- 现 doc（08-knowledge-doc.md）作为 reference，新 doc 用脚注 / inline 引用现 doc 的 §X.Y
