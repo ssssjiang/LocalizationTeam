@@ -501,134 +501,161 @@ GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到
 
 ---
 
-## 延伸 1：推理大模型——LLM 的第二条 scaling law
+## 延伸 1：具身 VLA (2023-2026)
 
-### 业界共识
+VLA (Vision-Language-Action) 把视觉 + 语言 model 输出端从 token 改为 action，直接输出机器人执行序列。2023 年 Google DeepMind RT-2 是首个工业级 VLA；2024-2026 间 Physical Intelligence π 系列 / Figure Helix / NVIDIA GR00T 把 VLA 推到产品级 + 跨形态泛化；国内 GraspVLA / GO-1 / UnifoLM-VLA-0 跟进。
 
-- 这一代 LLM 的提升主要不是「模型更大」，而是「模型想得更久」
-- 推理 scaling 被视为 LLM 能力增长的第二条腿（test-time compute scaling）
-- 业界普遍观察到护城河从「模型本身」转移到「数据飞轮 / 后训练工艺 / agent 编排 / 部署生态 / 应用场景」
+### 国际 VLA 时间线
 
-### 时间线（OpenAI 主线）
+国际 VLA 主线：Google DeepMind RT-2 → Physical Intelligence π 系列 → Figure AI Helix → NVIDIA GR00T 四条线。截至 2026-05-04 主流 release：
 
-- 2024.09.12 o1-preview：首次提出"内置推理"范式
-- 2024.12.20 o3-preview：ARC-AGI-1 上 87.5% 震惊业界
-- 2025.04.16 o3 正式发布；2025.06.10 o3-pro（MATH-500 98.1% / SWE-bench 61.5%）
+| Model      | 公司                    | Release    | Robot                  | 训练数据                            | 关键贡献                                                  |
+| ---------- | --------------------- | ---------- | ---------------------- | ------------------------------- | ----------------------------------------------------- |
+| RT-2       | Google DeepMind       | 2023-07    | dual-arm RT robot      | web-scale + RT-1                | VLM 直接转 VLA 的首个工作                                     |
+| π₀         | Physical Intelligence | 2024-10    | 7 个 embodiment         | ~10k hrs robot data             | generalist policy 跨形态                                  |
+| π₀.5       | Physical Intelligence | 2025-04-22 | 同 π₀ + new            | + open-world data               | open-world generalization                              |
+| π₀.7       | Physical Intelligence | 2026-04-16 | steerable foundation   | scaled                          | step-change in generalization                          |
+| Helix 02   | Figure AI             | 2026-01    | Figure 02 humanoid     | full-body data                  | unified visuomotor net + 4 分钟洗碗机连续自主                 |
+| GR00T N1   | NVIDIA                | 2025-03    | humanoid (open)        | open data + sim                 | 开源 humanoid foundation                                 |
+| GR00T N1.7 | NVIDIA                | 2026-04-17 | humanoid               | EgoScale 20,854 hrs egocentric  | Action Cascade dual-system + dexterity scaling law (首报告) |
 
-### 关键证据：推理 scaling 曲线
+#### Google DeepMind RT-2 (2023-07)[1]
 
-- 给模型 1s / 10s / 100s 思考时间，AIME 通过率持续上升
-- GPT-4o AIME 13% → o1 AIME 83%
+RT-2 (Brohan et al., Google DeepMind 2023-07)[1] 是首个把 VLM (PaLI-X 5B/55B / PaLM-E 12B/562B) 直接 fine-tune 成 VLA 的工作。action 被 tokenize 为 LLM vocabulary 中的 token，output 端 LLM 直接生成 action token。
 
-### DeepSeek R1（2025.01）
+- **数据**：web-scale pretraining（从 PaLI-X / PaLM-E 继承）+ RT-1 收集的 13 个机器人 17 个月数据（~130k 任务 episode）
+- **泛化**：零样本对未见过的 object / instruction，closed-loop success +60% on novel objects（vs RT-1 baseline）
+- **影响**：把 "VLM → fine-tune → VLA" 模式确立为后续标准（LLaVA / Qwen-VL / SigLIP 等都被尝试当 V-base）
 
-- 开源对标 o1，成本显著低于 OpenAI
-- 公开了完整训练 pipeline
-- 业界普遍认为：推理大模型这条之前闭源垄断的路线，几个月就被开源追平
+#### Physical Intelligence π 系列 (2024-2026)
 
-### 国内开源推理模型 2026 三种打法
+Physical Intelligence (PI) 是 Sergey Levine 等创立的具身公司，主线 π₀ → π₀.5 → π₀.7：
 
-#### DeepSeek R2（2026.04，本周）
+- **π₀** (2024-10)[2]：generalist robot policy，1 个 model 跨 7 个 embodiment（Franka / UR5e / Mobile Aloha / Trossen 等），~10k hrs 真机数据训练。VLM (PaliGemma) + flow matching action head。PI 公开 demo 在洗衣 / 折叠 / 打包多场景
+- **π₀.5** (2025-04-22)[3]：open-world generalization。用 action knowledge transfer（从 web video + lab data 联合训练）在未训练过的 home / kitchen 场景 0-shot 表现
+- **π₀.7** (2026-04-16)[4]：steerable robot foundation，PI 公开报告中描述为 "step-change in generalization"；具体 architecture 与训练 scale 待 paper release（写作时 verify）
 
-- 32B dense transformer
-- 单张 24GB 消费级 GPU（如 RTX 4090）就能跑
-- AIME 2025 92.7%，128K 上下文，MIT license
-- 路线：**小而精 + 后训练优化**
+PI 路线：闭源 + 大规模真机数据 + flow-matching action head（区别于 RT-2 的 token-by-token autoregressive action）。
 
-#### Kimi K2.5（2026.01.27）
+#### Figure AI Helix (2026-01 / 2026-03)
 
-- 1T MoE / 32B 激活 / 256K 上下文
-- self-directed agent swarm：100 sub-agents 并行 + 1500 工具调用
-- agent benchmark 上超过 GPT-5.2 / Claude 4.5 Opus / Gemini 3 Pro
-- 路线：**agent 化 + 并行编排**
+Figure AI 在 humanoid 方向，Helix 系列把 full-body 操作统一为单一 visuomotor net：
 
-#### Qwen3-Max-Thinking（2025.10）
+- **Helix** (2025-02)：上半身 + 双机协作，嵌入式低功耗 GPU
+- **Helix 02** (2026-01)[5]：full-body 自主，三层 dual-system（System 0 + 1 + 2，详见 +推理融合 节）；单一神经网络（10M 参数）替代 109,504 行 C++ 工程代码；Living room tidy demo (2026-03) 显示连续 4 分钟以上长任务自主
 
-- 1T 参数 / 36T tokens 训练
-- 配合 tool use + 推理 scaling 在 AIME 25 / HMMT 上拿到 100%
-- 路线：**超大模型 + 推理 scaling**
+Figure 路线：humanoid 形态 + 量产硬件（Figure 03 2025-10 demo 掌内 camera + 触觉传感器）+ 算法 / 硬件协同迭代。
 
-#### 当前 SOTA 的全局描述
+#### NVIDIA GR00T (2025-03 → 2026-04-17)
 
-- 单模型 SOTA 仍是 OpenAI o3 系列
-- 开源在 2026 把"推理能力 + 可部署性"组合做到了 frontier 水平
-- 这一波开源主要由中国团队推进
+NVIDIA GR00T 是 humanoid foundation model 开源线：
 
----
+- **GR00T N1** (2025-03)[6]：首个开源 humanoid foundation model，dual-system（VLM 推理 + Diffusion Transformer 动作）
+- **GR00T N1.5** (2025-06)：加入 FLARE（从人类视频学习）
+- **GR00T N1.6** (2026-04-15)：VLM 升级到 NVIDIA Cosmos-Reason-2B
+- **GR00T N1.7** (2026-04-17)[7]：3B 参数 "Action Cascade" = Cosmos-Reason2-2B (System 2) + 32-layer DiT (System 1)；EgoScale 20,854 hrs 人类 egocentric video 数据集；NVIDIA 公开报告中提出 "robot dexterity scaling law"（1k → 20k hrs 训练数据 dexterity 表现 doubling），是 VLA 领域第一次报告 scaling law 现象
 
-## 延伸 2：具身 VLA——AI 第一次走出屏幕
+NVIDIA 路线：open foundation + 与 Cosmos / Isaac Sim 工具链强绑定；与 Boston Dynamics / Agility / Figure 等多家 humanoid 厂商合作。
 
-### 业界共识
+<!-- REVIEW: 此处建议补 GR00T N1.7 Action Cascade architecture 图（NVIDIA blog 2026-04-17）。来源 [7]。 -->
 
-- VLA = Vision + Language + Action，让 AI 第一次直接输出动作，与物理世界形成闭环
-- 学术与产业普遍认为 VLA 不会取代传统机器人控制和 SLAM，而是在它们之上叠加智能决策
-- 一个完整具身 agent 通常被描述为三层：底层 SLAM/重建 → 中层 VLA → 上层任务规划
+#### 写作时 verify（截至 2026-05-04）
 
-### VLA 国际时间线
+- 未见 Figure Helix 03 公开 release；留待后续追加
+- π₀.7 (2026-04-16) 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
 
-#### 2023-2024 奠基
+### 国内 VLA 进展
 
-- 2023.07 Google DeepMind RT-2：开山之作
-- 2024.10 Physical Intelligence π₀：首个跨形态通用基础模型
+国内 VLA 在 2025-2026 出现 3 家主线：银河通用 GraspVLA / 智元 GO-1 / 宇树 UnifoLM：
 
-#### 2025 工程化
+| Model         | 公司   | Release    | Robot         | 训练数据                  | 开源闭源              |
+| ------------- | ---- | ---------- | ------------- | --------------------- | ----------------- |
+| GraspVLA      | 银河通用 | 2025-01-09 | Galbot 上半身    | 10 亿帧合成 + 真机           | 闭源                |
+| AgiBot GO-1   | 智元   | 2025-03-10 | 多形态           | AgiBot World 100 万 demo | 闭源 + 公开数据集        |
+| UnifoLM-VLA-0 | 宇树   | 2026-01-29 | G1 humanoid   | 真机 + 模拟                | 开源                |
 
-- 2025.02 Figure AI Helix：全上半身 + 双机协作 + 嵌入式低功耗 GPU
-- 2025.03 NVIDIA GR00T N1：开源人形机器人 foundation model（双系统：VLM 推理 + Diffusion Transformer 动作）
-- 2025.06 GR00T N1.5：加入 FLARE，可从人类视频学习
-- 2025.10 Figure 03 硬件：掌内嵌摄像头 + 触觉传感器（3 克级别力感知），为大规模量产设计
+#### 银河通用 GraspVLA (2025-01-09)[8]
 
-#### 2026 三圈融合的拐点
+GraspVLA 是与智源 / 北大 / 港大合作的具身抓取大模型：
 
-- 2026.01 Figure Helix 02：三级架构（System 0/1/2），单一神经网络（10M 参数）替代 109,504 行 C++；**洗碗机连续 4 分钟自主操作**（目前最长最复杂的人形机器人自主任务）
-- 2026.04.15 GR00T N1.6（4 天前）：内部 VLM 升级到 NVIDIA Cosmos-Reason-2B，Diffusion Transformer 翻倍（32 vs 16 层）
+- **数据**：10 亿帧合成 "视觉-语言-动作" 对预训练 + 真机 fine-tune
+- **七大泛化金标准**（银河通用提出）：光照 / 背景 / 平面位置 / 空间高度 / 动作策略 / 动态干扰 / 物体类别
+- **集成**：GraspVLA + TrackVLA + 人机交互模块 → GALBOT VLA agent；Galbot G1 上半身机器人在 NVIDIA CES 2025 demo 中托举 RTX 5090
 
-### VLA 国内时间线
+#### 智元 AgiBot GO-1 (2025-03-10)[9]
 
-#### 银河通用 GraspVLA（2025.01.09）
+GO-1 是智元 (AgiBot) 的 ViLLA (Vision-Language-Latent-Action) 架构：
 
-- 与智源 / 北大 / 港大合作
-- **全球首个端到端具身抓取基础大模型**
-- 预训练完全用合成数据（10 亿帧"视觉-语言-动作"对）
-- 提出 VLA 基础模型"七大泛化金标准"（光照 / 背景 / 平面位置 / 空间高度 / 动作策略 / 动态干扰 / 物体类别）
-- 配套机器人 Galbot 在 NVIDIA CES 2025 发布会托举 RTX 5090 出场
+- **架构**：MoE + Latent Planner + Action Expert 三件套，在 latent space 做 planning 而不是直接 action token
+- **训练数据**：AgiBot World 数据集，100 万条真实机器人 demonstration，217 个任务；国内首个公开大规模 VLA 数据集
+- **性能**：平均成功率 46% → 78%（vs GO-1 之前 baseline）
 
-#### 智元 GO-1（2025.03.10）
+#### 宇树 UnifoLM-VLA-0 (2026-01-29)[10]
 
-- ViLLA 架构（Vision-Language-Latent-Action）
-- MoE + Latent Planner + Action Expert 三件套
-- 100 万条真实机器人 demonstration 训练（AgiBot World 数据集，217 个任务）
-- 平均成功率 46% → 78%
-- 业界普遍视为国内首个产品级 VLA + 公开大规模数据集的工作
+UnifoLM-VLA-0 是宇树为 G1 humanoid 设计的 VLA：
 
-#### 宇树 UnifoLM-VLA-0（2026 开源）
+- **Backbone**：基于阿里 Qwen2.5-VL-7B（国内 VLA 直接复用 Qwen 系列 VLM 的代表案例）
+- **任务**：单一 policy 在 G1 上完成 12 类操作（开闭抽屉 / 插拔 / 抓放 / 工具使用）
+- **开源 + 硬件价格**：开源 + G1 售价约 $13.5K（vs Figure 02 等海外 humanoid 一个数量级低）
 
-- 给 G1 装"具身 AI 大脑"：开药瓶 / 装网球拍 / 整理工具
-- 基于阿里 Qwen2.5-VL-7B（Qwen 被国内具身公司直接用作 backbone 的真实案例）
-- G1 售价 $13.5K（一个数量级低于 Figure 02）
+### VLA + 推理融合
 
-### 国内 vs 国外打法对比（业内普遍观察）
+VLA + reasoning 融合的核心模式是 dual-system：System 1 高频反射动作 (VLA policy) + System 2 慢思考 (reasoning LLM) 协同，应对 long-horizon / 多步任务。
 
-- 硅谷（Figure / Physical Intelligence）：重金投入 + 全栈自研
-- NVIDIA：开源 foundation model + 生态绑定
-- 国内主流：硬件价格优势 + 开源 + 数据规模
+#### Reasoning model 极简介绍（背景，~200 字）
 
-### 三圈融合的两个最新信号（业界关注度最高）
+Reasoning model 把 chain-of-thought 推理内置为 model 能力，通过 RL on CoT 训练（而非外部 prompt-engineering）。代表工作：OpenAI o1 (2024-09)[11] / o3 (2025-04) / DeepSeek R1 (2025-01)[12] / DeepSeek R2 (2026-04，32B dense 单 24GB GPU 可跑)。性能特点：AIME / GPQA / Codeforces 等 multi-step 推理 benchmark 显著超过同期 GPT-4 / GPT-5 base。本 doc scope 偏 SLAM / 具身，不单独展开；此处仅作为 VLA + 推理融合的 background。
 
-#### VLA + 推理大模型
+#### Dual-system 三个实例
 
-- Figure Helix 02 三级架构
-  - System 0：实时平衡 1kHz
-  - System 1：视觉运动 200Hz
-  - System 2：高层推理
-- 公开报告中明确借鉴 Kahneman「快思考 / 慢思考」
-- 洗碗机 4 分钟连续自主任务由这个架构跑出来
+- **Figure Helix System 1+2** (2026-01)[5]：三级架构 — System 0 实时平衡 (1 kHz) / System 1 视觉运动 (200 Hz, VLA policy) / System 2 高层推理 (LLM reasoning)；公开报告中明确借鉴 Kahneman 快 / 慢思考二系统；4 分钟连续洗碗机自主 demo (2026-01) 由该架构实现
+- **π₀.5 reasoning version** (2025-04-22)[3]：π₀.5 在 base policy 之外集成 reasoning 模块；用 LLM 对当前 task 拆解为 sub-task 后由 base policy 执行
+- **GR00T N1.7 Action Cascade** (NVIDIA 2026-04-17)[7]：System 2 = Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §4.7 Cosmos），System 1 = 32-layer Diffusion Transformer；"Action Cascade" 命名强调 reasoning 输出的 plan 级联到 DiT action 生成
 
-#### VLA + World Models
+#### 关键挑战
 
-- GR00T N1.6（4 天前）把内部 VLM 直接换成 NVIDIA Cosmos-Reason-2B
-- NVIDIA 把自家 world model（Cosmos 系列）直接集成进 VLA 模型
-- 业界普遍认为这是 VLA + World Model 融合首次进入产品级
+- **System 1/2 latency 协调**：System 2 LLM 推理 ~秒级延迟，System 1 控制 ~10 ms；协调机制（event-triggered / 周期性 / 异步并行）直接影响系统响应
+- **Long-horizon planning**：System 2 输出的 plan 在 System 1 执行过程中可能偏离，何时重 plan 是开放问题
+- **Plan ↔ action 接口形式**：language token / latent vector / sub-task list，当前各家 design choice 不同，没有 standard
+
+### VLA + World Models 融合
+
+VLA + World Models 融合的核心模式是 World Model dreaming：用 world model 生成大量 rollout 数据训练 VLA policy，替代 / 补充真机数据收集。思路延续 Ha & Schmidhuber 2018 dream-based policy training（详见 §4.5），但 world model 从 V+M+C 升级到 latent video diffusion 大模型。
+
+#### Cosmos / Genie / V-JEPA 在此节简提（详见 §4.7）
+
+- **NVIDIA Cosmos** (2025-01 起)：physical AI world model 工具链，包括 Predict (未来状态) / Transfer (sim-to-real) / Reason (VLM)
+- **DeepMind Genie 系列** (2024-02 / 2024-12 / 2025-08)：可交互 latent world model，被多家 VLA 团队当 training playground 使用
+- **V-JEPA-2** (Meta 2025-06)：JEPA 路线的 video predictive model
+
+详细内容见 §4.7 World Models 近期形态；本节仅讨论与 VLA training 的融合机制。
+
+#### 三个融合机制
+
+- **Sim-to-real via Cosmos Transfer**：NVIDIA Cosmos Transfer 把 sim renderer 输出经 diffusion 改造成接近真机分布的图像，用于 VLA training data augmentation；GR00T N1.7 (2026-04-17) 公开报告中使用此 pipeline
+- **Dream-based RL training**：world model 生成 rollout，VLA policy 在 dream 中做 RL；银河通用 / 宇树 UnifoLM 等公开报告中提到 dreamer-like 训练方式
+- **Reasoning + World Model 在同一 model 内**：NVIDIA GR00T N1.7 把 Cosmos-Reason2-2B 同时作 System 2 reasoning 与 world model state predictor，把 reasoning 与 dream 在同一 model 内统一
+
+#### 当前局限与开放问题
+
+- **Sim-to-real gap 仍在**：world model dream 的物理一致性与真机 distribution 仍有 gap，完全 dream-only training 在长尾任务上未广泛验证
+- **训练数据分布对齐**：world model 训练数据 vs VLA policy 训练数据 distribution 是否需要联合归一化，当前各家 design 不同
+- **真机数据规模仍是瓶颈**：GR00T N1.7 dexterity scaling law 在 1k-20k hrs 真机数据上验证，是否能用 world model dream 进一步 scale 待验证（开放问题 1，§4.8）
+
+### References
+
+- [1] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
+- [2] Black et al. (Physical Intelligence), π₀: A Vision-Language-Action Flow Model for General Robot Control, arXiv 2024. arXiv:2410.24164
+- [3] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
+- [4] Physical Intelligence, π₀.7 release, physicalintelligence.company/blog/pi07 2026-04-16.
+- [5] Figure AI, Helix 02 release, figure.ai/news/helix 2026-01.
+- [6] NVIDIA, GR00T N1 release, developer.nvidia.com 2025-03.
+- [7] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
+- [8] 银河通用, GraspVLA + 七大泛化金标准, 银河通用 blog 2025-01-09; baike.baidu.com/item/GraspVLA
+- [9] AgiBot, GO-1 + AgiBot World 数据集 release, agibot.com 2025-03-10; tech.huanqiu.com/article/4QAL55JkZVE
+- [10] Unitree, UnifoLM-VLA-0 release, unitree.com 2026-01-29.
+- [11] OpenAI, o1 system card, openai.com/index/learning-to-reason-with-llms 2024-09-12.
+- [12] DeepSeek, DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning, arXiv 2025. arXiv:2501.12948
 
 ---
 
