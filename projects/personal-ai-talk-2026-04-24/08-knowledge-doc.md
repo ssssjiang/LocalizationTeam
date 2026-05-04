@@ -21,17 +21,14 @@
 
 ### 2.1 CNN：视觉端到端特征学习
 
-AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 16.4%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。
+AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 16.4%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，在大规模数据（ImageNet 1.2M 图像）+ GPU 算力下扩展。
 
 #### 关键设计
 
-AlexNet 的关键构件[1]：
+AlexNet 关键构件[1]：
 
-- 5 层卷积 + 3 层全连接，60M 参数
-- ReLU 激活函数（替代 sigmoid / tanh）加速收敛
-- Dropout (Hinton et al., 2012)[3] 减轻过拟合
-- 双 GPU 数据并行（NVIDIA GTX 580，3GB VRAM × 2；当时单 GPU 内存放不下完整模型）
-- Local Response Normalization（后续被 BatchNorm 替代）
+- **网络架构**：5 层卷积 + 3 层全连接，60M 参数；当时 NVIDIA GTX 580 单卡 3GB VRAM 装不下，采用双 GPU 数据并行
+- **训练 trick**：ReLU 激活函数（替代 sigmoid / tanh）加速收敛；Dropout (Hinton et al., 2012)[3] 减轻过拟合；Local Response Normalization（后续被 BatchNorm 替代）
 
 #### 后续推进
 
@@ -39,7 +36,6 @@ AlexNet 的关键构件[1]：
 
 - VGG (Simonyan & Zisserman, ICLR 2015)[4]：加深到 16-19 层，全部用 3×3 卷积；ImageNet top-5 错误率 7.32%
 - GoogLeNet / Inception (Szegedy et al., CVPR 2015)[5]：Inception module 多尺度分支并联；top-5 6.67%，参数量较 VGG 小 ~12×
-- LeNet (LeCun et al., Proc. IEEE 1998)[6]：首个卷积 + pooling + 全连接架构，应用于 MNIST 手写体识别；AlexNet 在大规模数据 + GPU 算力下扩展了 LeNet 思路
 
 ### 2.2 RNN：序列建模
 
@@ -115,13 +111,14 @@ Veit et al. (NeurIPS 2016)[17] 提出 ResNet 行为更接近"相对浅网络的 
 
 #### 跨架构延续
 
-残差连接在多种主流架构中以不同形式出现：
+残差连接在三大领域的主流架构中均有沿用：
 
-- **Transformer**：每个 sub-layer 后采用 `LayerNorm(x + Sublayer(x))`，其中 `+` 即残差连接[12]
-- **DenseNet** (Huang et al., CVPR 2017)[18]：把 sum 改为前序所有层的 concat，使每层都能直接看到所有前序特征
-- **ResNeXt** (Xie et al., CVPR 2017)[19]：在残差通路内引入分组卷积，把"加深 / 加宽"扩展为"加 cardinality"
-- **Diffusion U-Net**：encoder / decoder 之间用 skip connection 跨层 concat，结构上是残差思路的另一变种
-- **具身机器人模型** 的视觉 / 动作 head 的基础 block 多含残差结构
+- **Transformer 系**（NLP / LLM 主线）：每个 sub-layer 后采用 `LayerNorm(x + Sublayer(x))`，其中 `+` 即残差连接[12]；后续 LLM / VLM / VLA 大量复用该 block 模板
+- **视觉与生成模型**：
+  - **DenseNet** (Huang et al., CVPR 2017)[18]：把 sum 改为前序所有层的 concat，使每层都能直接看到所有前序特征
+  - **ResNeXt** (Xie et al., CVPR 2017)[19]：在残差通路内引入分组卷积，把"加深 / 加宽"扩展为"加 cardinality"
+  - **Diffusion U-Net**：encoder / decoder 之间用 skip connection 跨层 concat，结构上是残差思路的另一变种
+- **具身机器人模型**：视觉 / 动作 head 的基础 block 多含残差结构
 
 CNN 的卷积、RNN 的循环是架构特异性的归纳偏置；残差连接不绑定具体任务范式，仅为深网络优化提供一条线性通路。这一架构无关属性使其在 CNN[13]、Transformer[12]、Diffusion U-Net、具身视觉 head 等不同范式中均有沿用，且常与各架构原有的归纳偏置（卷积、attention 等）正交叠加。
 
@@ -159,10 +156,9 @@ Transformer (Vaswani et al., NeurIPS 2017)[1] 完全用 self-attention + positio
 
 #### 关键设计
 
-- **Scaled dot-product attention**：`Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]；√d_k 缩放避免 softmax 进入饱和区
-- **Multi-head attention**：把 Q / K / V 线性投影到 h 个子空间各自做 attention 后 concat；让模型在不同 representation subspace 关注不同模式
+- **Attention 机制**：Scaled dot-product `Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]，√d_k 缩放避免 softmax 进入饱和；Multi-head 把 Q / K / V 线性投影到 h 个子空间各自做 attention 后 concat，让模型在不同 representation subspace 关注不同模式
 - **Position encoding**：self-attention 本身排序无关；用 sinusoidal positional encoding 把绝对位置注入 embedding（后来 RoPE 等替代方案）
-- **Encoder-decoder + residual + LayerNorm**：每个 sub-layer 后 `LayerNorm(x + Sublayer(x))`，残差连接来自 ResNet[2]
+- **架构组合**：Encoder-decoder 双塔；每个 sub-layer 后 `LayerNorm(x + Sublayer(x))`，残差连接来自 ResNet[2]
 
 #### 解决了 RNN 的两个硬伤
 
@@ -304,7 +300,8 @@ CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)
 - **数据**：400M（图像，文本描述）pair，从 web 收集（WIT-400M）
 - **Encoder**：image encoder (ViT-B/16, ViT-L/14, ResNet) + text encoder (Transformer)
 - **Loss**：InfoNCE，把 batch 内对齐的 (image, text) 对作 positive，其他作 negative
-- 训出后两个 encoder 共享 latent space，同义图文相似度高
+
+训出后两个 encoder 共享 latent space，同义图文相似度高。
 
 #### Zero-shot 分类[1]
 
@@ -391,8 +388,7 @@ GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到
 
 #### GEN-1 (Runway 2023-02)[6]
 
-- **输入**：source video + reference image / text prompt
-- **输出**：stylized video（depth / mask / structure 保留 + appearance 替换）
+- **I/O**：source video + reference image / text prompt → stylized video（depth / mask / structure 保留 + appearance 替换）
 - **架构**：latent diffusion 扩展到 video，depth + structure 作为 conditioning
 - **应用**：商业视频后期 / 风格迁移；SaaS 形态，非技术用户可用
 
@@ -400,14 +396,15 @@ GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到
 
 GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hybrid），代表性 release：
 
-- **Stable Video Diffusion** (Blattmann et al., 2023-11)[7]：Diffusion 范式，开源 video diffusion，1.5B-3.5B param，14-25 frames @ 576×1024
-- **Sora** (OpenAI 2024-02 technical report)[8]：Diffusion 范式，spacetime patch + Diffusion Transformer (DiT, Peebles & Xie, ICCV 2023)[9]，60s 长视频；2024-12 公开 release 名 Sora Turbo
-- **Veo / Veo 3** (Google DeepMind 2024-05 / 2024-12)[1]：Diffusion 范式，闭源，高质量 + 长片段 + 物理一致性；集成进 Vertex AI
-- **VideoPoet** (Google 2023-12)：Autoregressive 范式，用 LLM 范式生成 video token；长 horizon 强但慢
-- **Pika / Runway Gen-3** (2024)：Diffusion 范式，商业向偏短片 / 创意
-- **Hybrid (latent autoregressive + diffusion refinement)**：探索阶段
+- **Diffusion 范式**（当前主流）：
+  - **Stable Video Diffusion** (Blattmann et al., 2023-11)[7]：开源 video diffusion，1.5B-3.5B param，14-25 frames @ 576×1024
+  - **Sora** (OpenAI 2024-02 technical report)[8]：spacetime patch + Diffusion Transformer (DiT, Peebles & Xie, ICCV 2023)[9]，60s 长视频；2024-12 公开 release 名 Sora Turbo
+  - **Veo / Veo 3** (Google DeepMind 2024-05 / 2024-12)[1]：闭源，高质量 + 长片段 + 物理一致性；集成进 Vertex AI
+  - **Pika / Runway Gen-3** (2024)：商业向偏短片 / 创意
+- **Autoregressive 范式**：**VideoPoet** (Google 2023-12) 用 LLM 范式生成 video token；长 horizon 强但慢
+- **Hybrid 范式**：latent autoregressive + diffusion refinement，探索阶段
 
-Diffusion 范式当前是主流；3D tensor (frame × H × W) 生成任务上，三种范式各自的 trade-off 待 video model scale 进一步放大后再观察。
+3D tensor (frame × H × W) 生成任务上，三种范式各自的 trade-off 待 video model scale 进一步放大后再观察。
 
 #### 与 World Models 收敛 (2024-2025)
 
@@ -499,10 +496,9 @@ NVIDIA GR00T 是 humanoid foundation model 开源线：
 
 NVIDIA 路线：open foundation + 与 Cosmos / Isaac Sim 工具链强绑定；与 Boston Dynamics / Agility / Figure 等多家 humanoid 厂商合作。
 
-**写作时 verify（截至 2026-05-04）**
-
-- 未见 Figure Helix 03 公开 release；留待后续追加
-- π₀.7 (2026-04-16) 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
+> **写作时 verify（截至 2026-05-04）**：
+> - 未见 Figure Helix 03 公开 release；留待后续追加
+> - π₀.7 (2026-04-16) 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
 
 #### 7.1.2 国内 VLA 进展
 
@@ -721,4 +717,3 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 
 - [1] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
 - [2] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
-
