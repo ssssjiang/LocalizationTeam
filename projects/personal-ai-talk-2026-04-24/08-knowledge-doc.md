@@ -1,11 +1,18 @@
-# AI 技术演进知识地图：从单点能力到闭环融合
+# AI 演进笔记 (2012-2026)
 
-## 整体趋势（业界主流叙事）
+## 整体趋势
 
-- AI 演进的近年走向：从「各管各的能力建设」走向「闭环融合」
-- 4 老阶段建立单点能力；3 个新方向（推理 / VLA / World Models）在 2024-2026 年开始把这些能力合并成 agent
-- 2026 年这件事已经从概念走到产品（GR00T N1.6 / Figure Helix 02 / Genie 3）
-- 中国团队在 2025-2026 年的 frontier 模型 release 中占比明显上升
+2012-2026 间 AI 演进经历 4 个 foundation 阶段（判别式 → Transformer → 生成式 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。主线时间锚点：
+
+- **2012-2015 判别式 AI**：AlexNet (NeurIPS 2012) / VGG / GoogLeNet / ResNet (CVPR 2016) — CNN 端到端特征学习
+- **2017 Transformer**：Vaswani et al. — self-attention 替代 RNN，LLM 工业化基础
+- **2020-2022 LLM scaling**：GPT-3 (NeurIPS 2020) / Chinchilla (NeurIPS 2022) / ChatGPT (2022-11)
+- **2020-2024 生成式 AI**：DDPM (NeurIPS 2020) → Stable Diffusion (2022-08) → CLIP (ICML 2021) → GPT-4V (2023-09)
+- **2018 / 2023 World Models 起源**：Ha & Schmidhuber (NeurIPS 2018) V+M+C / Runway GEN-1 (2023-02)
+- **2023-2026 具身 VLA**：RT-2 (2023-07) → π₀ (2024-10) → π₀.7 (2026-04-16) / Helix 02 (2026-01) / GR00T N1.7 (2026-04-17)
+- **2024-2026 World Models 近期形态**：Genie 3 (2025-08) / Cosmos (2025-01 起) / 重建侧 3DGS / DUSt3R / VGGT
+
+本笔记覆盖 AI 整体演进，因记录目的偏 SLAM / 具身机器人，不展开 LLM 推理大模型（OpenAI o1 / o3、DeepSeek R1 / R2、Qwen3-Max-Thinking、Kimi K2.5 等）；其极简介绍仅作为 §4.6 +推理融合 节内 inline 200 字 background 出现。
 
 ## 第一阶段：判别式 AI (2012-2015)
 
@@ -791,66 +798,45 @@ VGGT 把传统 SfM / MVS pipeline 整合为单一大型 feed-forward Transformer
 
 ---
 
-## 整体回收
+## 两个开放问题
 
-### 一句话总结（业界主流叙事）
+两个与具身 / 重建相关的、当前未解决的问题。仅描述现状 / 缺口 / 待观察项，不下判断。
 
-- AI 演进近年正在从「各管各的能力建设」走向「闭环融合」
+### 开放问题 1：VLA 在 home / 长尾场景的泛化
 
-### 老阶段：单点能力建立
+**现状**：VLA 在工厂 / 结构化 pick-place / lab demo 任务上 robust。GR00T N1.7 (2026-04-17)[1] 在 EgoScale 20,854 hrs 数据上首次报告 robot dexterity scaling law（1k → 20k hrs 训练数据 → dexterity 表现 doubling），是 VLA scale 路线的 positive signal。
 
-- 第一阶段：AI 能学特征
-- 第二阶段：AI 能 scale
-- 第三阶段：AI 能创造、能跨模态理解
-- 第四阶段：埋下 world model + 视频生成的种子
+**缺口**：home / 长尾场景的公开 benchmark + success rate 仍未广泛报告：
 
-### 新方向：能力开始合并成 agent
+- Physical Intelligence π₀.5 (2025-04-22)[2] 在 open-world generalization 上是早期信号
+- π₀.7 (2026-04-16) "step-change in generalization" 描述待 paper 公开（写作时 verify）
+- Figure Helix 02 (2026-01) 4 分钟洗碗机 demo 是单点案例，不是统计意义上的成功率
 
-- 推理大模型 → 让 AI **会想**
-- VLA → 让 AI **会做**
-- World Models → 让 AI 在脑内**演**
+**待观察**：
 
-### 2026 已从概念走到产品（公开 release）
+- 是否有标准 home benchmark（类似 ImageNet / COCO 在 CV 时代的角色）
+- scaling law 在 home / 长尾 task 上是否同样成立，还是会饱和
+- World Model dream 替代真机数据是否能 scale 到 home 场景多样性（与开放问题 2 部分耦合）
 
-- 2026.04 NVIDIA GR00T N1.6 + Cosmos Reason 2：world model 直接吃进 VLA
-- 2026.01 Figure Helix 02：三级架构完成 4 分钟洗碗机连续自主任务
-- 2025.08 Genie 3：world model 第一次走向公众
+### 开放问题 2：World Models 与 metric 重建是否合流
 
-### 中国格局（基于公开 release 的观察）
+**现状**：当前两条线在工具上都 reach Transformer feed-forward 大模型化，但 design choice 仍分化：
 
-#### LLM 一线
+- **生成路线 (Genie 3 / Cosmos)**：latent video 表示，隐式 / pixel-level 一致性，无显式 metric 几何
+- **重建路线 (3DGS / DUSt3R / VGGT)**：explicit geometry 表示（point / Gaussian / camera matrix），metric 精度（PSNR / pose error）
 
-- Qwen3.5 / GLM-4.6 / Kimi K2.5 / DeepSeek R2
+**两种合流的可能形态**：
 
-#### 具身一线
+- **Latent → metric**：world model 内部加显式 3D consistency loss（与 SfM / NeRF / 3DGS supervision 联合训练），让 latent 同时具 metric 几何
+- **Metric → generative**：重建 model 加 video diffusion prior 做 sparse-view / extrapolation，让 reconstruction 在 unseen view 上具生成能力
 
-- 银河通用 GraspVLA / 智元 GO-1 / 宇树 UnifoLM-VLA-0
+**待观察**：
 
-#### 客观描述
+- 是否有 paper 在同一 benchmark（如 ScanNet / Tanks-and-Temples）同时报告 metric 精度（pose error / depth RMSE）与 generative 质量（PSNR / FID）
+- VLA training 端是否需要 metric 几何（manipulation 时物体精确位置 / SLAM 闭环）
+- 是否出现标准化 evaluation protocol 同时 cover 两类指标
 
-- 2025-2026 年的 frontier release 中，中国团队的占比明显上升
-- 在多个维度（开源生态 / 部署成本 / agent 编排 / 硬件价格）已经站在第一梯队
+### References
 
----
-
-## 三个仍在讨论的开放问题（讨论环节用）
-
-### Q1：scaling 的尽头
-
-- 预训练 scaling + 推理 scaling 这两条腿还能跑多远？
-- 撞墙时间？
-- 撞墙后下一条 scaling 的腿可能是什么？
-- 学界目前没有共识
-
-### Q2：开源 vs 闭源的格局
-
-- DeepSeek R1 让一个之前闭源垄断的方向（推理大模型）几个月被开源追平
-- 这种「开源追赶速度」是会持续，还是 R1 是个例外？
-- 大模型的护城河到底在哪？
-- 业界讨论激烈但无定论
-
-### Q3：具身智能的路径之争
-
-- VLA（端到端）vs 传统机器人（分层规划）vs 完全 world model 驱动（LeCun JEPA）
-- 哪条会赢？还是会融合？
-- 这是当前具身领域最公开、最未解决的路线之争
+- [1] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
+- [2] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
