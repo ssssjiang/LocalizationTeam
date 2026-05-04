@@ -58,22 +58,24 @@
 | G7  | 每轮交付与 review                | 我写完 + commit + 自动 self-check report + drift 提示；user OK 进下轮 / 不 OK 在该轮迭代；commit message 见 §5                              |
 | G8  | scope 重定向：删延伸 1 推理大模型       | 业务为扫地 / 割草机扩具身、user 做 SLAM；推理大模型与业务弱关联，整节删（净省 ~3200 字）；+推理融合节 inline 补 ~200 字 reasoning 极简介绍                             |
 | G9  | 重建侧工作回归                     | user 是定位建图算法工程师，重建侧是专业 background；§4.7 (原 §4.8) 加回 "重建侧工作 (3DGS/DUSt3R/VGGT)" ~1500 字客观介绍，不与生成做主观对照（避开 Q5 严禁的 SLAM 视角对照） |
+| G10 | drift → 09 staging          | user 重新框定 doc 用途为「演进 narrative」, frontier 列举 (LLM / VLM / 重建侧) 不属主线，移到 09 staging file (`08-drift-staging-for-09.md`) 待 09 brainstorm 完 form factor 后整理；§3.4/§3.5 删，§4.3 后半删，§7.3 删；§4 拆 §4 (视觉与视频生成) + §5 (多模态理解)；§5-§8 编号 shift §6-§9；§7 父节点改回 "World Models 近期形态"；净减 ~3700 字 (10.4K → 6.7K) |
+| G11 | sibling axis 平行性 grill       | 逐级 audit `##` / `###` / `####` sibling axis 演绎/归纳关系；6 处修复：§2.3 `工作机制的另一种解释` → `后续理论解释`；§3.4 简介 inline 进 §3.3 末（§3 仅 3 个 ###）；§4 拆 4.1 方法演进（含 4 个 ####）+ 4.2 应用扩展（与引子二分 axis 一致）；§6.2 4→3 #### 时间序；§8.1 3→2 #### (体系 / 应用与对比)；§8.2 4→2 #### 同模式 |
 
 
 ## 3. 总体骨架
 
 
-| `##` 阶段                            | 长度预算       | `###` sub-topics                                                                                       |
-| ---------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------ |
-| 整体趋势（开篇短段，不开 ##）                   | ~250       | 7 条 bullet 或一段，每条阶段时间锚点 + 代表 work + 1 句 scope statement（覆盖 AI 整体演进，doc 偏 SLAM / 具身视角，不展开 LLM 推理大模型，G8） |
-| 第一阶段：判别式 AI (2012-2015)            | ~2200      | CNN (700) / RNN (600) / ResNet (900)（3）                                                                |
-| 第二阶段：Transformer 范式 (2017-2026)    | ~4800      | Transformer (1000) / Scaling Law (800) / ChatGPT (600) / 2026 主线大模型 (1200) / 国内大模型 (1200)（5）           |
-| 第三阶段：多模态生成与对齐 (2020-2024)            | ~2600      | Diffusion (1000) / CLIP (800) / GPT-4V (800)（3）                                                        |
-| 第四阶段：World Models 起源 (2018-2023)   | ~1600      | World Models 2018 (800) / Runway GEN-1 (800)（2）                                                        |
-| 延伸 1：具身 VLA (2023-2026)            | ~4600      | 国际 VLA (1800) / 国内 VLA (1200) / VLA+推理 (**900**, inline reasoning 200) / VLA+World Models (700)（4）     |
-| 延伸 2：3D 空间智能近期形态 (2024-2026) | ~3300      | Genie 3 (1000) / NVIDIA Cosmos (800) / **重建侧工作 (1500, 3DGS/DUSt3R/VGGT，G9)**（3）                        |
-| 两个开放问题                             | ~700       | VLA 在 home 场景泛化 / World Models 与 metric 重建合流（2，各 ~350）                                                 |
-| **Total**                          | **~20.1K** | **20 ###**                                                                                             |
+| `##` 阶段                          | 长度预算       | `###` sub-topics                                                                                       |
+| -------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------ |
+| 整体趋势（开篇短段，不开 ##）                 | ~250       | 7 条 bullet 或一段，每条阶段时间锚点 + 代表 work + 1 句 scope statement（覆盖 AI 整体演进，doc 偏 SLAM / 具身视角，不展开 LLM 推理大模型，G8） |
+| 第一阶段：判别式 AI (2012-2015)          | ~2200      | CNN (700) / RNN (600) / ResNet (900)（3）                                                                |
+| 第二阶段：Transformer 范式 (2017-2026)  | ~4800      | Transformer (1000) / Scaling Law (800) / ChatGPT (600) / 2026 主线大模型 (1200) / 国内大模型 (1200)（5）           |
+| 第三阶段：多模态生成与对齐 (2020-2024)        | ~2600      | Diffusion (1000) / CLIP (800) / GPT-4V (800)（3）                                                        |
+| 第四阶段：World Models 起源 (2018-2023) | ~1600      | World Models 2018 (800) / Runway GEN-1 (800)（2）                                                        |
+| 延伸 1：具身 VLA (2023-2026)          | ~4600      | 国际 VLA (1800) / 国内 VLA (1200) / VLA+推理 (**900**, inline reasoning 200) / VLA+World Models (700)（4）     |
+| 延伸 2：3D 空间智能近期形态 (2024-2026)     | ~3300      | Genie 3 (1000) / NVIDIA Cosmos (800) / **重建侧工作 (1500, 3DGS/DUSt3R/VGGT，G9)**（3）                        |
+| 两个开放问题                           | ~700       | VLA 在 home 场景泛化 / World Models 与 metric 重建合流（2，各 ~350）                                                 |
+| **Total**                        | **~20.1K** | **20 ###**                                                                                             |
 
 
 ## 4. 各 ### Facts Outline
@@ -292,7 +294,7 @@
 | 3   | 第三阶段（Diffusion / CLIP / GPT-4V）                             |                                                                              | ✓               |
 | 4   | 第四阶段（World Models 2018 / GEN-1）                             |                                                                              | ✓               |
 | 5   | 延伸 1（具身 VLA：国际 / 国内 / +推理 / +WM）                            | 国际 VLA 扩到 1800（G2）；+推理含 inline reasoning 极简介绍（G8）；+WM Cosmos / Genie 仅简提（G1） | ✓               |
-| 6   | 延伸 2（3D 空间智能近期形态：Genie 3 / Cosmos / 重建侧工作）            | 重建侧工作回归（3DGS / DUSt3R / VGGT，~1500，G9）                                       | ✓               |
+| 6   | 延伸 2（3D 空间智能近期形态：Genie 3 / Cosmos / 重建侧工作）                  | 重建侧工作回归（3DGS / DUSt3R / VGGT，~1500，G9）                                       | ✓               |
 | 7   | 整体趋势（开篇）+ 两个开放问题（收尾）                                        | 整体趋势 postpone 到此轮写有 navigation-correct 优势（G5）                                | ✓               |
 | 8   | Audit pass：grep 禁用词 / time anchor 一致性 / citation 完整性 / 风格扫描 |                                                                              | ✓               |
 
@@ -359,4 +361,26 @@ rg -n "(我认为|趋势是|建立.{0,4}范式|不是.{1,8}而是|值得注意|�
 - Time anchor 一致（YYYY-MM-DD / venue YYYY，G4）；同节同 model 第一次给完整日期
 - 跨节内容不重复：主节展开 model 本体，横向节回引（G1）
 - 用户对每轮内容确认 OK
+
+## 11. Post-restructure 实际状态 (2026-05-05)
+
+经 G10 (drift → 09 staging) + G11 (sibling axis grill) 落地后，08 doc 实际结构如下（§3-§5 上方设计为历史 design 记录，不再同步）：
+
+| `##` | 标题                                | `###` 数量 | sibling axis (post-G11)                                          |
+| ---- | --------------------------------- | -------- | ----------------------------------------------------------------- |
+| §1   | 整体趋势                              | —        | 5 阶段 + 2 延伸 + 1 开放问题（doc framing）                                |
+| §2   | 第一阶段：判别式 AI (2012-2015)           | 3        | CNN / RNN / ResNet（三个 problem-solving 方向）                        |
+| §3   | 第二阶段：Transformer 范式 (2017-2026)   | 3        | Transformer / Scaling Law / ChatGPT (含 frontier inline 简介)       |
+| §4   | 第三阶段：视觉与视频生成 (2020-2024)          | 2        | 4.1 方法演进 (4 ####) / 4.2 应用扩展 (二分 axis)                           |
+| §5   | 第四阶段：多模态理解 (2020-2024)            | 2        | 5.1 CLIP / 5.2 GPT-4V (representation / LLM 二分)                  |
+| §6   | 第五阶段：World Models 起源 (2018-2023)  | 2        | 6.1 Ha & Schmidhuber 2018 / 6.2 Runway GEN-1                     |
+| §7   | 延伸 1：具身 VLA (2023-2026)            | 2        | 7.1 进展（地理）/ 7.2 融合方向（与外部范式融合）                                   |
+| §8   | 延伸 2：World Models 近期形态 (2024-2026) | 2        | 8.1 Genie / 8.2 Cosmos（两条主线，二级 #### 体系/应用与对比对称）                  |
+| §9   | 两个开放问题                           | 2        | 9.1 VLA home 泛化 / 9.2 WM 与 metric 重建合流                            |
+
+**字数**：~6.7K（当前）vs ~20.1K（原 design），净减 ~13.4K（drift 移走 ~4.3K + 删延伸 1 推理大模型 ~3.2K + 整体精简 ~5.9K）。
+
+**相关 file**：
+- `projects/personal-ai-talk-2026-04-24/specs/08-drift-staging-for-09.md`：drift 暂存（LLM frontier / VLM frontier / 重建侧 ~4.3K 字），待 09 brainstorm 完 form factor 后整理进 09 doc
+- `projects/personal-ai-talk-2026-04-24/specs/2026-05-04-sweeper-embodied-roadmap-brainstorm-checkpoint.md`：09 doc brainstorm 进行中
 

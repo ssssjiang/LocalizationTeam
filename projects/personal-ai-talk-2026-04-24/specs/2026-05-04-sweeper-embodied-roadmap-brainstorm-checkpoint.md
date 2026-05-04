@@ -95,6 +95,14 @@
 - 路径：`projects/personal-ai-talk-2026-04-24/09-sweeper-embodied-roadmap.md`
 - 现 doc（08-knowledge-doc.md）作为 reference，新 doc 用脚注 / inline 引用现 doc 的 §X.Y
 
+### 4.3 §1 行业技术现状地图 raw material（2026-05-05 update）
+
+08 doc 已经做了一次 grill 决定（详见 spec G10），把 "frontier 横扫 / 横向 reference table" 部分（不属于 narrative 主线）从 08 移到了 staging：
+
+- **路径**：`projects/personal-ai-talk-2026-04-24/specs/08-drift-staging-for-09.md`
+- **内容**：~4.3K 字，分 3 块——LLM frontier (GPT-5.5 / Gemini 3.1 / Claude 4.7 / Qwen / Kimi / GLM / DeepSeek + Mamba 架构线) / 多模态 LLM frontier (GPT-4o / Qwen Omni / Kimi K2 / GLM-4.6 等) / 几何重建 (3DGS / DUSt3R / VGGT)
+- **用途**：09 doc §1 行业技术现状地图的初步 raw material；待 form factor 决定后，按 09 章节结构（成熟度 / 工业可用性 / 国内外厂商 cover）重新整理
+
 ## 5. 接续 instruction
 
 下次 session 开场直接：
