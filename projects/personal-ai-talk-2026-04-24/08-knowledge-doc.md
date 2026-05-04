@@ -23,14 +23,14 @@
 
 AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 16.4%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，在大规模数据（ImageNet 1.2M 图像）+ GPU 算力下扩展。
 
-#### 关键设计
+#### 2.1.1 关键设计
 
 AlexNet 关键构件[1]：
 
 - **网络架构**：5 层卷积 + 3 层全连接，60M 参数；当时 NVIDIA GTX 580 单卡 3GB VRAM 装不下，采用双 GPU 数据并行
 - **训练 trick**：ReLU 激活函数（替代 sigmoid / tanh）加速收敛；Dropout (Hinton et al., 2012)[3] 减轻过拟合；Local Response Normalization（后续被 BatchNorm 替代）
 
-#### 后续推进
+#### 2.1.2 后续推进
 
 后续工作沿同一范式深化：
 
@@ -41,32 +41,35 @@ AlexNet 关键构件[1]：
 
 RNN (Recurrent Neural Network) 通过 hidden state 在时序上的递归传递处理序列数据。1980-1990s 提出，实用化集中在 2014-2017 年（Sutskever 2014 seq2seq[7]、Bahdanau 2014 attention[8]）。
 
-#### 主要 variant
+#### 2.2.1 主要 variant
 
 - **vanilla RNN**：hidden state h_t = tanh(W_h h_{t-1} + W_x x_t)；长序列梯度衰减 / 爆炸严重
 - **LSTM** (Hochreiter & Schmidhuber, Neural Computation 1997)[9]：引入 input / forget / output 三门控 + cell state，缓解长序列梯度衰减；2014-2017 年是 NMT / speech 主流 backbone
 - **GRU** (Cho et al., EMNLP 2014)[10]：简化 LSTM 为 update / reset 两门，参数比 LSTM 少 ~25%，多数任务上性能相当
 
-#### 应用
+#### 2.2.2 应用
 
 RNN 推动了两个领域的端到端化：
 
 - **NMT** (Neural Machine Translation)：Sutskever et al. (NeurIPS 2014)[7] 用 encoder-decoder LSTM 在 WMT'14 EN-FR 上达到 BLEU 34.81（vs phrase-based SMT 33.30）
 - **Speech recognition**：DeepSpeech (Hannun et al., 2014)[11] 用 RNN + CTC loss 替代传统 HMM-GMM pipeline，WER 在 Switchboard 上 16%（vs 商业 baseline 18.4%）
 
-#### 已知局限
+#### 2.2.3 已知局限
 
 RNN 在 2017 年后被 Transformer 在 NMT / LM 主线快速取代，主要因：
 
 - **串行依赖**：当前 step 依赖前一 step hidden state，无法 GPU 并行
 - **长距离依赖衰减**：即使 LSTM 也只能稳定捕获 ~100-1000 step 内信息
-- 这两条 Transformer (Vaswani et al., NeurIPS 2017)[12] 同时解决
+
+这两条由 Transformer (Vaswani et al., NeurIPS 2017)[12] 同时解决。
 
 ### 2.3 ResNet 与残差连接
 
 ResNet 引入残差连接 `y = F(x) + x`[13]，解决了深网络的优化退化（degradation）问题。该机制后续在 Transformer[12]、Diffusion U-Net、具身机器人模型的视觉 head 等主流架构的 block 中被沿用，成为不绑定具体任务范式的通用组件。
 
-#### 历史背景与退化现象
+本节按 paper review 标准三段展开：起因（深网络优化退化）→ 解决（残差 block + ImageNet 验证）→ 影响（后续理论解释 + 跨架构延续）。
+
+#### 2.3.1 起因
 
 ResNet (He et al., 2015-12)[13] 之前，Highway Networks (Srivastava et al., NeurIPS 2015)[14] 已提出"门控 + 恒等通路"的思路：每层输出为 `y = T(x) · F(x) + (1 − T(x)) · x`，T(x) 是受 LSTM 启发的 sigmoid 门控函数。Highway 网络可训练 100+ 层，但门控参数随深度增加难以稳定收敛。
 
@@ -74,7 +77,9 @@ CNN 深度从 20 层加到 56 层时，训练误差与测试误差同时升高[1
 
 ResNet 把 Highway 的 T(x) 固定为 1，简化为无门控的恒等加和 `y = F(x) + x`，参数更少、训练更稳定，并在 ImageNet 上得到验证。
 
-#### 机制
+#### 2.3.2 解决
+
+**残差 block 与梯度路径**
 
 每个 block 的输出由 `y = F(x)` 改为 `y = F(x) + x`[13]。F 学到 0 时 block 退化为恒等映射；更深的网络至少不会比更浅的等价网络更差，给优化器一条保底通路。
 
@@ -87,7 +92,7 @@ ResNet 用了两种 block 设计[13]：
 
 He et al. 在 Pre-activation 工作（ECCV 2016）[16] 把 BN 与 ReLU 移到卷积之前（即 BN-ReLU-Conv 而非 Conv-BN-ReLU），让残差通路更接近纯恒等映射，可训练深度从 152 层扩展到 1001 层。
 
-#### 直接效果
+**ImageNet 实验**
 
 ResNet 在 ImageNet 上的 top-5 错误率随深度变化（来源：[13] Table 4，single-model single-crop）：
 
@@ -101,15 +106,15 @@ ResNet 在 ImageNet 上的 top-5 错误率随深度变化（来源：[13] Table 
 | ResNet-152 | 4.49% | 60.2M |
 
 
-ResNet-152 ensemble 后达到 3.57%[13]。同期对照：GoogLeNet 6.67%、VGG 7.32%、AlexNet (2012) 16.4%。
+ResNet-152 ensemble 后达到 3.57%[13]。同期对照：GoogLeNet 6.67%、VGG 7.32%、AlexNet (2012) 16.4%。ResNet 在一年内取代 VGG / GoogLeNet 成为下游 CV 任务的默认 backbone：COCO 目标检测 mAP 从 33.5（VGG-Faster R-CNN）提升到 37.4（ResNet-101-Faster R-CNN）[13]；ImageNet localization 错误率从 19.4% 降到 9.0%[13]。
 
-ResNet 在一年内取代 VGG / GoogLeNet 成为下游 CV 任务的默认 backbone：COCO 目标检测 mAP 从 33.5（VGG-Faster R-CNN）提升到 37.4（ResNet-101-Faster R-CNN）[13]；ImageNet localization 错误率从 19.4% 降到 9.0%[13]。
+#### 2.3.3 影响
 
-#### 后续理论解释 (ensemble view + loss landscape)
+**后续理论解释 (ensemble view + loss landscape)**
 
 Veit et al. (NeurIPS 2016)[17] 提出 ResNet 行为更接近"相对浅网络的 ensemble"：在已训练的 ResNet 中删除任意一个 block，输出几乎不变；这表明残差通路提供了多条并行路径，网络的实际有效深度远小于其名义深度。该机制层面的两类解释——He et al. 的 identity mapping 通路[13] 与 Veit et al. 的 ensemble 路径[17]——均有论文支撑且并不互斥，提示残差连接可能同时提供了"恒等映射的可达性"与"梯度路径的多样性"两类作用。
 
-#### 跨架构延续
+**跨架构延续**
 
 残差连接在三大领域的主流架构中均有沿用：
 
@@ -154,18 +159,18 @@ Transformer (Vaswani et al., 2017) 用 self-attention 替代 RNN 循环，解决
 
 Transformer (Vaswani et al., NeurIPS 2017)[1] 完全用 self-attention + position-wise FFN 取代 RNN 循环结构与 CNN 卷积。在 WMT'14 EN-DE 翻译任务上 BLEU 28.4，超过当时 RNN encoder-decoder baseline 25.16[1]。
 
-#### 关键设计
+#### 3.1.1 关键设计
 
 - **Attention 机制**：Scaled dot-product `Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]，√d_k 缩放避免 softmax 进入饱和；Multi-head 把 Q / K / V 线性投影到 h 个子空间各自做 attention 后 concat，让模型在不同 representation subspace 关注不同模式
 - **Position encoding**：self-attention 本身排序无关；用 sinusoidal positional encoding 把绝对位置注入 embedding（后来 RoPE 等替代方案）
 - **架构组合**：Encoder-decoder 双塔；每个 sub-layer 后 `LayerNorm(x + Sublayer(x))`，残差连接来自 ResNet[2]
 
-#### 解决了 RNN 的两个硬伤
+#### 3.1.2 解决两个硬伤
 
 - **并行性**：self-attention 矩阵运算所有 step 一次性算出，GPU 满负载；RNN 必须串行
 - **长距离依赖**：任意两 token 直接 O(1) 交互，不经 hidden state 衰减；LSTM 只能稳定捕捉 ~100-1000 step 内信息
 
-#### 三派分化与下游影响
+#### 3.1.3 三派与影响
 
 Transformer 之后 LLM 主要分三派架构：
 
@@ -183,16 +188,18 @@ Kaplan et al. (OpenAI 2020)[7] 实验拟合：LLM cross-entropy loss 与参数�
 
 含义：给定 compute budget 可预测最优 N / D 配比与最终 loss。这是 LLM 工程化的核心依据 — 模型设计从 "试新 architecture" 转向 "scale 现有架构 + 调数据 / 训练流程"。
 
-#### GPT-3 (Brown et al., NeurIPS 2020)[8]
+#### 3.2.1 GPT-3 (2020)
 
-- 175B 参数，300B token 训练；in-context learning (few-shot) 显示无需 fine-tune 即可做翻译 / QA / 算术 / code
+GPT-3 (Brown et al., NeurIPS 2020)[8] 175B 参数，300B token 训练。
+
+- in-context learning (few-shot) 显示无需 fine-tune 即可做翻译 / QA / 算术 / code
 - 性能曲线随 scale 平滑提升，验证 Kaplan 2020 预测
 
-#### Chinchilla 修正 (Hoffmann et al., DeepMind 2022)[9]
+#### 3.2.2 Chinchilla 修正 (2022)
 
-Kaplan 2020 的最优配比偏向 "参数大 / 数据少"；Hoffmann et al. 用 400+ 个新实验拟合发现 N 与 D 应同速 scale (compute-optimal: 1B 参数 ↔ 20B token)。Chinchilla 70B (1.4T token) 性能超过 Gopher 280B (300B token)，验证 GPT-3 严重 undertrained。
+Kaplan 2020 的最优配比偏向 "参数大 / 数据少"；Hoffmann et al. (DeepMind 2022)[9] 用 400+ 个新实验拟合发现 N 与 D 应同速 scale (compute-optimal: 1B 参数 ↔ 20B token)。Chinchilla 70B (1.4T token) 性能超过 Gopher 280B (300B token)，验证 GPT-3 严重 undertrained。
 
-#### Emergent abilities 与争议
+#### 3.2.3 Emergent abilities 与争议
 
 Wei et al. (TMLR 2022)[10] 列出 137 个 BIG-Bench 任务的 emergence 曲线：某些任务 (multi-step arithmetic / chain-of-thought) 在小模型几乎随机，到某个 scale 阈值后性能突然提升。
 
@@ -202,7 +209,7 @@ Schaeffer et al. (NeurIPS 2023)[11] 提出反例：多数 emergence 现象由 me
 
 ChatGPT (OpenAI 2022-11-30)[12] 的技术基底 = GPT-3.5 + InstructGPT-style RLHF (Ouyang et al., NeurIPS 2022)[13]。
 
-#### RLHF 三阶段[13]
+#### 3.3.1 RLHF 三阶段
 
 - **SFT (supervised fine-tuning)**：用人类示范回复做 supervised learning，让 base model 学会对话格式
 - **Reward model**：让人类对多个候选回复排序，训一个 reward model 模拟人类偏好
@@ -210,7 +217,7 @@ ChatGPT (OpenAI 2022-11-30)[12] 的技术基底 = GPT-3.5 + InstructGPT-style RL
 
 设计目标 = 三 H (helpful / harmless / honest)。RLHF 思想源自 Christiano et al. (NIPS 2017)[14] 的 RL from human preferences。
 
-#### 产品意义
+#### 3.3.2 产品意义
 
 ChatGPT 5 天 100 万用户、2 个月 1 亿用户。技术上 GPT-3.5 + RLHF 不是飞跃 (InstructGPT 2022-01 已上线)，但产品形态 (对话 UI + alignment to human preference) 是 LLM 第一次被普通用户日常使用的关键节点。后续 Anthropic Claude (Constitutional AI, Bai et al., 2022)[15]、DeepSeek R1 (RL-from-base, 2025-01) 均沿用 RL-from-feedback 思路。
 
@@ -242,35 +249,45 @@ ChatGPT 之后 (2024-2026)，LLM frontier 由 OpenAI / Google DeepMind / Anthrop
 
 ### 4.1 方法演进 (Diffusion 主线)
 
-Diffusion 模型把 "从噪声生成图像" 问题 cast 为 iterative denoising：给定图像 x_0，forward 过程逐步加 Gaussian 噪声直到 x_T ≈ N(0, I)；reverse 过程训练 model 预测每步去噪的 score（或直接预测噪声 ε）。训练 stable，scale 友好。方法演进沿四个里程碑展开：基础 (DDPM) → 加速 (DDIM) → 条件控制 (Guidance) → 降算力 (Latent Diffusion)。
+Diffusion 模型把 "从噪声生成图像" 问题 cast 为 iterative denoising：给定图像 x_0，forward 过程逐步加 Gaussian 噪声直到 x_T ≈ N(0, I)；reverse 过程训练 model 预测每步去噪的 score（或直接预测噪声 ε）。训练 stable，scale 友好。方法演进沿三个 angle 展开：基础架构 (DDPM) → 效率优化 (sampling 加速 DDIM + compute 降低 Latent Diffusion) → 条件控制 (Guidance)。
 
-#### DDPM (Ho et al., NeurIPS 2020)[1]
+#### 4.1.1 基础：DDPM (2020)
+
+DDPM (Ho et al., NeurIPS 2020)[1] 是 Diffusion 现代起点。
 
 - Forward：`q(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)`，β_t 是 noise schedule
 - Reverse：训 ε_θ(x_t, t) 预测加入的噪声；损失 `L = E[||ε - ε_θ(x_t, t)||²]`
 - T 通常 1000 步，直接采样需 1000 次 forward pass
 
-#### 加速：DDIM (Song et al., ICLR 2021)[2]
+#### 4.1.2 效率优化
 
-- DDIM 把 reverse 过程改为 deterministic non-Markovian path
+效率优化沿两个 dimension 展开：sampling 步数压缩 (DDIM) + compute 降低 (Latent Diffusion)。
+
+**加速 sampling：DDIM (2021)**
+
+DDIM (Song et al., ICLR 2021)[2] 把 reverse 过程改为 deterministic non-Markovian path。
+
 - 1000 → 50 步内 sample，质量基本无损
 - 后续 DPM-Solver / EDM 等进一步压到 10-20 步
 
-#### Guidance：Classifier vs Classifier-free
+**降算力：Latent Diffusion (2022)**
+
+Latent Diffusion (Rombach et al., CVPR 2022)[5] 把 diffusion 从 pixel space 移到 VAE encoder 输出的 latent space（典型 4× downsample），显著降低 compute。Stable Diffusion (2022-08，open-weight) 基于 LDM + LAION-5B 训练，是首个消费级 GPU (8GB VRAM) 可跑的 text-to-image 模型；开源后社区驱动迅速展开周边生态 (ControlNet 2023-02 / LoRA / ComfyUI 等)。
+
+#### 4.1.3 条件控制：Guidance
 
 - **Classifier guidance** (Dhariwal & Nichol, NeurIPS 2021)[3]：训一个 classifier `p(y|x_t)`，reverse 时用其梯度 `∇_x log p(y|x)` 引导生成
 - **Classifier-free guidance** (Ho & Salimans, 2022)[4]：同时训 conditional / unconditional model，sampling 时混合 `ε = ε_uncond + w · (ε_cond - ε_uncond)`；不需要单独 classifier，是当前 text-to-image 主流
 
-#### Latent Diffusion 与 Stable Diffusion (Rombach et al., CVPR 2022)[5]
-
-LDM 把 diffusion 从 pixel space 移到 VAE encoder 输出的 latent space（典型 4× downsample），显著降低 compute。Stable Diffusion (2022-08，open-weight) 基于 LDM + LAION-5B 训练，是首个消费级 GPU (8GB VRAM) 可跑的 text-to-image 模型；开源后社区驱动迅速展开周边生态 (ControlNet 2023-02 / LoRA / ComfyUI 等)。
-
 ### 4.2 应用扩展 (2022-2024)
 
-- **DALL-E 2** (Ramesh et al., OpenAI 2022-04)[6]：CLIP latent + diffusion prior + diffusion decoder
-- **Imagen** (Saharia et al., Google NeurIPS 2022)[7]：T5 text encoder + cascaded pixel diffusion
-- **Midjourney** v3 (2022-08) → v5 (2023-03) → v6 (2024-04)：闭源，偏艺术风格
-- **Stable Diffusion 1.x → 2.x → SDXL (2023-07) → SD3 (2024-02)**：开源主线；FLUX (Black Forest Labs 2024-08) 接力
+应用扩展沿图像 / 视频两条 modality 展开：
+
+- **图像生成**（按 release 时间序）：
+  - **DALL-E 2** (Ramesh et al., OpenAI 2022-04)[6]：CLIP latent + diffusion prior + diffusion decoder
+  - **Imagen** (Saharia et al., Google NeurIPS 2022)[7]：T5 text encoder + cascaded pixel diffusion
+  - **Midjourney** v3 (2022-08) → v5 (2023-03) → v6 (2024-04)：闭源，偏艺术风格
+  - **Stable Diffusion 1.x → 2.x → SDXL (2023-07) → SD3 (2024-02)**：开源主线；FLUX (Black Forest Labs 2024-08) 接力
 - **视频扩展**：Stable Video Diffusion (2023-11)[9] / Sora (OpenAI 2024-02 technical report)[8] / Veo 3 (Google 2024-12)
 
 ### References
@@ -295,25 +312,21 @@ LDM 把 diffusion 从 pixel space 移到 VAE encoder 输出的 latent space（�
 
 CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)[1] 用 contrastive learning 把图像与文本对齐到同一 embedding space。
 
-#### 训练框架[1]
+#### 5.1.1 训练框架
 
 - **数据**：400M（图像，文本描述）pair，从 web 收集（WIT-400M）
 - **Encoder**：image encoder (ViT-B/16, ViT-L/14, ResNet) + text encoder (Transformer)
 - **Loss**：InfoNCE，把 batch 内对齐的 (image, text) 对作 positive，其他作 negative
 
-训出后两个 encoder 共享 latent space，同义图文相似度高。
+训出后两个 encoder 共享 latent space，同义图文相似度高。同期独立工作 ALIGN (Jia et al., Google ICML 2021)[2] 用 1.8B noisy 图文对（vs CLIP 400M cleaner pairs），验证 contrastive pre-training scale 路线 robust。
 
-#### Zero-shot 分类[1]
+#### 5.1.2 Zero-shot 分类
 
 - 给定类别名 list（如 ImageNet 1000 类），把每类做 prompt template `a photo of a {class}`，编码得到 1000 个文本 embedding
 - 输入图像编码后，计算与所有文本 embedding 的相似度，取最高者为类别
 - ViT-L/14 在 ImageNet zero-shot top-1 ~76.2%，接近 supervised ResNet-50 baseline
 
-#### 平行工作：ALIGN
-
-ALIGN (Jia et al., Google ICML 2021)[2] 同期独立工作，用 1.8B noisy 图文对（vs CLIP 400M cleaner pairs），验证 contrastive pre-training scale 路线 robust。
-
-#### 下游影响
+#### 5.1.3 下游影响
 
 - **Text-to-image generation**：Stable Diffusion / DALL-E 2 / Imagen 的 text encoder 都是 CLIP（或衍生的 OpenCLIP / T5）
 - **Open-vocabulary detection / segmentation**：OWL-ViT (Minderer et al., ECCV 2022)[3] / GroundingDINO / SAM-2 prompt
@@ -325,9 +338,9 @@ CLIP 是后续 VLM 与 VLA（V-base = VLM）的 visual backbone 主流来源；�
 
 GPT-4V (OpenAI 2023-09 system card)[4] 是 GPT-4 的视觉扩展版本，把图像作为另一种 token 输入 decoder-only LLM。多模态从此从单独研究方向变为 LLM 的 standard configuration。
 
-#### LLaVA 与开源 VLM 路线 (Liu et al., NeurIPS 2023)[5]
+#### 5.2.1 LLaVA (2023)
 
-LLaVA (2023-04) 用 minimum-effort 方案验证 VLM 可行性：
+LLaVA (Liu et al., NeurIPS 2023)[5]（2023-04 release）用 minimum-effort 方案验证 VLM 可行性：
 
 - Vision encoder (CLIP ViT-L/14 frozen) + projection (单层 linear / 后续 MLP) + LLM (Vicuna)
 - 训练 stage 1：align projection (CC3M subset 558K pairs)
@@ -355,18 +368,20 @@ LLaVA (2023-04) 用 minimum-effort 方案验证 VLM 可行性：
 
 Ha & Schmidhuber (NeurIPS 2018)[1] 提出 agent 在内部 world model 中 "dream" rollout，用 dream 训 policy，而非每步与真实环境交互。该工作沿用 Schmidhuber 早期 (1990, 1991) RL with world model 的思路[2]，在深度学习时代以 V+M+C 三模块实现。
 
-#### V+M+C 三模块[1]
+#### 6.1.1 方法与实验
+
+**V+M+C 三模块**[1]：
 
 - **V (Vision)**：VAE encoder 把高维 observation 压缩到 latent z（32 维）
 - **M (Memory)**：MDN-RNN（mixture density net + RNN）在 latent space 预测下一时刻 `z_{t+1} | z_t, a_t`
 - **C (Controller)**：简单 linear policy `a = W [z_t; h_t]`，h_t 是 RNN hidden state；用 evolution strategy (CMA-ES) 训练，不需要 backprop 透 V / M
 
-#### 关键实验[1]
+**关键实验**[1]：
 
 - **CarRacing-v0** (OpenAI Gym)：agent 完全在 dream rollout 中训练 policy，直接 deploy 到真实 environment 取得 906 ± 21 分（vs 当时 best published 591），首次在 reward 上证明 dream-based policy training 可行
 - **ViZDoom Take Cover**：类似 setup，agent 在 dream 中训练后真实 env 中 sample 上 1100 step（baseline ~280 step）
 
-#### 6 年实践停滞 (2018-2024)
+#### 6.1.2 实践停滞 (2018-2024)
 
 V+M+C 在玩具 task 上验证后，2018-2024 间未出现规模化 successful application：
 
@@ -376,7 +391,7 @@ V+M+C 在玩具 task 上验证后，2018-2024 间未出现规模化 successful a
 
 实际突破等到 2024-2025 大模型时代（Cosmos / Genie 系列），详见 §8。
 
-#### 路线分歧：JEPA vs LLM 主线
+#### 6.1.3 路线分歧：JEPA vs LLM 主线
 
 LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，提出 JEPA (Joint Embedding Predictive Architecture, 2022)[3] 路线：在 embedding space 做 predictive learning，不做 pixel-level reconstruction。后续 V-JEPA (Bardes et al., 2024)[4]、V-JEPA-2 (Meta 2025-06)[5] 用于 video understanding。
 
@@ -386,13 +401,13 @@ LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，提出 JEP
 
 GEN-1 (Esser et al., Runway research 2023-02)[6] 把 diffusion 思路 extend 到视频生成的工程产品。技术上不是最强（后续 Sora / Veo 3 性能远超），但是 video diffusion 工程化的早期里程碑，提出了 "条件生成视频" 的若干 design choice。
 
-#### GEN-1 (Runway 2023-02)[6]
+#### 6.2.1 GEN-1 (2023-02)
 
 - **I/O**：source video + reference image / text prompt → stylized video（depth / mask / structure 保留 + appearance 替换）
 - **架构**：latent diffusion 扩展到 video，depth + structure 作为 conditioning
 - **应用**：商业视频后期 / 风格迁移；SaaS 形态，非技术用户可用
 
-#### 后续主线 (2023-2024)
+#### 6.2.2 后续主线 (2023-2024)
 
 GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hybrid），代表性 release：
 
@@ -406,7 +421,7 @@ GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hyb
 
 3D tensor (frame × H × W) 生成任务上，三种范式各自的 trade-off 待 video model scale 进一步放大后再观察。
 
-#### 与 World Models 收敛 (2024-2025)
+#### 6.2.3 与 World Models 收敛 (2024-2025)
 
 视频生成主线在 2024-2025 与 World Models 路线收敛：
 
@@ -609,7 +624,7 @@ VLA + World Models 融合的核心模式是 World Model dreaming：用 world mod
 
 DeepMind Genie 系列把 video generation 改造为 user-action-controllable，即 explicit world model。
 
-#### Genie 系列时间线
+#### 8.1.1 Genie 系列时间线
 
 主线 Genie 1 → Genie 2 → Genie 3 → Project Genie：
 
@@ -618,7 +633,7 @@ DeepMind Genie 系列把 video generation 改造为 user-action-controllable，�
 - **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；60s session 一致性；用户从一张图或一段文字出发实时操控生成的 3D 环境；距 2018 Ha World Models 论文 7 年，是 World Models 公众级 demo 的标志性 release
 - **Project Genie** (DeepMind 2026-01-29)[4]：Genie 3 商业化产品，集成 Google AI Ultra（US 18+ 用户）
 
-#### 应用与对比
+#### 8.1.2 应用与对比
 
 **应用线**：
 
@@ -635,7 +650,7 @@ DeepMind Genie 系列把 video generation 改造为 user-action-controllable，�
 
 NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVIDIA Isaac Sim / GR00T humanoid foundation 配套形成 stack。
 
-#### Cosmos 体系（3 子族 + 工具链定位）
+#### 8.2.1 Cosmos 体系（3 子族 + 工具链定位）
 
 **3 个子族 (2025-2026)[6, 7]**：
 
@@ -650,7 +665,7 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 - **Embodiment**：GR00T N1.x humanoid foundation
 - **Hardware**：Jetson Thor / DGX Spark（具身 inference 硬件）
 
-#### 应用与对比
+#### 8.2.2 应用与对比
 
 **公开 early adopter**[7]：NVIDIA 公开报告中 Cosmos 早期 adopter 包含 humanoid + 自动驾驶两个方向：
 
