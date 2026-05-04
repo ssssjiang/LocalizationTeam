@@ -659,70 +659,135 @@ VLA + World Models 融合的核心模式是 World Model dreaming：用 world mod
 
 ---
 
-## 延伸 3：World Models 的真正突破
+## 延伸 2：World Models 近期形态 (2024-2026)
 
-### 业界共识
+2024-2026 间 World Models 走出 V+M+C 玩具阶段，由 latent video diffusion 大模型 + interactive control 实现产品级 / 公众级 release。DeepMind Genie 系列与 NVIDIA Cosmos 工具链是当前两大主线；与之并行，重建侧工作（3DGS / DUSt3R / VGGT）在同期 reach Transformer feed-forward 大模型化。
 
-- 7 年后（2018→2025），world model 走出玩具任务，走向通用化 + 产品化
-- 它代表 AI 理解世界的另一条路线（与 LLM 范式并列，而非替代）
-- 业界观察到「重建世界」与「生成世界」两条线在工具上趋同（详见后文）
+### Genie 3 与可交互世界生成
 
-### 标志性事件 1：Genie 3（2025.08.05, DeepMind）
+DeepMind Genie 系列把 video generation 改造为 user-action-controllable，即 explicit world model。主线 Genie 1 → Genie 2 → Genie 3 → Project Genie：
 
-- 第一个面向公众的实时交互通用 world model
-- 20-24 fps，720p，可保持几分钟一致性
-- 用户从一张图或一段文字出发，可实时操控生成的 3D 环境探索
-- 距 2018 Ha 那篇论文整整 7 年；业界普遍认为质变发生在 2024-2025 大模型基础设施齐备之后
-- 跟 V+M+C 架构相比不是同一量级（训练规模、画质、可交互性都是 LLM 时代的产物）
+#### 时间线
 
-### 标志性事件 2：NVIDIA Cosmos 成为 Physical AI 基础设施
+- **Genie 1** (DeepMind, ICML 2024)[1]：第一代 foundation world model，256×256，11B 参数，从 200k+ 小时 unlabeled internet video 学；可生成 2D platform-style world，user 用 action token 控制 agent
+- **Genie 2** (DeepMind 2024-12)[2]：升级到 3D 环境，支持 first-person / third-person 视角，~1 分钟 horizon 一致性
+- **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；60s session 一致性；用户从一张图或一段文字出发实时操控生成的 3D 环境；距 2018 Ha World Models 论文 7 年，是 World Models 公众级 demo 的标志性 release
+- **Project Genie** (DeepMind 2026-01-29)[4]：Genie 3 商业化产品，集成 Google AI Ultra（US 18+ 用户）
 
-- 2025.01 CES 发布；至今下载量超 200 万
-- 三个模型族：
-  - **Predict**：未来状态模拟
-  - **Transfer**：仿真到现实迁移
-  - **Reason**：物理推理
-- 早期采用者：Figure AI / Uber / Waabi（VLA + 自动驾驶厂商）
-- 2026.04 GR00T N1.6 直接用 Cosmos-Reason-2B 作为内部 VLM
-- 业界普遍视为 world model 真正进入产品级的标志
+#### 与 Sora-style 视频生成的区别
 
-### 重建侧：另一条对照线（2023-2025 飞速演进）
+视频生成 model 是 implicit world model，但 Sora / Veo 输出的是固定 video clip，user 不能在生成中途介入。Genie 系列的核心区别：
 
-#### 3DGS（2023.07, Inria, SIGGRAPH 2023 best paper）
+- **Action-conditioned**：每帧生成依赖 user 当前 action token，系统在线 sample 而非 batch 生成
+- **State maintenance**：跨 frame 维护 world state（物体位置 / 物理一致性 / 相机轨迹）
+- **Interactive latency**：real-time (~24 fps) 生成 vs offline batch generation
 
-- 100+ fps 的 1080p 实时渲染
-- 训练几分钟达到 Mip-NeRF360 画质
-- 业界视为「重建已存在的世界」成本降低一个数量级的代表性工作
+#### 应用线
 
-#### DUSt3R / MASt3R（Naver Labs, CVPR 2024）
+- **Waymo World Model** (Waymo 2026-02)[5]：自动驾驶 closed-loop 仿真，在内部 world model 中 sample edge case 训练 / evaluate L4 policy
+- **VLA training playground**（多家 humanoid VLA）：用 Genie 系列环境做 RL pretrain / sim2real 验证（详见 §4.6 +WM 融合）
 
-- 给一组未标定图像，直接 transformer 输出 3D pointmap + 相机参数
-- 改变了「传统 SLAM 依赖标定 + 多视几何」的范式
-- map-free relocalization：中位平移误差 1.17 → 0.36，旋转误差砍 80%
+<!-- REVIEW: 此处建议补 Genie 3 demo screenshot (deepmind.google/en/blog/genie-3)。来源 [3]。 -->
 
-#### VGGT（Meta + Oxford, CVPR 2025 best paper）
+### NVIDIA Cosmos 与机器人仿真
 
-- feed-forward transformer，输入 1~几百张图，1 秒内输出相机 + 深度 + 点云 + 3D track
-- 完全不需要传统 BA / 后处理优化
-- 业界普遍视为 SfM 这件事被 transformer 端到端替代的标志
+NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVIDIA Isaac Sim / GR00T humanoid foundation 配套形成 stack。
 
-### 「重建 vs 生成」工具层面趋同（学界已开始讨论的现象）
+#### Cosmos 三个子族 (2025-2026)[6, 7]
 
-#### 两条线在用越来越相似的工具
+- **Cosmos Predict (Predict 2.5, 2026-04)**：flow-based world prediction；统一接口（text-to-world / image-to-world / video-to-world）；2.5 系列在长 horizon 物理一致性上较 1.x 显著 improve
+- **Cosmos Transfer (Transfer 2.5, 2026-04)**：multi-controlnet 可控生成（depth map / segmentation / pose / sketch 等多种 input 条件）；用于 sim-to-real data augmentation（sim renderer 输出 → diffusion 改造为 real-distribution）
+- **Cosmos Reason (Reason 2, 2026-04)**：VLM 增强 spatial-temporal 理解的 reasoning model；NVIDIA GR00T N1.6 / N1.7 直接用 Reason2-2B 作为 System 2 backbone（详见 §4.6 +推理融合）
 
-- transformer 主干
-- foundation model 方向
-- 海量数据预训练
+#### 工具链定位
 
-#### 形式上相似的目标
+Cosmos 不是单点 model，而是 NVIDIA "physical AI stack"：
 
-- 3DGS 与 Genie 3 都是用神经网络表示 3D 世界
-- 区别在数据来源（观察 vs 训练）和目标（精确重建 vs 可信生成）
+- **Foundation**：Cosmos foundation models (Predict / Transfer / Reason)
+- **Sim**：NVIDIA Isaac Sim / Isaac Lab（sim 引擎）
+- **Embodiment**：GR00T N1.x humanoid foundation
+- **Hardware**：Jetson Thor / DGX Spark（具身 inference 硬件）
 
-#### 仍是开放问题
+#### 公开 early adopter[7]
 
-- 两条路线最终是融合、并存还是分化，目前学界没有定论
-- 但 2027-2028 这是 AI 视觉/几何方向被广泛关注的战场之一
+NVIDIA 公开报告中 Cosmos 早期 adopter 包含 humanoid + 自动驾驶两个方向：
+
+- **Humanoid**：1X / Agility Robotics / Figure AI / Boston Dynamics（Cosmos Transfer 用作 sim-to-real）
+- **自动驾驶**：Uber / Waabi（Cosmos Predict 用作 closed-loop 仿真）
+
+#### 与 Genie 路线的差异
+
+Cosmos 与 Genie 共享 latent video world model 核心思路，但 design choice 不同：
+
+- **Target user**：Cosmos 偏 robot / 自动驾驶 industry developer；Genie 偏 consumer / game / general public
+- **Open vs closed**：Cosmos 部分模型开源 (Cosmos-Reason2-2B 等)，Genie 闭源
+- **Toolchain integration**：Cosmos 与 NVIDIA Isaac Sim 深度集成；Genie 暂无类似 sim 引擎绑定
+
+### 重建侧工作 (3DGS / DUSt3R / VGGT)
+
+与生成路线（Genie / Cosmos）在 latent video 上学世界动力学不同，重建侧工作直接从图像 / 视频数据恢复显式 3D 几何（point cloud / mesh / Gaussians）。2023-2025 间，重建侧 reach explicit primitives + neural rendering / 大模型化 feed-forward 两类突破。本节客观介绍方法（输入 / 输出 / 关键 paper），不下重建 vs 生成的判断。
+
+#### 3D Gaussian Splatting (3DGS) — Kerbl et al., SIGGRAPH 2023[8]
+
+3DGS 把 3D 场景表示为 explicit 3D Gaussians（位置 / 协方差 / 颜色 / opacity），可微分 splatting 渲染。
+
+- **Pipeline**：SfM 初始化 sparse point cloud → 每点初始化为 3D Gaussian → 可微分渲染 + per-pixel L1 / SSIM loss → adaptive density control（split / clone / prune）
+- **性能**：1080p 100+ fps real-time render；训练几分钟达到 Mip-NeRF360 PSNR
+- **后续工作**：
+  - **4DGS**（含时间维度，Wu et al. CVPR 2024）：动态场景
+  - **Deformable GS**：变形场建模
+  - **SuperSplat / GS-LRM** (Zhang et al. ECCV 2024)[9]：feed-forward 大模型化，从图像直接预测 Gaussians，去除 SfM 初始化 + per-scene optimization
+
+#### DUSt3R / MASt3R — Wang et al., CVPR 2024[10] / Leroy et al., ECCV 2024[11]
+
+DUSt3R 把 3D 重建从 "SfM + MVS + BA" 多阶段 pipeline 改为单 Transformer feed-forward。
+
+- **DUSt3R 输入**：image pair（无标定相机）→ **输出**：两张图分别的 dense 3D point map（在 reference 相机系下），pixel-wise 对应
+- **泛化**：任意场景 sparse-view 重建，web image / phone image / video frame 均可
+- **MASt3R**：在 DUSt3R 上加 dense matching head，提升 keypoint matching 精度；map-free relocalization 中位平移误差 1.17m → 0.36m，旋转误差降 80%[11]
+- **应用**：sparse-view 重建 / SLAM front-end / camera pose recovery；已被 SLAM 社区作 front-end 集成
+
+#### VGGT (Visual Geometry Grounded Transformer) — Wang et al., CVPR 2025[12]
+
+VGGT 把传统 SfM / MVS pipeline 整合为单一大型 feed-forward Transformer。
+
+- **输入**：1-N 张图（任意视角，无标定）
+- **一次性输出**：camera intrinsics & extrinsics + per-pixel depth + 3D point cloud + 3D point tracking
+- **特点**：不需要 BA 后处理优化；1 秒级 inference（vs 传统 SfM 分钟级 - 小时级）；训练 scale 是 DUSt3R 的几倍
+- **影响**：SfM / MVS 传统多阶段 pipeline 被 Transformer feed-forward 端到端整合的近期工作之一
+
+#### 共性与差异
+
+重建侧工作（3DGS / DUSt3R / VGGT）的共性：
+
+- **Explicit geometric primitives**：输出显式 3D 表示（Gaussians / points / camera params），区别于 latent video model 的隐式 world state
+- **Neural rendering / feed-forward 大模型化**：3DGS 的 differentiable rasterizer / DUSt3R / VGGT 的 Transformer feed-forward，与 LLM / VLM 时代 architecture 趋同
+- **Web-scale data + foundation training**：VGGT / GS-LRM 等大模型化路线开始用 web image / video 大规模 pretrain，与 VLM / VLA 走相同 path
+
+重建侧与生成侧（Genie / Cosmos）的差异（仅陈述方法层面，不下判断）：
+
+- **数据来源**：重建从 observation（real image）出发，生成从 prior + condition 出发
+- **几何表示**：重建保留显式几何（point / Gaussian / camera matrix），生成多用 latent feature
+- **任务目标**：重建追求 metric 精度（PSNR / pose error），生成追求 photorealism + plausibility
+
+两条线的关系是开放问题之一（详见 §4.8 开放问题 2）。
+
+<!-- REVIEW: 此处建议补 3DGS rendering vs NeRF 对比图 / DUSt3R pair-prediction diagram。来源 [8] / [10]。 -->
+
+### References
+
+- [1] Bruce et al. (DeepMind), Genie: Generative Interactive Environments, ICML 2024. arXiv:2402.15391
+- [2] DeepMind, Genie 2: A large-scale foundation world model, deepmind.google 2024-12.
+- [3] DeepMind, Genie 3: A new frontier for world models, deepmind.google/en/blog/genie-3 2025-08-05.
+- [4] DeepMind, Project Genie + Google AI Ultra release, deepmind.google 2026-01-29.
+- [5] Waymo, Waymo World Model release, waymo.com 2026-02.
+- [6] NVIDIA, Cosmos World Foundation Models, developer.nvidia.com/cosmos 2025-01 (CES).
+- [7] NVIDIA, Advancing Physical AI with Cosmos 2.5 + Reason2, developer.nvidia.com/blog 2026-04.
+- [8] Kerbl et al., 3D Gaussian Splatting for Real-Time Radiance Field Rendering, SIGGRAPH 2023. arXiv:2308.04079
+- [9] Zhang et al., GS-LRM: Large Reconstruction Model for 3D Gaussian Splatting, ECCV 2024. arXiv:2404.19702
+- [10] Wang et al., DUSt3R: Geometric 3D Vision Made Easy, CVPR 2024. arXiv:2312.14132
+- [11] Leroy et al., Grounding Image Matching in 3D with MASt3R, ECCV 2024. arXiv:2406.09756
+- [12] Wang et al., VGGT: Visual Geometry Grounded Transformer, CVPR 2025. arXiv:2503.11651
 
 ---
 
