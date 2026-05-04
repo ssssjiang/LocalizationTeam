@@ -288,52 +288,125 @@ Mamba (Gu & Dao, 2023)[16] 用 selective State Space Model (SSM) 替代 self-att
 
 ---
 
-## 第三阶段：生成式 AI 的爆发
+## 第三阶段：生成式 AI (2020-2024)
 
-### 业界公认的意义
+2020-2024 间，Diffusion 与 CLIP 分别在生成与跨模态对齐上 reach scale；与 GPT-4V 起多模态成为 LLM 的 standard configuration。这条线为 World Models（latent video）与 VLA（V-base = VLM）提供视觉基础。
 
-- 关键词：**打通**
-- Diffusion 打通：AI 不只是判别器，也能是创造者
-- VLM 打通：视觉和语言不再是两条独立研究线
-- 合起来 → AI 开始具备类人的创造和理解能力，真正进入大众视野
+### Diffusion 模型与 DDPM
 
-### Diffusion：让生成式 AI 第一次"真正可用"
+Diffusion 模型把 "从噪声生成图像" 问题 cast 为 iterative denoising：给定图像 x_0，forward 过程逐步加 Gaussian 噪声直到 x_T ≈ N(0, I)；reverse 过程训练 model 预测每步去噪的 score（或直接预测噪声 ε）。训练 stable，scale 友好。
 
-#### Diffusion 之前的困境
+#### DDPM (Ho et al., NeurIPS 2020)[1]
 
-- GAN（2014）训练不稳定、模式崩塌
-- VAE 生成模糊
-- Autoregressive 太慢
+- Forward：`q(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)`，β_t 是 noise schedule
+- Reverse：训 ε_θ(x_t, t) 预测加入的噪声；损失 `L = E[||ε - ε_θ(x_t, t)||²]`
+- T 通常 1000 步，直接采样需 1000 次 forward pass
 
-#### 反直觉的核心思路
+#### 加速：DDIM (Song et al., ICLR 2021)[2]
 
-- 不学「怎么生成图像」，学「怎么去噪声」
-- Forward：清晰图像逐步加噪 → 纯噪声
-- Reverse：训练模型从纯噪声逐步还原回清晰图像
-- 把「从无到有」拆成「每步去一点点噪声」，训练稳定可 scale
+- DDIM 把 reverse 过程改为 deterministic non-Markovian path
+- 1000 → 50 步内 sample，质量基本无损
+- 后续 DPM-Solver / EDM 等进一步压到 10-20 步
 
-#### 生态爆发
+#### Guidance：Classifier vs Classifier-free
 
-- DDPM 论文（2020）→ 两年内 DALL-E 2（2022.04）+ Stable Diffusion（2022.08，**开源**）+ Midjourney
-- Stable Diffusion 开源被业界视为关键节点：消费级 GPU 跑 image generation，开源社区一夜起飞
+- **Classifier guidance** (Dhariwal & Nichol, NeurIPS 2021)[3]：训一个 classifier `p(y|x_t)`，reverse 时用其梯度 `∇_x log p(y|x)` 引导生成
+- **Classifier-free guidance** (Ho & Salimans, 2022)[4]：同时训 conditional / unconditional model，sampling 时混合 `ε = ε_uncond + w · (ε_cond - ε_uncond)`；不需要单独 classifier，是当前 text-to-image 主流
 
-### VLM：CLIP 是起点
+#### Latent Diffusion 与 Stable Diffusion (Rombach et al., CVPR 2022)[5]
 
-#### CLIP（2021, OpenAI）
+LDM 把 diffusion 从 pixel space 移到 VAE encoder 输出的 latent space（典型 4× downsample），显著降低 compute。Stable Diffusion (2022-08，open-weight) 基于 LDM + LAION-5B 训练，是首个消费级 GPU (8GB VRAM) 可跑的 text-to-image 模型；开源后社区驱动迅速展开周边生态 (ControlNet 2023-02 / LoRA / ComfyUI 等)。
 
-- 4 亿对（图像，文本描述）做对比学习
-- 把图像和文本对齐到同一个语义空间
-- 含义：图与对应文本描述向量接近，跨类别向量距离远
+#### 应用线 (2022-2024)
 
-#### 三大下游影响
+- **DALL-E 2** (Ramesh et al., OpenAI 2022-04)[6]：CLIP latent + diffusion prior + diffusion decoder
+- **Imagen** (Saharia et al., Google NeurIPS 2022)[7]：T5 text encoder + cascaded pixel diffusion
+- **Midjourney** v3 (2022-08) → v5 (2023-03) → v6 (2024-04)：闭源，偏艺术风格
+- **Stable Diffusion 1.x → 2.x → SDXL (2023-07) → SD3 (2024-02)**：开源主线；FLUX (Black Forest Labs 2024-08) 接力
+- **视频扩展**：Stable Video Diffusion (2023-11)[9] / Sora (OpenAI 2024-02 technical report)[8] / Veo 3 (Google 2024-12)
 
-- 零样本图像分类（不需要专门训练分类器）
-- DALL-E 2 / Stable Diffusion 的 text encoder 都是 CLIP
-- GPT-4V / Qwen-VL / LLaVA 本质上都是 CLIP 范式上叠加 LLM
+<!-- REVIEW: 此处建议补 forward / reverse diffusion process 图（Ho 2020 Fig. 2）。来源 [1]。 -->
 
-#### GPT-4V（2023.09）
+### CLIP 与多模态对齐
 
-- AI 第一次能"看懂"用户发的图并回答问题
+CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)[10] 用 contrastive learning 把图像与文本对齐到同一 embedding space。
+
+#### 训练框架[10]
+
+- **数据**：400M（图像，文本描述）pair，从 web 收集（WIT-400M）
+- **Encoder**：image encoder (ViT-B/16, ViT-L/14, ResNet) + text encoder (Transformer)
+- **Loss**：InfoNCE，把 batch 内对齐的 (image, text) 对作 positive，其他作 negative
+- 训出后两个 encoder 共享 latent space，同义图文相似度高
+
+#### Zero-shot 分类[10]
+
+- 给定类别名 list（如 ImageNet 1000 类），把每类做 prompt template `a photo of a {class}`，编码得到 1000 个文本 embedding
+- 输入图像编码后，计算与所有文本 embedding 的相似度，取最高者为类别
+- ViT-L/14 在 ImageNet zero-shot top-1 ~76.2%，接近 supervised ResNet-50 baseline
+
+#### 平行工作：ALIGN
+
+ALIGN (Jia et al., Google ICML 2021)[11] 同期独立工作，用 1.8B noisy 图文对（vs CLIP 400M cleaner pairs），验证 contrastive pre-training scale 路线 robust。
+
+#### 下游影响
+
+- **Text-to-image generation**：Stable Diffusion / DALL-E 2 / Imagen 的 text encoder 都是 CLIP（或衍生的 OpenCLIP / T5）
+- **Open-vocabulary detection / segmentation**：OWL-ViT (Minderer et al., ECCV 2022)[12] / GroundingDINO / SAM-2 prompt
+- **VLM backbone**：LLaVA / Qwen-VL / InternVL 的 vision tower 通常用 CLIP-ViT（或 SigLIP）抽取 visual feature
+
+CLIP 是后续 VLM 与 VLA（V-base = VLM）的 visual backbone 主流来源；§4.6 国际 VLA 节中 RT-2 / π₀ 等 model 内的 vision encoder 多溯源到 CLIP / SigLIP 系列。
+
+<!-- REVIEW: 此处建议补 CLIP contrastive training 框图（Radford 2021 Fig. 1）。来源 [10]。 -->
+
+### GPT-4V 与多模态大模型
+
+GPT-4V (OpenAI 2023-09 system card)[13] 是 GPT-4 的视觉扩展版本，把图像作为另一种 token 输入 decoder-only LLM。多模态从此从单独研究方向变为 LLM 的 standard configuration。
+
+#### LLaVA 与开源 VLM 路线 (Liu et al., NeurIPS 2023)[14]
+
+LLaVA (2023-04) 用 minimum-effort 方案验证 VLM 可行性：
+
+- Vision encoder (CLIP ViT-L/14 frozen) + projection (单层 linear / 后续 MLP) + LLM (Vicuna)
+- 训练 stage 1：align projection (CC3M subset 558K pairs)
+- 训练 stage 2：instruction tuning (GPT-4 generated 158K visual instruction data)
+
+开源后成为 VLM 基本范式；LLaVA-1.5 (2023-10) 替换 projection 为 MLP，benchmark 进一步提升。
+
+#### 国内同期 VLM
+
+- **Qwen-VL** (Bai et al., Alibaba 2023-08)[15]：ViT + Qwen-7B，支持中英文 OCR / grounding / referring expression
+- **InternVL** (Chen et al., Shanghai AI Lab CVPR 2024)[16]：6B vision encoder（放大 ViT scale）+ LLM，多模态 benchmark 上对标 GPT-4V
+
+#### 多模态作为 LLM standard
+
+2024 年起，主流 LLM release 默认含多模态：
+
+- Gemini (Google 2023-12 起 native multimodal)
+- Claude 3 (Anthropic 2024-03 native vision)
+- GPT-4o (OpenAI 2024-05 omni：text + vision + audio)
+- Qwen2-VL (2024-08) / Qwen2.5-VL (2025-01) / Qwen3.5 Omni (2026-03)
+- Kimi K2 / GLM-4.6 等国内 frontier 均含视觉
+
+VLM 的标准化为 VLA（V-base = VLM）与 World Models（Cosmos-Reason 系列）提供了 ready-made 视觉理解组件；§4.6（具身 VLA）/ §4.7（World Models 近期形态）中绝大多数 model 的 vision tower 直接复用或微调自这条 VLM 主线。
+
+### References
+
+- [1] Ho et al., Denoising Diffusion Probabilistic Models (DDPM), NeurIPS 2020. arXiv:2006.11239
+- [2] Song et al., Denoising Diffusion Implicit Models (DDIM), ICLR 2021. arXiv:2010.02502
+- [3] Dhariwal & Nichol, Diffusion Models Beat GANs on Image Synthesis (Classifier guidance), NeurIPS 2021. arXiv:2105.05233
+- [4] Ho & Salimans, Classifier-Free Diffusion Guidance, arXiv 2022. arXiv:2207.12598
+- [5] Rombach et al., High-Resolution Image Synthesis with Latent Diffusion Models, CVPR 2022. arXiv:2112.10752
+- [6] Ramesh et al., Hierarchical Text-Conditional Image Generation with CLIP Latents (DALL-E 2), arXiv 2022. arXiv:2204.06125
+- [7] Saharia et al., Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding (Imagen), NeurIPS 2022. arXiv:2205.11487
+- [8] OpenAI, Video generation models as world simulators (Sora technical report), 2024-02.
+- [9] Blattmann et al., Stable Video Diffusion, arXiv 2023. arXiv:2311.15127
+- [10] Radford et al., Learning Transferable Visual Models From Natural Language Supervision (CLIP), ICML 2021. arXiv:2103.00020
+- [11] Jia et al., Scaling Up Visual and Vision-Language Representation Learning With Noisy Text Supervision (ALIGN), ICML 2021. arXiv:2102.05918
+- [12] Minderer et al., Simple Open-Vocabulary Object Detection with Vision Transformers (OWL-ViT), ECCV 2022. arXiv:2205.06230
+- [13] OpenAI, GPT-4V(ision) System Card, openai.com 2023-09.
+- [14] Liu et al., Visual Instruction Tuning (LLaVA), NeurIPS 2023. arXiv:2304.08485
+- [15] Bai et al., Qwen-VL, arXiv 2023. arXiv:2308.12966
+- [16] Chen et al., InternVL, CVPR 2024. arXiv:2312.14238
 
 ---
 
