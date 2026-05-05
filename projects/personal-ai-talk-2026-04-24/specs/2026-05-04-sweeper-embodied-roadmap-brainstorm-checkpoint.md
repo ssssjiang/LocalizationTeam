@@ -1,115 +1,85 @@
 # 扫地机具身新项目调研 doc — Brainstorming Checkpoint
 
-> **状态**：brainstorming 进行中，本次会话因 form factor 未定中断。下次讨论时直接读本 doc 接续。
+> **状态**：brainstorm phase 1 完成（12 项 root decision + 5 项 spec grill 修订 G1-G5 closed-loop，2026-05-05）；剩 Q5.2 / Q6.2 / Q6.3 / Q6.4 细化层 open（09 doc 起草中 inline 处理）；spec 已落 `2026-05-04-sweeper-embodied-roadmap-design.md`。
+>
+> **2026-05-05 spec grill 修订** G1-G5（详 spec §6）：
+>
+> - G1 milestone 改并行 13-15 月（修 timeline 不一致）
+> - G2 团队拆三层 model（核心 + 既有复用 + teleop 外包）
+> - G3 加 ¥3000-5500 万 cost breakdown + 预算 scenario
+> - G4 GR00T fork chain + M0/M3 trigger + OpenVLA fallback
+> - G5 量产 NX trigger evaluation + AGX fallback（高端定位 ¥9000-11000）
 >
 > **trigger 原话**（2026-05-04）：
+>
 > > 我们调研的目的，其实是给我们扫地机公司的，具身新项目一些启发 & 方向上的指导，以及希望了解行业技术的现状，以及我们可以考虑什么样的方案，用什么样的计算资源；当然从 CNN 说起，是为了掌握发展的脉络，不会悬浮。
 
 ## 1. 真实需求识别
 
 现有产出 `projects/personal-ai-talk-2026-04-24/08-knowledge-doc.md` 是 **AI 演进笔记**（2012-2026 客观 record），但 user 真实需要的是 **扫地机具身新项目调研结论**——两类产出目的不同：
 
-| 维度 | 现 doc（08-knowledge-doc.md）| 待写新 doc |
+| 维度 | 现 doc（08-knowledge-doc.md） | 待写新 doc |
 | --- | --- | --- |
 | 目的 | 技术演进客观 record | 给具身新项目的 启发 / 方向 / 资源选型 |
 | reader 视角 | 任意技术读者 | 内部技术团队 |
 | 输出形式 | 演进时间线 + 客观陈述 | 现状地图 + 候选方案 + decision support |
-| 风格 | 不下判断 | 必须有 implication / 推荐 / trade-off（基于客观证据 derive）|
+| 风格 | 不下判断 | 必须有 implication / 推荐 / trade-off（基于客观证据 derive） |
 | 计算资源 | 不涉及 | 端侧 SoC / 云端训练 / 推理 latency 必须明确 |
 
 现 doc 不动（保持 self-contained 演进 reference 价值），新 doc 引用 §4.X 而不重复演进细节。
 
-## 2. 已确认决定
+## 2. 已确认决定（2026-05-05 grill 完成 12 项 root）
 
-| ID | 决定 | 选择 | 备注 |
+| ID | 决定 | 选择 | 关键 reasoning |
 | --- | --- | --- | --- |
-| Q1 | scope / 产出形式 | **B：单独新 doc** | `09-sweeper-embodied-roadmap.md`（~8-12K 字）；现 doc 不改 |
-| Q2 | reader 视角 | **B：内部技术团队** | 定位 / 算法同事；平等技术语言；可有 hypothesis 但要标注 |
+| Q1 | 产出形式 | 单独新 doc | `09-sweeper-embodied-roadmap.md`（~10-15K 字）；现 doc 不改 |
+| Q2 | reader 视角 | 内部技术团队 | 平等技术语言；可有 hypothesis 但需标注 |
+| Q3 | form factor north star | wheel-legged biped + 1 arm（可蹲扫地、站爬楼 / 抓物） | leverage 现有扫地机 SLAM 蹲伏模式；爬楼 + 抓物组合 cover 主要消费级痛点 |
+| Q3.2 | Phase 拆分 | Phase 1 = 轮式 base + 1 arm；Phase 2 = + lift；Phase 3 = full wheel-legged biped | 直接 jump 到 biped 跨度过大；从 wheeled + arm 起步对接 π₀ / GraspVLA mature 路径 |
+| Q3.4 | Phase 1 task | language-grounded pickup-and-place with multi-target placement（N1 散落物清场 + N2 物品归位 + N3 垃圾分类） | 三 task 共享 capability stack；reframe 为 "language-grounded pick-and-place"；时间表 push 到 12-18 月 |
+| Q4.1 | 推理分配 | 全端侧 | 行业 frontier (GR00T / Helix / π₀ / GraspVLA) 全端侧；家居网络 + 隐私 + 长期 cloud cost 三重 risk |
+| Q4.2 | SoC 选型 | dev/pilot Orin AGX 275 TOPS → 量产 Orin NX 100 TOPS → Phase 2 国产 SoC（地平线 J6P / 黑芝麻 A2000 Pro） | AGX 是行业 dev standard；NX 量化后跑 3B VLA 量产 BOM 可承受；国产替代推到 Phase 2 toolchain mature 后 |
+| Q4.3a | 数据策略 | D 三栈 combined：web video pretrain (EgoScale-style) + sim (Isaac Sim + Cosmos Transfer) + 公开数据集 (AgiBot World 100 万 demo / Open X-Embodiment) + 真机 5-10 万 episode | 全真机 18-24 月不可达；行业 frontier 默认三栈；π₀ / GR00T / GraspVLA 已 prove |
+| Q4.3b | GPU cluster | Hybrid：dev 云租 + pretrain 自购 16×H100（约 ¥1500-2000 万） | dev 阶段不确定性高云租按需；pretrain 进入 stable phase 自购 cluster cost-effective |
+| Q4.4 | VLA model fork base | **GR00T N1.7** (NVIDIA Open Model License, 3B Cosmos-Reason2-2B + 32-layer DiT) 主线 + Mobile Aloha teleop pipeline reference + OpenVLA 作 fallback | 2026 dexterity scaling law 唯一报告；NVIDIA toolchain 与 SoC 选型对齐；dual-system 架构直接 fit Phase 1 task |
+| Q5.1 | Phase 1 deadline | demo 锚 WAIC 2027-07 + 量产首发锚 IFA 2027-09 / 双 11 2027-11（~21 月含 buffer） | WAIC 国内具身展会主场；IFA / 双 11 消费机器人量产首发经典窗口；vs CES 2027 buffer 足够 |
+| Q6.1 | 团队主路线 | B fork 开源 + 5-8 核心团队 + 学术合作 | fork GR00T N1.7 / OpenVLA / AgiBot World / Mobile Aloha 省 6-12 月自研；学术合作补关键模块；与具身大厂合作是战略陷阱 |
 
-## 3. 待决问题
+**Phase 2 / Phase 3 indicative timeline**（未硬锁）：
 
-### 3.1 Q3：具身新项目的目标形态（核心 — 决定整个方案空间）
+- Phase 2: Phase 1 量产 + 12-15 月（约 2028-Q4，双 11 2028 / IFA 2028 量产）
+- Phase 3: Phase 2 量产 + 30-48 月（约 2031-2032 量产；WAIC 2030 demo）
 
-| 选项 | 描述 | 影响 |
-| --- | --- | --- |
-| A | 现有扫地 / 割草机 + VLM 增强（语言交互 / 物体识别 / 用户指令理解，不动机械臂）| VLM 端侧推理 + 现有 SLAM stack；改动最小，落地最快 |
-| B | 轮式 + 单臂 / 抓取（拾取地面玩具 / 衣物 / 垃圾，半具身）| 引入抓取 RL / VLA-pick-and-place；硬件改动大 |
-| C | 轮式 / 足式 + 双臂 / 上半身（家居整理 / 厨房任务）| 全 VLA；与 GR00T / Helix 对标 |
-| D | 全仿人（与 Figure / GR00T 对标）| 远超公司现有能力；需大幅扩团队 |
-| E | SLAM + Foundation model 平台（多 form factor 共享底层：扫地 / 割草 / 仿人）| 平台型路线；研发周期长但复用度高 |
-| F | 还在德尔菲中 / 多条都可能 | 可能并行 |
+## 3. 剩余 open question（09 doc 起草中 inline 处理）
 
-**user 当前态度**：还没想好，待下次讨论决定。
+| ID | Topic | 处理 | 重要度 |
+| --- | --- | --- | --- |
+| Q5.2 | Phase 2 / 3 软锚点细化 | 09 doc §7 inline | 低 |
+| Q6.2 | 学术合作具体对象（清华 / 上海 AI Lab / 港大 / Stanford / CMU 等） | 09 doc §6.4 inline | 中 |
+| Q6.3 | teleop 数据采集 location / 工位规模 / 操作员 | 09 doc §5.3 inline | 中 |
+| Q6.4 | 国产工具链 partner 优先级（地平线 / 黑芝麻 / 阿里 Qwen / Cosmos 国内 team） | 09 doc §6.5 inline | 中 |
 
-### 3.2 Q4：算力 / 硬件平台预算（未问）
+## 4. 候选 doc 设计（已落 spec）
 
-候选方向：
-- 端侧 SoC：高通 RB5 / RB6、地平线 J5/J6、瑞芯微 RK3588 / RK3576、NVIDIA Jetson Orin（NX / AGX）、海思
-- TOPS 预算：≤8 TOPS（轻量 CV）/ 8-30 TOPS（小型 VLM）/ 30-275 TOPS（VLA / 大模型推理）
-- 功耗 / 散热 / BOM cost 约束
-- 是否允许云端协同（mobile robot + cloud inference）
+最终 09 doc 章节大纲已落到 `2026-05-04-sweeper-embodied-roadmap-design.md` §5；本 checkpoint 不再重复。
 
-### 3.3 Q5：时间节点（未问）
-
-- 短期 demo（3-6 月）
-- 中期 product（1-2 年）
-- 长期 platform（3+ 年）
-- 是否对标某个具体的展会 / 发布节点
-
-### 3.4 Q6：团队能力 gap（未问）
-
-已知：user 是 SLAM / 定位建图算法工程师；公司有扫地 / 割草机量产 SLAM 能力。
-
-待确认：
-- 是否已有 VLM / 多模态团队
-- 是否已有 RL / 模仿学习 / VLA 团队
-- 是否已有抓取 / 操作 / dexterous manipulation 团队
-- 数据采集能力（家居场景遥操作 / 仿真 sim2real）
-
-## 4. 候选 doc 设计（待 Q3-Q6 决定后填充）
-
-### 4.1 章节大纲
-
-`09-sweeper-embodied-roadmap.md` 草拟章节（~8-12K 字）：
-
-1. **§1 行业技术现状地图**（基于 08-knowledge-doc.md 抽象，加"成熟度 / 工业可用性"标签）
-   - VLM / VLA / World Models / 重建侧 当前 state-of-the-art
-   - 哪些已工业化（量产）/ demo / 仅实验室
-   - 国内外厂商 cover 矩阵
-2. **§2 候选技术方案**（针对 Q3 选定的 form factor）
-   - 3-4 条候选路线 × trade-off 矩阵
-   - 每条路线：所需模型 / 数据 / 算法 / 硬件 / 风险
-3. **§3 计算资源选型**
-   - 端侧 SoC 候选 + TOPS / 功耗 / BOM 矩阵
-   - 云端训练资源（GPU 数 / 时长 / cost）
-   - 推理 latency budget（real-time control loop / 长 horizon planning）
-4. **§4 团队能力 gap + 可行性评估**
-   - 现有能力 vs 需要能力 → 缺口清单
-   - 招聘 / 外包 / 合作 / 学术 三选一
-5. **§5 路线图建议**
-   - 短期 / 中期 / 长期 milestone
-   - 优先级 + risk
-
-### 4.2 命名与引用
+### 4.1 命名与引用
 
 - 路径：`projects/personal-ai-talk-2026-04-24/09-sweeper-embodied-roadmap.md`
 - 现 doc（08-knowledge-doc.md）作为 reference，新 doc 用脚注 / inline 引用现 doc 的 §X.Y
 
-### 4.3 §1 行业技术现状地图 raw material（2026-05-05 update）
+### 4.2 §1 行业技术现状地图 raw material
 
-08 doc 已经做了一次 grill 决定（详见 spec G10），把 "frontier 横扫 / 横向 reference table" 部分（不属于 narrative 主线）从 08 移到了 staging：
+08 doc 已经做了一次 grill 决定（详见 08 spec G10），把 "frontier 横扫 / 横向 reference table" 部分（不属于 narrative 主线）从 08 移到了 staging：
 
 - **路径**：`projects/personal-ai-talk-2026-04-24/specs/08-drift-staging-for-09.md`
 - **内容**：~4.3K 字，分 3 块——LLM frontier (GPT-5.5 / Gemini 3.1 / Claude 4.7 / Qwen / Kimi / GLM / DeepSeek + Mamba 架构线) / 多模态 LLM frontier (GPT-4o / Qwen Omni / Kimi K2 / GLM-4.6 等) / 几何重建 (3DGS / DUSt3R / VGGT)
-- **用途**：09 doc §1 行业技术现状地图的初步 raw material；待 form factor 决定后，按 09 章节结构（成熟度 / 工业可用性 / 国内外厂商 cover）重新整理
+- **用途**：09 doc §2 行业技术现状地图的初步 raw material；按 09 章节结构（成熟度 / 工业可用性 / 国内外厂商 cover）重新整理
 
 ## 5. 接续 instruction
 
-下次 session 开场直接：
+下一阶段：
 
-1. 读本 doc（你现在看的这份）
-2. 用户回答 Q3（form factor 选项 A-F + 可补充 hypothesis）
-3. 顺序问 Q4 / Q5 / Q6
-4. 进入 doc 大纲 fill-in 阶段
-5. 落盘 final spec 至 `projects/personal-ai-talk-2026-04-24/specs/2026-05-04-sweeper-embodied-roadmap-design.md`
-6. 进入 implementation（writing-plans 或直接写 doc）
+1. 写 09 doc 第一稿（§1 摘要 + §2 行业地图 + §3 Phase 路线图 骨架），与用户对齐
+2. 起草中 inline 处理 Q5.2 / Q6.2 / Q6.3 / Q6.4 细化层
+3. 进入 implementation（writing-plans 或直接写 doc）

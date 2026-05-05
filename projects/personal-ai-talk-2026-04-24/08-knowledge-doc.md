@@ -733,4 +733,3 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 
 - [1] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
 - [2] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
-

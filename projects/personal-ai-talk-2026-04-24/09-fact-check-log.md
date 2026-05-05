@@ -414,12 +414,14 @@ README.md               — 入口 + 4 晚学习节奏
 
 ### G2. 本次写入 `08-knowledge-doc.md` 的修正
 
-| 位置 | 原表述问题 | 修正 | 依据 |
-| --- | --- | --- | --- |
-| §2.1 AlexNet top-5 | 16.4% | **15.3%**[1, 2] | **A6 / F2.1**；与 Krizhevsky et al. 报告及 ILSVRC 对照叙述一致 |
-| §2.3 对照句 AlexNet | 16.4% | **15.3%**[1] | 同上 |
-| §8.1 Genie 3 | 「60s session 一致性」 | 改为官方措辞：**几分钟级一致性**（附英原文 *a few minutes*）[3] | DeepMind 博客 2025-08-05：`retaining consistency for a few minutes at a resolution of 720p`（同日抓取核对） |
-| §6.2 GEN-1 + §6 References [6] | 强调 arXiv / Runway blog | **ICCV 2023** 正式发表为主条目，arXiv 作 preprint 附注 | **F1.c**；[ICCV 2023 Open Access HTML](https://openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html) |
+
+| 位置                             | 原表述问题                  | 修正                                          | 依据                                                                                                                                                                                       |
+| ------------------------------ | ---------------------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| §2.1 AlexNet top-5             | 16.4%                  | **15.3%**[1, 2]                             | **A6 / F2.1**；与 Krizhevsky et al. 报告及 ILSVRC 对照叙述一致                                                                                                                                      |
+| §2.3 对照句 AlexNet               | 16.4%                  | **15.3%**[1]                                | 同上                                                                                                                                                                                       |
+| §8.1 Genie 3                   | 「60s session 一致性」      | 改为官方措辞：**几分钟级一致性**（附英原文 *a few minutes*）[3] | DeepMind 博客 2025-08-05：`retaining consistency for a few minutes at a resolution of 720p`（同日抓取核对）                                                                                         |
+| §6.2 GEN-1 + §6 References [6] | 强调 arXiv / Runway blog | **ICCV 2023** 正式发表为主条目，arXiv 作 preprint 附注  | **F1.c**；[ICCV 2023 Open Access HTML](https://openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html) |
+
 
 ### G3. 诚实边界（未在本次会话逐项打开的条目）
 
