@@ -21,19 +21,21 @@
 
 Phase 1 关键 commit：
 
-| 维度 | Commit |
-| --- | --- |
-| **形态** | 现有扫地机 base + 1 arm；BOM target ¥6000-8000（NX 量产）/ ¥9000-11000（AGX fallback）|
-| **算法 base** | fork **NVIDIA GR00T N1.7**（3B Cosmos-Reason2-2B + 32-layer Diffusion Transformer，NVIDIA Open Model License）[1]；M0 parallel benchmark + M3 trigger 评估，threshold 触发 OpenVLA fallback[2] |
-| **数据** | 三栈 combined：web video pretrain (EgoScale-style)[1] + Isaac Sim + Cosmos Transfer[3] + AgiBot World 100 万 demo[4] + Open X-Embodiment[5] + 真机 5-10 万 episode |
-| **算力** | dev/pilot Orin AGX 275 TOPS → 量产 Orin NX 100 TOPS（M5-M6 trigger 评估，failover AGX 量产）；GPU cluster hybrid（dev 云租 + pretrain 自购 16×H100）|
-| **团队** | 三层 model — 核心 ML/VLA + sim 5-8 人新招 + 公司既有 ME/EE / ML infra / product 5-8 FTE × ⅓ 复用 + teleop 操作员 16-20 人外包；学术合作补 sim2real / VLM grounding 关键模块 |
-| **deadline** | demo 锚 **WAIC 2027-07** + 量产首发锚 **IFA 2027-09 / 双 11 2027-11**（buffer 1-5 月）|
-| **总投资** | baseline **¥3000-5500 万** |
+
+| 维度           | Commit                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **形态**       | 现有扫地机 base + 1 arm；BOM target ¥6000-8000（NX 量产）/ ¥9000-11000（AGX fallback）                                                                                                            |
+| **算法 base**  | fork **NVIDIA GR00T N1.7**（3B Cosmos-Reason2-2B + 32-layer Diffusion Transformer，NVIDIA Open Model License）[1]；M0 parallel benchmark + M3 trigger 评估，threshold 触发 OpenVLA fallback[2] |
+| **数据**       | 三栈 combined：web video pretrain (EgoScale-style)[1] + Isaac Sim + Cosmos Transfer[3] + AgiBot World 100 万 demo[4] + Open X-Embodiment[5] + 真机 5-10 万 episode                           |
+| **算力**       | dev/pilot Orin AGX 275 TOPS → 量产 Orin NX 100 TOPS（M5-M6 trigger 评估，failover AGX 量产）；GPU cluster hybrid（dev 云租 + pretrain 自购 16×H100）                                                  |
+| **团队**       | 三层 model — 核心 ML/VLA + sim 5-8 人新招 + 公司既有 ME/EE / ML infra / product 5-8 FTE × ⅓ 复用 + teleop 操作员 16-20 人外包；学术合作补 sim2real / VLM grounding 关键模块                                        |
+| **deadline** | demo 锚 **WAIC 2027-07** + 量产首发锚 **IFA 2027-09 / 双 11 2027-11**（buffer 1-5 月）                                                                                                          |
+| **总投资**      | baseline **¥3000-5500 万**                                                                                                                                                             |
+
 
 **行业战略判断**（基于公开 release，截至 2026-05-04）：VLA frontier (RT-2 / π₀ / GR00T / Helix / GraspVLA) 已 reach pilot 与有限量产阶段[1, 2, 6, 7, 8]，2026-2027 间是消费级具身落地窗口；扫地机公司具备 SLAM + 量产硬件 + 渠道三项 leverage，与 Physical Intelligence / Figure 类纯具身公司相比，在 distribution 与 cost-down 上有结构性优势。
 
-<!-- REVIEW: 「结构性优势」表述偏判断性，需公司战略层 confirm 量产硬件成本比 / 渠道触达率等量化数据是否可对比。-->
+
 
 ### References
 
@@ -62,15 +64,17 @@ VLA (Vision-Language-Action) 把视觉 + 语言 model 输出端从 token 改为 
 
 国际 VLA 主线四条：Google DeepMind RT-2 → Physical Intelligence π 系列 → Figure AI Helix → NVIDIA GR00T。截至 2026-05-04 主流 release：
 
-| Model | 公司 | Release | Robot 形态 | 训练数据 | 关键贡献 |
-| --- | --- | --- | --- | --- | --- |
-| RT-2 | Google DeepMind | 2023-07 | dual-arm RT robot | web-scale + RT-1 | VLM 直接转 VLA 的首个工业级工作[1] |
-| π₀ | Physical Intelligence | 2024-10 | 7 个 embodiment | ~10k hrs 真机 | generalist policy 跨形态[2] |
-| π₀.5 | Physical Intelligence | 2025-04-22 | + open-world | + open-world data | open-world generalization[3] |
-| π₀.7 | Physical Intelligence | 2026-04-16 | steerable foundation | scaled | step-change in generalization[4] |
-| Helix 02 | Figure AI | 2026-01 | Figure 02 humanoid | full-body | 单一神经网络（10M 参数）替代 109,504 行 C++；4 分钟洗碗机连续自主[5] |
-| GR00T N1 | NVIDIA | 2025-03 | humanoid (open) | open + sim | 首个开源 humanoid foundation[6] |
-| GR00T N1.7 | NVIDIA | 2026-04-17 | humanoid | EgoScale 20,854 hrs egocentric | Action Cascade dual-system + dexterity scaling law 首报告[7] |
+
+| Model      | 公司                    | Release    | Robot 形态             | 训练数据                           | 关键贡献                                                      |
+| ---------- | --------------------- | ---------- | -------------------- | ------------------------------ | --------------------------------------------------------- |
+| RT-2       | Google DeepMind       | 2023-07    | dual-arm RT robot    | web-scale + RT-1               | VLM 直接转 VLA 的首个工业级工作[1]                                   |
+| π₀         | Physical Intelligence | 2024-10    | 7 个 embodiment       | ~10k hrs 真机                    | generalist policy 跨形态[2]                                  |
+| π₀.5       | Physical Intelligence | 2025-04-22 | + open-world         | + open-world data              | open-world generalization[3]                              |
+| π₀.7       | Physical Intelligence | 2026-04-16 | steerable foundation | scaled                         | step-change in generalization[4]                          |
+| Helix 02   | Figure AI             | 2026-01    | Figure 02 humanoid   | full-body                      | 单一神经网络（10M 参数）替代 109,504 行 C++；4 分钟洗碗机连续自主[5]             |
+| GR00T N1   | NVIDIA                | 2025-03    | humanoid (open)      | open + sim                     | 首个开源 humanoid foundation[6]                               |
+| GR00T N1.7 | NVIDIA                | 2026-04-17 | humanoid             | EgoScale 20,854 hrs egocentric | Action Cascade dual-system + dexterity scaling law 首报告[7] |
+
 
 数据点：GR00T N1.7 公开报告中提出 robot dexterity scaling law（1k → 20k hrs 训练数据 → dexterity 表现 doubling），是 VLA 领域第一次报告 scaling law 现象[7]。
 
@@ -80,11 +84,13 @@ VLA (Vision-Language-Action) 把视觉 + 语言 model 输出端从 token 改为 
 
 国内 VLA 主线三家：银河通用 GraspVLA / 智元 GO-1 / 宇树 UnifoLM-VLA-0：
 
-| Model | 公司 | Release | Robot 形态 | 训练数据 | 开源 / 闭源 |
-| --- | --- | --- | --- | --- | --- |
-| GraspVLA | 银河通用 | 2025-01-09 | Galbot 上半身 | 10 亿帧合成 + 真机 | 闭源；七大泛化金标准[8] |
-| AgiBot GO-1 | 智元 | 2025-03-10 | 多形态 | AgiBot World 100 万 demo / 217 任务 | model 闭源 + **数据集开源** |
-| UnifoLM-VLA-0 | 宇树 | 2026-01-29 | G1 humanoid | 真机 + sim | **开源**；基于阿里 Qwen2.5-VL-7B |
+
+| Model         | 公司   | Release    | Robot 形态    | 训练数据                             | 开源 / 闭源                   |
+| ------------- | ---- | ---------- | ----------- | -------------------------------- | ------------------------- |
+| GraspVLA      | 银河通用 | 2025-01-09 | Galbot 上半身  | 10 亿帧合成 + 真机                     | 闭源；七大泛化金标准[8]             |
+| AgiBot GO-1   | 智元   | 2025-03-10 | 多形态         | AgiBot World 100 万 demo / 217 任务 | model 闭源 + **数据集开源**      |
+| UnifoLM-VLA-0 | 宇树   | 2026-01-29 | G1 humanoid | 真机 + sim                         | **开源**；基于阿里 Qwen2.5-VL-7B |
+
 
 国内线对 Phase 1 的实际意义：
 
@@ -132,11 +138,13 @@ DUSt3R (Wang et al., CVPR 2024)[13] / MASt3R (Leroy et al., ECCV 2024)[14] 把 3
 
 **跨层 × 跨厂商 cover 矩阵**（§2 wrap-up，不开三级标题以避免 §2 sibling 超 3）：
 
-| Layer | 国际 frontier | 国内 frontier | mature 度 | Phase 1 进入工具链 |
-| --- | --- | --- | --- | --- |
-| **VLA**（决策层） | π₀ / GR00T / Helix / RT-2 | GraspVLA / GO-1 / UnifoLM | pilot + 有限量产 | ✅ fork GR00T N1.7（核心）|
-| **World Models**（仿真层） | Genie / Cosmos / V-JEPA | （国内 frontier 暂未独立产品化） | demo + tool 阶段 | ✅ Cosmos Transfer + Reason2（核心子组件）|
-| **几何重建**（感知层） | 3DGS / DUSt3R / VGGT | 智源 / 港大 / 上海 AI Lab 等高校工作 | 学术 + 工业早期 | ⚠️ Phase 2 评估接入 |
+
+| Layer                 | 国际 frontier               | 国内 frontier               | mature 度       | Phase 1 进入工具链                      |
+| --------------------- | ------------------------- | ------------------------- | -------------- | ---------------------------------- |
+| **VLA**（决策层）          | π₀ / GR00T / Helix / RT-2 | GraspVLA / GO-1 / UnifoLM | pilot + 有限量产   | ✅ fork GR00T N1.7（核心）              |
+| **World Models**（仿真层） | Genie / Cosmos / V-JEPA   | （国内 frontier 暂未独立产品化）     | demo + tool 阶段 | ✅ Cosmos Transfer + Reason2（核心子组件） |
+| **几何重建**（感知层）         | 3DGS / DUSt3R / VGGT      | 智源 / 港大 / 上海 AI Lab 等高校工作 | 学术 + 工业早期      | ⚠️ Phase 2 评估接入                    |
+
 
 时间锚点：截至 2026-05-04 公开 release 整理；后续 frontier 月度迭代，整理周期 ≤ 1 月。
 
@@ -277,3 +285,4 @@ north star = **wheel-legged biped + 1 arm**（双足轮足混合 base + 单臂�
 ## 8. 开放问题
 
 > 待第二轮起草。
+
