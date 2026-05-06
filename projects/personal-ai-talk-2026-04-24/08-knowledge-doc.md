@@ -2,7 +2,7 @@
 
 ## 1. 整体趋势
 
-2012-2026 间 AI 演进经历 5 个 foundation 阶段（判别式 → Transformer → 视觉与视频生成 → 多模态理解 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。主线时间锚点：
+2012-2026 间 AI 演进经历 5 个 foundation 阶段（判别式 → Transformer → 视觉与视频生成 → 多模态理解 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。时间线：
 
 - **2012-2015 判别式 AI**：AlexNet (NeurIPS 2012) / VGG / GoogLeNet / ResNet (CVPR 2016) — CNN 端到端特征学习
 - **2017 Transformer**：Vaswani et al. — self-attention 替代 RNN，LLM 工业化基础
@@ -13,43 +13,43 @@
 - **2023-2026 具身 VLA**：RT-2 (2023-07) → π₀ (2024-10) → π₀.7 (2026-04-16) / Helix 02 (2026-01) / GR00T N1.7 (2026-04-17)
 - **2024-2026 World Models 近期形态**：Genie 3 (2025-08) / Cosmos (2025-01 起)
 
-本笔记 narrative arc 是「演进路径 + 应用扩展 + 解决什么问题」。覆盖 AI 整体演进的主线脉络（CNN/RNN → ResNet → Transformer → LLM → Diffusion → CLIP/VLM → World Models / VLA），不做 frontier 模型横扫（具体 model 列表见 `09-sweeper-embodied-roadmap.md` §1 行业技术现状地图）。LLM 推理大模型（OpenAI o1 / o3、DeepSeek R1 / R2、Qwen3-Max-Thinking、Kimi K2.5 等）极简介绍仅在 §7.2.1 VLA + 推理融合 节内 inline 200 字 background 出现。
+本笔记按「演进路径 + 应用扩展 + 解决的问题」组织。覆盖 AI 整体演进的主线脉络（CNN/RNN → ResNet → Transformer → LLM → Diffusion → CLIP/VLM → World Models / VLA），不做 frontier 模型横扫；具体模型列表见 `09-sweeper-embodied-roadmap.md` §1 行业技术现状地图。LLM 推理模型（OpenAI o1 / o3、DeepSeek R1 / R2、Qwen3-Max-Thinking、Kimi K2.5 等）只在 §7.2.1 VLA + 推理融合 中作为背景简述。
 
 ## 2. 第一阶段：判别式 AI (2012-2015)
 
-2012-2015 间，CNN / RNN / ResNet 在视觉端到端特征学习、序列建模、深网络优化退化三个方向出现关键工作；后续 Transformer / Diffusion / VLA 等架构沿用其中的核心组件（CNN backbone、ResNet 残差连接）。
+2012-2015 间，CNN / RNN / ResNet 分别推进了视觉端到端特征学习、序列建模和深网络训练。后续 Transformer / Diffusion / VLA 等架构继续沿用其中的组件，例如 CNN backbone 与 ResNet 残差连接。
 
 ### 2.1 CNN：视觉端到端特征学习
 
-AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 15.3%[1, 2]。同期 SIFT / HOG + classifier 的 hand-crafted pipeline 被替换为 end-to-end CNN：raw RGB pixel → 卷积层堆叠 → softmax 分类。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，在大规模数据（ImageNet 1.2M 图像）+ GPU 算力下扩展。
+AlexNet (Krizhevsky et al., NeurIPS 2012)[1] 在 ImageNet ILSVRC-2012（1.2M 图像 / 1000 类）上把 top-5 错误率从 SIFT-FV (Fisher Vector) baseline 的 25.8% 降到 15.3%[1, 2]。在这一范式里，传统的 SIFT / HOG 特征工程 + 分类器流程被端到端 CNN 替代：原始 RGB 图像输入网络，经多层卷积提特征，最后由 softmax 输出类别。AlexNet 沿用 LeNet (LeCun et al., Proc. IEEE 1998)[6] 在 MNIST 上确立的卷积 + pooling + 全连接模板，并把它扩展到 ImageNet 规模数据和 GPU 训练。
 
 #### 2.1.1 关键设计
 
 AlexNet 关键构件[1]：
 
 - **网络架构**：5 层卷积 + 3 层全连接，60M 参数；当时 NVIDIA GTX 580 单卡 3GB VRAM 装不下，采用双 GPU 数据并行
-- **训练 trick**：ReLU 激活函数（替代 sigmoid / tanh）加速收敛；Dropout (Hinton et al., 2012)[3] 减轻过拟合；Local Response Normalization（后续被 BatchNorm 替代）
+- **训练方法**：ReLU 激活函数替代 sigmoid / tanh，加速收敛；Dropout (Hinton et al., 2012)[3] 减轻过拟合；Local Response Normalization 后续被 BatchNorm 替代
 
 #### 2.1.2 后续推进
 
-后续工作沿同一范式深化：
+后续工作继续沿「更深 / 更宽 / 更高效」方向改进 CNN：
 
 - VGG (Simonyan & Zisserman, ICLR 2015)[4]：加深到 16-19 层，全部用 3×3 卷积；ImageNet top-5 错误率 7.32%
 - GoogLeNet / Inception (Szegedy et al., CVPR 2015)[5]：Inception module 多尺度分支并联；top-5 6.67%，参数量较 VGG 小 ~12×
 
 ### 2.2 RNN：序列建模
 
-RNN (Recurrent Neural Network) 通过 hidden state 在时序上的递归传递处理序列数据。1980-1990s 提出，实用化集中在 2014-2017 年（Sutskever 2014 seq2seq[7]、Bahdanau 2014 attention[8]）。
+RNN (Recurrent Neural Network) 用 hidden state 在时间步之间传递信息，因此可以处理文本、语音等序列数据。RNN 在 1980-1990s 已提出，实用化集中在 2014-2017 年，例如 Sutskever 2014 seq2seq[7] 与 Bahdanau 2014 attention[8]。
 
 #### 2.2.1 主要 variant
 
-- **vanilla RNN**：hidden state h_t = tanh(W_h h_{t-1} + W_x x_t)；长序列梯度衰减 / 爆炸严重
-- **LSTM** (Hochreiter & Schmidhuber, Neural Computation 1997)[9]：引入 input / forget / output 三门控 + cell state，缓解长序列梯度衰减；2014-2017 年是 NMT / speech 主流 backbone
+- **vanilla RNN**：用 `h_t = tanh(W_h h_{t-1} + W_x x_t)` 更新 hidden state；长序列训练中容易出现梯度衰减或梯度爆炸
+- **LSTM** (Hochreiter & Schmidhuber, Neural Computation 1997)[9]：引入 input / forget / output 三个门控和 cell state，缓解长序列梯度衰减；2014-2017 年是 NMT / speech 主流 backbone
 - **GRU** (Cho et al., EMNLP 2014)[10]：简化 LSTM 为 update / reset 两门，参数比 LSTM 少 ~25%，多数任务上性能相当
 
 #### 2.2.2 应用
 
-RNN 推动了两个领域的端到端化：
+RNN 在两个领域替代了部分传统多模块流程：
 
 - **NMT** (Neural Machine Translation)：Sutskever et al. (NeurIPS 2014)[7] 用 encoder-decoder LSTM 在 WMT'14 EN-FR 上达到 BLEU 34.81（vs phrase-based SMT 33.30）
 - **Speech recognition**：DeepSpeech (Hannun et al., 2014)[11] 用 RNN + CTC loss 替代传统 HMM-GMM pipeline，WER 在 Switchboard 上 16%（vs 商业 baseline 18.4%）
@@ -58,8 +58,8 @@ RNN 推动了两个领域的端到端化：
 
 RNN 在 2017 年后被 Transformer 在 NMT / LM 主线快速取代，主要因：
 
-- **串行依赖**：当前 step 依赖前一 step hidden state，无法 GPU 并行
-- **长距离依赖衰减**：即使 LSTM 也只能稳定捕获 ~100-1000 step 内信息
+- **串行依赖**：当前 step 依赖前一 step 的 hidden state，难以在 GPU 上并行计算
+- **长距离依赖衰减**：即使使用 LSTM，也只能较稳定地捕获约 100-1000 step 内的信息
 
 这两条由 Transformer (Vaswani et al., NeurIPS 2017)[12] 同时解决。
 
@@ -67,13 +67,13 @@ RNN 在 2017 年后被 Transformer 在 NMT / LM 主线快速取代，主要因�
 
 ResNet 引入残差连接 `y = F(x) + x`[13]，解决了深网络的优化退化（degradation）问题。该机制后续在 Transformer[12]、Diffusion U-Net、具身机器人模型的视觉 head 等主流架构的 block 中被沿用，成为不绑定具体任务范式的通用组件。
 
-本节按 paper review 标准三段展开：起因（深网络优化退化）→ 解决（残差 block + ImageNet 验证）→ 影响（后续理论解释 + 跨架构延续）。
+本节按「问题 → 方法 → 影响」展开：先说明深网络为什么会出现优化退化，再说明残差 block 如何提供恒等通路，最后说明残差连接为什么能跨架构沿用。
 
 #### 2.3.1 起因
 
 ResNet (He et al., 2015-12)[13] 之前，Highway Networks (Srivastava et al., NeurIPS 2015)[14] 已提出"门控 + 恒等通路"的思路：每层输出为 `y = T(x) · F(x) + (1 − T(x)) · x`，T(x) 是受 LSTM 启发的 sigmoid 门控函数。Highway 网络可训练 100+ 层，但门控参数随深度增加难以稳定收敛。
 
-CNN 深度从 20 层加到 56 层时，训练误差与测试误差同时升高[13]。这一现象不能用过拟合解释——若是过拟合，训练误差应继续下降。该现象被归因为优化层面的退化：随深度增加，SGD (stochastic gradient descent) 在更复杂的损失曲面上更难找到与浅层网络等价的解[13]。Li et al. (NeurIPS 2018) 通过损失曲面可视化进一步证实，残差连接显著平滑了深网络的损失曲面，使 SGD 更易收敛[15]。
+CNN 深度从 20 层加到 56 层时，训练误差与测试误差同时升高[13]。这一现象不能用过拟合解释：若是过拟合，训练误差应继续下降，测试误差才会上升。普通深层 CNN 理论上可以让额外层学习恒等映射，从而复现浅层网络的解；但没有残差连接时，SGD (stochastic gradient descent) 很难把这些额外层优化成恒等映射，训练误差因此升高[13]。Li et al. (NeurIPS 2018) 通过损失曲面可视化进一步说明，残差连接能让深网络的损失曲面更平滑，使 SGD 更易收敛[15]。
 
 ResNet 把 Highway 的 T(x) 固定为 1，简化为无门控的恒等加和 `y = F(x) + x`，参数更少、训练更稳定，并在 ImageNet 上得到验证。
 
@@ -81,14 +81,14 @@ ResNet 把 Highway 的 T(x) 固定为 1，简化为无门控的恒等加和 `y =
 
 **残差 block 与梯度路径**
 
-每个 block 的输出由 `y = F(x)` 改为 `y = F(x) + x`[13]。F 学到 0 时 block 退化为恒等映射；更深的网络至少不会比更浅的等价网络更差，给优化器一条保底通路。
+每个 block 的输出由 `y = F(x)` 改为 `y = F(x) + x`[13]。如果 `F(x)` 学到 0，这个 block 就退化为恒等映射；更深网络可以通过这种方式复现浅层网络的解，给优化器一条保底通路。
 
-反向传播时，残差连接为梯度提供一条 unit-multiplier 通路：`∂L/∂x = ∂L/∂y · (1 + ∂F/∂x)`。即使 F 部分的梯度衰减为 0，外层梯度也能经 `1` 这条通路直接传至浅层，缓解深网络中常见的梯度衰减问题[13]。
+对残差 block `y = F(x) + x`，反向传播时梯度不仅经过 `F(x)` 分支，也能沿 `+x` 的恒等分支直接回传：`∂L/∂x = ∂L/∂y · (1 + ∂F/∂x)`。即使 `F(x)` 分支的梯度很小，恒等分支中的 `1` 仍会把外层梯度传到浅层，缓解深网络中的梯度衰减[13]。
 
 ResNet 用了两种 block 设计[13]：
 
-- **Basic block**（用于 ResNet-18 / 34）：两个 3×3 卷积 + 残差加和
-- **Bottleneck block**（用于 ResNet-50 / 101 / 152）：1×1 → 3×3 → 1×1 三层卷积 + 残差加和。1×1 卷积先压缩通道再恢复，参数与计算量约为 basic block 的一半
+- **Basic block**（用于 ResNet-18 / 34）：两个 3×3 卷积后与输入做残差加和
+- **Bottleneck block**（用于 ResNet-50 / 101 / 152）：采用 1×1 → 3×3 → 1×1 三层卷积后再做残差加和。前后两个 1×1 卷积先压缩通道再恢复通道，使参数量和计算量低于直接堆叠 3×3 卷积
 
 He et al. 在 Pre-activation 工作（ECCV 2016）[16] 把 BN 与 ReLU 移到卷积之前（即 BN-ReLU-Conv 而非 Conv-BN-ReLU），让残差通路更接近纯恒等映射，可训练深度从 152 层扩展到 1001 层。
 
@@ -118,14 +118,14 @@ Veit et al. (NeurIPS 2016)[17] 提出 ResNet 行为更接近"相对浅网络的 
 
 残差连接在三大领域的主流架构中均有沿用：
 
-- **Transformer 系**（NLP / LLM 主线）：每个 sub-layer 后采用 `LayerNorm(x + Sublayer(x))`，其中 `+` 即残差连接[12]；后续 LLM / VLM / VLA 大量复用该 block 模板
+- **Transformer 系**（NLP / LLM 主线）：每个 attention 或 FFN 子层外都加残差连接和 LayerNorm，即先计算 `x + Sublayer(x)`，再做归一化[12]；后续 LLM / VLM / VLA 大量复用这一 block 模板
 - **视觉与生成模型**：
   - **DenseNet** (Huang et al., CVPR 2017)[18]：把 sum 改为前序所有层的 concat，使每层都能直接看到所有前序特征
-  - **ResNeXt** (Xie et al., CVPR 2017)[19]：在残差通路内引入分组卷积，把"加深 / 加宽"扩展为"加 cardinality"
+  - **ResNeXt** (Xie et al., CVPR 2017)[19]：在残差 block 内加入分组卷积，用多组并行卷积分支替代单一路径；`cardinality` 指这些并行分支的数量
   - **Diffusion U-Net**：encoder / decoder 之间用 skip connection 跨层 concat，结构上是残差思路的另一变种
 - **具身机器人模型**：视觉 / 动作 head 的基础 block 多含残差结构
 
-CNN 的卷积、RNN 的循环是架构特异性的归纳偏置；残差连接不绑定具体任务范式，仅为深网络优化提供一条线性通路。这一架构无关属性使其在 CNN[13]、Transformer[12]、Diffusion U-Net、具身视觉 head 等不同范式中均有沿用，且常与各架构原有的归纳偏置（卷积、attention 等）正交叠加。
+CNN 的卷积、RNN 的循环都带有特定任务假设；残差连接不同，它主要为深网络优化提供一条线性直通路径，不绑定某一类任务。这个特性使残差连接可以与卷积、attention 等不同结构叠加，并在 CNN[13]、Transformer[12]、Diffusion U-Net、具身视觉 head 等架构中沿用。
 
 ### References
 
@@ -153,32 +153,32 @@ CNN 的卷积、RNN 的循环是架构特异性的归纳偏置；残差连接不
 
 ## 3. 第二阶段：Transformer 范式 (2017-2026)
 
-Transformer (Vaswani et al., 2017) 用 self-attention 替代 RNN 循环，解决并行 + 长距离依赖两个硬伤；后续 9 年间经 Scaling Law / RLHF / 多模态 / 推理 scaling 几次范式扩展，演变为 LLM 工业化的统一基底。
+Transformer (Vaswani et al., 2017) 用 self-attention 替代 RNN 循环，同时解决并行训练和长距离依赖两个问题。后续 Scaling Law、RLHF、多模态和推理模型都建立在这一可扩展架构之上，Transformer 因此成为 LLM 工业化的基础结构。
 
 ### 3.1 Transformer：注意力机制
 
-Transformer (Vaswani et al., NeurIPS 2017)[1] 完全用 self-attention + position-wise FFN 取代 RNN 循环结构与 CNN 卷积。在 WMT'14 EN-DE 翻译任务上 BLEU 28.4，超过当时 RNN encoder-decoder baseline 25.16[1]。
+Transformer (Vaswani et al., NeurIPS 2017)[1] 用 self-attention 和 position-wise FFN 取代 RNN 循环结构与 CNN 卷积。self-attention 负责让不同 token 直接交互；position-wise FFN 对每个 token 的表示单独做非线性变换。在 WMT'14 EN-DE 翻译任务上，Transformer BLEU 达到 28.4，超过当时 RNN encoder-decoder baseline 的 25.16[1]。
 
 #### 3.1.1 关键设计
 
-- **Attention 机制**：Scaled dot-product `Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]，√d_k 缩放避免 softmax 进入饱和；Multi-head 把 Q / K / V 线性投影到 h 个子空间各自做 attention 后 concat，让模型在不同 representation subspace 关注不同模式
-- **Position encoding**：self-attention 本身排序无关；用 sinusoidal positional encoding 把绝对位置注入 embedding（后来 RoPE 等替代方案）
-- **架构组合**：Encoder-decoder 双塔；每个 sub-layer 后 `LayerNorm(x + Sublayer(x))`，残差连接来自 ResNet[2]
+- **Attention 机制**：Scaled dot-product `Attention(Q, K, V) = softmax(QK^T / √d_k) V`[1]，其中 Q 表示当前 token 要查找的信息，K 表示其他 token 可被匹配的信息，V 表示被关注后提供的内容；`√d_k` 缩放避免 softmax 进入饱和。Multi-head attention 用多套线性变换生成多组 Q / K / V，并行计算多次 attention；不同 head 可以关注不同 token 关系，最后把结果拼接输出
+- **Position encoding**：self-attention 本身不包含词序信息；Transformer 需要额外加入 positional encoding，让每个 token 的表示同时包含「词义」和「位置」。原始 Transformer 使用 sin / cos 生成固定位置编码，后续 LLM 多使用 RoPE 等方案
+- **架构组合**：原始 Transformer 采用 encoder-decoder 结构：encoder 编码源序列，decoder 根据 encoder 输出生成目标序列。每个 attention 或 FFN 子层外都加残差连接和 LayerNorm，即先计算 `x + Sublayer(x)`，再做归一化；其中残差连接沿用了 ResNet 的 `F(x) + x` 思路[2]
 
 #### 3.1.2 解决两个硬伤
 
-- **并行性**：self-attention 矩阵运算所有 step 一次性算出，GPU 满负载；RNN 必须串行
-- **长距离依赖**：任意两 token 直接 O(1) 交互，不经 hidden state 衰减；LSTM 只能稳定捕捉 ~100-1000 step 内信息
+- **并行性**：self-attention 可用矩阵运算一次性计算所有 token 之间的关系，适合 GPU 并行；RNN 必须按时间步串行计算
+- **长距离依赖**：任意两个 token 可直接交互，不必经过一串 hidden state 传递；LSTM 通常只能较稳定地捕获约 100-1000 step 内的信息
 
 #### 3.1.3 三派与影响
 
 Transformer 之后 LLM 主要分三派架构：
 
-- **encoder-only** (BERT, Devlin et al., NAACL 2019)[3]：masked language modeling，适合 representation / NLU
-- **decoder-only** (GPT, Radford et al., 2018)[4]：causal LM 自回归生成，后续成为 LLM 主线
-- **encoder-decoder** (T5, Raffel et al., JMLR 2020)[5]：text-to-text 统一 framework
+- **encoder-only** (BERT, Devlin et al., NAACL 2019)[3]：只保留 Transformer encoder，通过 masked language modeling 训练模型根据上下文补全被遮住的词；输出的是上下文语义表示，适合文本分类、实体识别、句子匹配等语言理解任务
+- **decoder-only** (GPT, Radford et al., 2018)[4]：只保留 Transformer decoder，通过 causal language modeling 训练模型从左到右预测下一个 token；生成时每次输出一个 token，再把该 token 接回上下文继续生成。后续 LLM 多采用这一结构
+- **encoder-decoder** (T5, Raffel et al., JMLR 2020)[5]：保留 encoder 和 decoder，把翻译、摘要、分类、问答等任务都改写成「文本输入 → 文本输出」格式，因此不同 NLP 任务可以用同一套模型结构和训练形式处理
 
-attention 机制本身在 Bahdanau et al. (ICLR 2015)[6] 就已用于 NMT；Transformer 的核心贡献是把 "更大 = 更强" 工程化为可预测、可并行 scale 的事实，后续 Scaling Law 在此基础上验证。
+Attention 机制本身在 Bahdanau et al. (ICLR 2015)[6] 中已用于 NMT (Neural Machine Translation, 神经机器翻译)：生成目标语言每个词时，模型会动态关注源语言句子中最相关的位置。Transformer 的变化不是首次使用 attention，而是去掉 RNN 循环结构，把 self-attention 作为序列建模主干；self-attention 可并行计算，任意两个 token 也可直接交互。后续 Scaling Law 在这一可并行架构上验证了参数量、数据量与计算量扩大后的可预测收益。
 
 ### 3.2 Scaling Law 与 GPT-3
 
@@ -186,24 +186,24 @@ Kaplan et al. (OpenAI 2020)[7] 实验拟合：LLM cross-entropy loss 与参数�
 
 `L(N) ∝ N^-0.076`、`L(D) ∝ D^-0.095`、`L(C) ∝ C^-0.05`[7]
 
-含义：给定 compute budget 可预测最优 N / D 配比与最终 loss。这是 LLM 工程化的核心依据 — 模型设计从 "试新 architecture" 转向 "scale 现有架构 + 调数据 / 训练流程"。
+含义：给定计算预算后，可以估算较优的参数量 N、数据量 D 配比以及最终 loss。这使模型设计从频繁尝试新架构，转向在既有 Transformer 架构上扩大模型、增加数据并调整训练流程。
 
 #### 3.2.1 GPT-3 (2020)
 
 GPT-3 (Brown et al., NeurIPS 2020)[8] 175B 参数，300B token 训练。
 
-- in-context learning (few-shot) 显示无需 fine-tune 即可做翻译 / QA / 算术 / code
-- 性能曲线随 scale 平滑提升，验证 Kaplan 2020 预测
+- in-context learning (few-shot)：不更新模型参数，只在 prompt 中给少量任务示例，模型就能按示例格式完成翻译、问答、算术和代码生成等任务
+- 性能曲线随模型规模平滑提升，与 Kaplan 2020 的 scaling law 预测一致
 
 #### 3.2.2 Chinchilla 修正 (2022)
 
-Kaplan 2020 的最优配比偏向 "参数大 / 数据少"；Hoffmann et al. (DeepMind 2022)[9] 用 400+ 个新实验拟合发现 N 与 D 应同速 scale (compute-optimal: 1B 参数 ↔ 20B token)。Chinchilla 70B (1.4T token) 性能超过 Gopher 280B (300B token)，验证 GPT-3 严重 undertrained。
+Kaplan 2020 的最优配比让早期 LLM 更偏向增加参数量；Hoffmann et al. (DeepMind 2022)[9] 通过 400+ 个实验修正了这一结论：在固定算力下，参数量 N 和训练 token 数 D 应同步增加，约为 1B 参数对应 20B token。Chinchilla 只有 70B 参数，但用 1.4T token 训练，性能超过 280B 参数、300B token 的 Gopher；这说明 GPT-3 / Gopher 这类模型参数很大，但训练数据不足。
 
 #### 3.2.3 Emergent abilities 与争议
 
-Wei et al. (TMLR 2022)[10] 列出 137 个 BIG-Bench 任务的 emergence 曲线：某些任务 (multi-step arithmetic / chain-of-thought) 在小模型几乎随机，到某个 scale 阈值后性能突然提升。
+Wei et al. (TMLR 2022)[10] 列出 137 个 BIG-Bench 任务的 emergence 曲线：部分任务（如 multi-step arithmetic / chain-of-thought）在小模型上接近随机，但模型规模超过某个阈值后表现明显上升，这类现象被称为 emergent abilities。
 
-Schaeffer et al. (NeurIPS 2023)[11] 提出反例：多数 emergence 现象由 metric 选择 (discontinuous metrics like exact-match) 造成的伪迹；换连续 metric 后曲线平滑。Emergence 是否真实仍是开放问题。
+Schaeffer et al. (NeurIPS 2023)[11] 提出反例：很多「突然上升」来自 exact-match 这类离散指标，答案只要不完全正确就记 0 分，因此平滑进步会被显示成跳变。换成连续评价指标后，部分任务的性能曲线变得平滑。Emergence 是否真实仍是开放问题。
 
 ### 3.3 ChatGPT 与 RLHF
 
@@ -211,17 +211,17 @@ ChatGPT (OpenAI 2022-11-30)[12] 的技术基底 = GPT-3.5 + InstructGPT-style RL
 
 #### 3.3.1 RLHF 三阶段
 
-- **SFT (supervised fine-tuning)**：用人类示范回复做 supervised learning，让 base model 学会对话格式
+- **SFT (supervised fine-tuning)**：用人类示范回复做监督微调，让 base model 学会对话格式
 - **Reward model**：让人类对多个候选回复排序，训一个 reward model 模拟人类偏好
 - **PPO RL**：用 reward model 作 reward signal，PPO 优化 policy LM
 
-设计目标 = 三 H (helpful / harmless / honest)。RLHF 思想源自 Christiano et al. (NIPS 2017)[14] 的 RL from human preferences。
+设计目标是三 H：helpful / harmless / honest。RLHF 思想源自 Christiano et al. (NIPS 2017)[14] 的 RL from human preferences。
 
 #### 3.3.2 产品意义
 
-ChatGPT 5 天 100 万用户、2 个月 1 亿用户。技术上 GPT-3.5 + RLHF 不是飞跃 (InstructGPT 2022-01 已上线)，但产品形态 (对话 UI + alignment to human preference) 是 LLM 第一次被普通用户日常使用的关键节点。后续 Anthropic Claude (Constitutional AI, Bai et al., 2022)[15]、DeepSeek R1 (RL-from-base, 2025-01) 均沿用 RL-from-feedback 思路。
+ChatGPT 5 天达到 100 万用户、2 个月达到 1 亿用户。GPT-3.5 + RLHF 的技术组合在 InstructGPT 2022-01 已出现，但 ChatGPT 把对话 UI 与人类偏好对齐结合起来，使 LLM 进入普通用户的日常使用场景。后续 Anthropic Claude (Constitutional AI, Bai et al., 2022)[15]、DeepSeek R1 (RL-from-base, 2025-01) 均沿用 RL-from-feedback 思路。
 
-ChatGPT 之后 (2024-2026)，LLM frontier 由 OpenAI / Google DeepMind / Anthropic 三家闭源主线 + Alibaba / Moonshot / Zhipu / DeepSeek 国内 4 家开源主线推进，主流 release 包括 GPT-5.5 / Gemini 3.1 Pro / Claude Opus 4.7 / Qwen3.6-Max / Kimi K2.6 / GLM-4.6 / DeepSeek V4 等；架构线另有 Mamba 系列 (SSM) 在长 context / inference cost 敏感场景作为 Transformer 替代。本笔记 narrative 聚焦"演进 → 解决什么问题 → 应用扩展"主线，不展开 frontier 横扫；具体 model 参数 / benchmark / 价格对比详见 `09-sweeper-embodied-roadmap.md` §1 行业技术现状地图。
+ChatGPT 之后 (2024-2026)，LLM frontier 由 OpenAI / Google DeepMind / Anthropic 三家闭源主线，以及 Alibaba / Moonshot / Zhipu / DeepSeek 等国内开源或开放权重主线推进。主流 release 包括 GPT-5.5 / Gemini 3.1 Pro / Claude Opus 4.7 / Qwen3.6-Max / Kimi K2.6 / GLM-4.6 / DeepSeek V4 等；架构线另有 Mamba 系列 (SSM) 在长 context / inference cost 敏感场景作为 Transformer 替代。本笔记聚焦「演进 → 解决什么问题 → 应用扩展」主线，不展开 frontier 横扫；具体模型参数、benchmark 与价格对比见 `09-sweeper-embodied-roadmap.md` §1 行业技术现状地图。
 
 ### References
 
@@ -245,43 +245,43 @@ ChatGPT 之后 (2024-2026)，LLM frontier 由 OpenAI / Google DeepMind / Anthrop
 
 ## 4. 第三阶段：视觉与视频生成 (2020-2024)
 
-2020-2024 间 Diffusion 主线把图像 / 视频生成做大：DDPM (NeurIPS 2020) 把生成 cast 为 iterative denoising → DDIM 加速 → Latent Diffusion / Stable Diffusion (CVPR 2022) 降 compute → DALL-E 2 / Imagen / Midjourney / Sora / Veo 应用线展开。本节按方法演进 + 应用扩展两条线展开。
+2020-2024 间，Diffusion 成为图像 / 视频生成主线：DDPM (NeurIPS 2020) 定义逐步去噪框架，DDIM 加速采样，Latent Diffusion / Stable Diffusion (CVPR 2022) 降低计算量，DALL-E 2 / Imagen / Midjourney / Sora / Veo 把这条路线带入产品应用。本节按方法演进与应用扩展两条线展开。
 
 ### 4.1 方法演进 (Diffusion 主线)
 
-Diffusion 模型把 "从噪声生成图像" 问题 cast 为 iterative denoising：给定图像 x_0，forward 过程逐步加 Gaussian 噪声直到 x_T ≈ N(0, I)；reverse 过程训练 model 预测每步去噪的 score（或直接预测噪声 ε）。训练 stable，scale 友好。方法演进沿三个 angle 展开：基础架构 (DDPM) → 效率优化 (sampling 加速 DDIM + compute 降低 Latent Diffusion) → 条件控制 (Guidance)。
+Diffusion 模型把图像生成写成「逐步去噪」问题。训练时先把真实图像 `x_0` 一步步加高斯噪声，直到接近纯噪声 `x_T`；模型学习反向过程：给定带噪图像 `x_t` 和步数 `t`，预测其中的噪声并逐步去掉。DDPM 定义了这一框架；DDIM 减少去噪步数，Latent Diffusion 把去噪搬到压缩后的 latent space 以降低计算量；Guidance 则让生成结果受文本或类别等条件控制。
 
 #### 4.1.1 基础：DDPM (2020)
 
-DDPM (Ho et al., NeurIPS 2020)[1] 是 Diffusion 现代起点。
+DDPM (Ho et al., NeurIPS 2020)[1] 是现代 Diffusion 的起点：训练时逐步加噪，生成时从纯噪声逐步去噪。
 
-- Forward：`q(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)`，β_t 是 noise schedule
-- Reverse：训 ε_θ(x_t, t) 预测加入的噪声；损失 `L = E[||ε - ε_θ(x_t, t)||²]`
-- T 通常 1000 步，直接采样需 1000 次 forward pass
+- **Forward**：`q(x_t | x_{t-1}) = N(x_t; √(1-β_t) x_{t-1}, β_t I)`，表示从 `x_{t-1}` 到 `x_t` 时按 `β_t` 指定的强度加入高斯噪声；`β_t` 是 noise schedule，即每一步加多少噪声的时间表
+- **Reverse**：模型 `ε_θ(x_t, t)` 输入带噪图像 `x_t` 和步数 `t`，预测这一步加入的噪声 `ε`；训练损失 `L = E[||ε - ε_θ(x_t, t)||²]` 让预测噪声接近真实噪声
+- **采样步数**：原始 DDPM 通常设 `T=1000`，生成一张图需要从 `x_T` 逐步去噪到 `x_0`，因此约需 1000 次模型前向推理
 
 #### 4.1.2 效率优化
 
-效率优化沿两个 dimension 展开：sampling 步数压缩 (DDIM) + compute 降低 (Latent Diffusion)。
+效率优化沿两个方向展开：DDIM 减少采样步数，Latent Diffusion 降低每一步的计算量。
 
 **加速 sampling：DDIM (2021)**
 
-DDIM (Song et al., ICLR 2021)[2] 把 reverse 过程改为 deterministic non-Markovian path。
+DDIM (Song et al., ICLR 2021)[2] 改写了 diffusion 的反向采样路径：生成时不必严格按 `x_T → x_{T-1} → ... → x_0` 逐步去噪，而是可以跳过大量中间时间步，并在确定性路径上生成图像。
 
-- 1000 → 50 步内 sample，质量基本无损
-- 后续 DPM-Solver / EDM 等进一步压到 10-20 步
+- 原始 DDPM 约 1000 步的采样过程可压缩到约 50 步，图像质量损失较小
+- 后续 DPM-Solver / EDM 等采样器进一步把步数压到 10-20 步
 
 **降算力：Latent Diffusion (2022)**
 
-Latent Diffusion (Rombach et al., CVPR 2022)[5] 把 diffusion 从 pixel space 移到 VAE encoder 输出的 latent space（典型 4× downsample），显著降低 compute。Stable Diffusion (2022-08，open-weight) 基于 LDM + LAION-5B 训练，是首个消费级 GPU (8GB VRAM) 可跑的 text-to-image 模型；开源后社区驱动迅速展开周边生态 (ControlNet 2023-02 / LoRA / ComfyUI 等)。
+Latent Diffusion (Rombach et al., CVPR 2022)[5] 不直接在像素空间去噪，而是先用 VAE encoder 把图像压缩到 latent space（典型 4× downsample），再在 latent space 做 diffusion，因此显著降低计算量。Stable Diffusion (2022-08，open-weight) 基于 LDM + LAION-5B 训练，是早期可在消费级 GPU（8GB VRAM）上运行的 text-to-image 模型；开源后带动 ControlNet (2023-02)、LoRA、ComfyUI 等社区生态。
 
 #### 4.1.3 条件控制：Guidance
 
-- **Classifier guidance** (Dhariwal & Nichol, NeurIPS 2021)[3]：训一个 classifier `p(y|x_t)`，reverse 时用其梯度 `∇_x log p(y|x)` 引导生成
-- **Classifier-free guidance** (Ho & Salimans, 2022)[4]：同时训 conditional / unconditional model，sampling 时混合 `ε = ε_uncond + w · (ε_cond - ε_uncond)`；不需要单独 classifier，是当前 text-to-image 主流
+- **Classifier guidance** (Dhariwal & Nichol, NeurIPS 2021)[3]：额外训练一个分类器 `p(y|x_t)`，反向去噪时用分类器梯度 `∇_x log p(y|x)` 把生成结果推向目标类别
+- **Classifier-free guidance** (Ho & Salimans, 2022)[4]：同一个模型同时学习有条件和无条件生成，采样时混合两种噪声预测 `ε = ε_uncond + w · (ε_cond - ε_uncond)`；它不需要单独分类器，是当前 text-to-image 主流做法
 
 ### 4.2 应用扩展 (2022-2024)
 
-应用扩展沿图像 / 视频两条 modality 展开：
+应用扩展沿图像和视频两条线展开：
 
 - **图像生成**（按 release 时间序）：
   - **DALL-E 2** (Ramesh et al., OpenAI 2022-04)[6]：CLIP latent + diffusion prior + diffusion decoder
@@ -306,49 +306,49 @@ Latent Diffusion (Rombach et al., CVPR 2022)[5] 把 diffusion 从 pixel space �
 
 ## 5. 第四阶段：多模态理解 (2020-2024)
 
-2020-2024 间，CLIP (ICML 2021) 用 contrastive learning 把图像与文本对齐到统一 embedding space，解决跨模态表征问题；GPT-4V (2023-09) 起把 vision 装进 LLM，多模态从此成为 LLM standard configuration。本节按 representation 与 LLM 融合两条线展开，二者共同支撑后续 VLM / VLA 的视觉理解组件。
+2020-2024 年，多模态理解沿两条线发展：CLIP (ICML 2021) 用对比学习把图像和文本编码到同一个向量空间，使图文可以直接匹配；GPT-4V (2023-09) 则把图像输入接入 LLM，让语言模型可以基于图片回答问题。前者解决图文表征对齐，后者把视觉理解并入 LLM；这两条线共同构成后续 VLM 和 VLA 的视觉理解基础。
 
 ### 5.1 CLIP 与多模态对齐
 
-CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)[1] 用 contrastive learning 把图像与文本对齐到同一 embedding space。
+CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)[1] 用 contrastive learning 训练图像 encoder 和文本 encoder，把图像与文本映射到同一个 embedding space。
 
 #### 5.1.1 训练框架
 
-- **数据**：400M（图像，文本描述）pair，从 web 收集（WIT-400M）
-- **Encoder**：image encoder (ViT-B/16, ViT-L/14, ResNet) + text encoder (Transformer)
-- **Loss**：InfoNCE，把 batch 内对齐的 (image, text) 对作 positive，其他作 negative
+- **数据**：400M 对图像和文本描述，从 web 收集（WIT-400M）
+- **Encoder**：image encoder (ViT-B/16, ViT-L/14, ResNet) 把图像编码成向量，text encoder (Transformer) 把文本编码成向量
+- **Loss**：InfoNCE 在一个 batch 内把原本配对的 (image, text) 作为正样本，把错配图文作为负样本；训练目标是提高正样本图文向量的相似度，同时降低错配图文向量的相似度
 
-训出后两个 encoder 共享 latent space，同义图文相似度高。同期独立工作 ALIGN (Jia et al., Google ICML 2021)[2] 用 1.8B noisy 图文对（vs CLIP 400M cleaner pairs），验证 contrastive pre-training scale 路线 robust。
+训练完成后，两个 encoder 输出到同一个 latent space；语义匹配的图像和文本向量相似度更高。同期 Google 的 ALIGN (Jia et al., ICML 2021)[2] 采用类似的图文对比学习框架，但训练数据扩大到 1.8B 对网页图文。相比 CLIP 的 400M 对相对清洗数据，ALIGN 的数据规模更大、噪声也更高；其结果说明图文对比预训练在大规模 noisy 数据上仍能学到有效的跨模态表示。
 
 #### 5.1.2 Zero-shot 分类
 
-- 给定类别名 list（如 ImageNet 1000 类），把每类做 prompt template `a photo of a {class}`，编码得到 1000 个文本 embedding
-- 输入图像编码后，计算与所有文本 embedding 的相似度，取最高者为类别
+- 给定类别名列表（如 ImageNet 1000 类），把每类写成 prompt template `a photo of a {class}`，编码得到 1000 个文本 embedding
+- 输入图像编码后，计算图像 embedding 与所有文本 embedding 的相似度，取相似度最高的类别
 - ViT-L/14 在 ImageNet zero-shot top-1 ~76.2%，接近 supervised ResNet-50 baseline
 
 #### 5.1.3 下游影响
 
 - **Text-to-image generation**：Stable Diffusion / DALL-E 2 / Imagen 的 text encoder 都是 CLIP（或衍生的 OpenCLIP / T5）
 - **Open-vocabulary detection / segmentation**：OWL-ViT (Minderer et al., ECCV 2022)[3] / GroundingDINO / SAM-2 prompt
-- **VLM backbone**：LLaVA / Qwen-VL / InternVL 的 vision tower 通常用 CLIP-ViT（或 SigLIP）抽取 visual feature
+- **VLM backbone**：LLaVA / Qwen-VL / InternVL 的 vision tower 通常用 CLIP-ViT（或 SigLIP）抽取视觉特征
 
-CLIP 是后续 VLM 与 VLA（V-base = VLM）的 visual backbone 主流来源；§7.1.1 国际 VLA 节中 RT-2 / π₀ 等 model 内的 vision encoder 多溯源到 CLIP / SigLIP 系列。
+CLIP 是后续 VLM 与 VLA（V-base = VLM）中视觉 backbone 的常见来源；§7.1.1 国际 VLA 节中 RT-2 / π₀ 等模型的 vision encoder 多来自 CLIP / SigLIP 系列。
 
 ### 5.2 GPT-4V 与多模态 LLM
 
-GPT-4V (OpenAI 2023-09 system card)[4] 是 GPT-4 的视觉扩展版本，把图像作为另一种 token 输入 decoder-only LLM。多模态从此从单独研究方向变为 LLM 的 standard configuration。
+GPT-4V (OpenAI 2023-09 system card)[4] 是 GPT-4 的视觉扩展版本，支持把图像与文本一起输入 decoder-only LLM。此后，图像理解逐渐成为主流 LLM 的默认能力之一。
 
 #### 5.2.1 LLaVA (2023)
 
-LLaVA (Liu et al., NeurIPS 2023)[5]（2023-04 release）用 minimum-effort 方案验证 VLM 可行性：
+LLaVA (Liu et al., NeurIPS 2023)[5] 在 2023-04 release，用较少结构改动验证了 VLM 的基本路线：保留已有 vision encoder 和 LLM，只训练中间连接层与视觉指令数据，让 LLM 能接收图像信息并回答视觉问题。
 
-- Vision encoder (CLIP ViT-L/14 frozen) + projection (单层 linear / 后续 MLP) + LLM (Vicuna)
-- 训练 stage 1：align projection (CC3M subset 558K pairs)
-- 训练 stage 2：instruction tuning (GPT-4 generated 158K visual instruction data)
+- **模型结构**：冻结 CLIP ViT-L/14 作为 vision encoder，用 projection layer 把图像特征映射到 LLM 可接收的 token 表示，再接入 Vicuna；早期 projection 是单层 linear，后续版本改为 MLP
+- **Stage 1：图文对齐**：用 CC3M 子集中的 558K 图文对训练 projection layer，让图像特征能对齐到 LLM 的语言表示空间
+- **Stage 2：视觉指令微调**：用 GPT-4 生成的 158K 条视觉指令数据做 instruction tuning，让模型学会按用户问题基于图像内容作答
 
-开源后成为 VLM 基本范式；LLaVA-1.5 (2023-10) 替换 projection 为 MLP，benchmark 进一步提升。
+LLaVA 开源后成为 VLM 的常见实现模板；LLaVA-1.5 (2023-10) 把 projection 从单层 linear 改为 MLP，benchmark 结果进一步提升。
 
-2024 年起多模态成为 LLM standard configuration（Gemini / Claude 3 / GPT-4o / Qwen-VL / Qwen Omni / Kimi K2 / GLM-4.6 等），VLM 由此成为后续 VLA（V-base = VLM）与 World Models（Cosmos-Reason 系列）的 ready-made 视觉理解组件。具体模型横扫详见 `09-sweeper-embodied-roadmap.md` §1。
+2024 年起，多模态逐渐成为 LLM 标准能力（Gemini / Claude 3 / GPT-4o / Qwen-VL / Qwen Omni / Kimi K2 / GLM-4.6 等）。VLM 因此成为后续 VLA（V-base = VLM）与 World Models（Cosmos-Reason 系列）的视觉理解组件来源。具体模型列表见 `09-sweeper-embodied-roadmap.md` §1。
 
 ### References
 
@@ -362,77 +362,77 @@ LLaVA (Liu et al., NeurIPS 2023)[5]（2023-04 release）用 minimum-effort 方�
 
 ## 6. 第五阶段：World Models 起源 (2018-2023)
 
-2018 年 Ha & Schmidhuber 提出 V+M+C 架构是 world model 在深度学习时代的现代起点；2023 年 Runway GEN-1 把 diffusion 推向视频生成工程化。两条路线在 2024-2026 收敛为 latent video → 可交互 world model（详见 §8）；本节是后续延伸 1（具身 VLA）+ 延伸 2（World Models 近期形态）的两条根。
+2018 年 Ha & Schmidhuber 提出的 V+M+C 架构，是 deep learning 语境下 world model 的早期代表；2023 年 Runway GEN-1 把 diffusion 用到视频生成产品中。两条线在 2024-2026 年汇合到 latent video 与可交互 world model（详见 §8）：前者影响后续 VLA 训练，后者进入 World Models 近期形态。
 
 ### 6.1 World Models 2018 (Ha & Schmidhuber)
 
-Ha & Schmidhuber (NeurIPS 2018)[1] 提出 agent 在内部 world model 中 "dream" rollout，用 dream 训 policy，而非每步与真实环境交互。该工作沿用 Schmidhuber 早期 (1990, 1991) RL with world model 的思路[2]，在深度学习时代以 V+M+C 三模块实现。
+Ha & Schmidhuber (NeurIPS 2018)[1] 提出：agent 可以先学习一个内部 world model，再在这个模型中模拟环境轨迹（dream rollout）来训练 policy，而不是每一步都与真实环境交互。该工作沿用 Schmidhuber 早期 (1990, 1991) RL with world model 的思路[2]，并在深度学习时代用 V+M+C 三模块实现。
 
 #### 6.1.1 方法与实验
 
 **V+M+C 三模块**[1]：
 
-- **V (Vision)**：VAE encoder 把高维 observation 压缩到 latent z（32 维）
-- **M (Memory)**：MDN-RNN（mixture density net + RNN）在 latent space 预测下一时刻 `z_{t+1} | z_t, a_t`
-- **C (Controller)**：简单 linear policy `a = W [z_t; h_t]`，h_t 是 RNN hidden state；用 evolution strategy (CMA-ES) 训练，不需要 backprop 透 V / M
+- **V (Vision)**：VAE encoder 把高维 observation 压缩成 32 维 latent `z`
+- **M (Memory)**：MDN-RNN（mixture density net + RNN）在 latent space 预测下一时刻状态 `z_{t+1} | z_t, a_t`
+- **C (Controller)**：简单 linear policy `a = W [z_t; h_t]` 根据当前 latent `z_t` 和 RNN hidden state `h_t` 输出动作；该 policy 用 evolution strategy (CMA-ES) 训练，不需要反向传播穿过 V / M
 
 **关键实验**[1]：
 
-- **CarRacing-v0** (OpenAI Gym)：agent 完全在 dream rollout 中训练 policy，直接 deploy 到真实 environment 取得 906 ± 21 分（vs 当时 best published 591），首次在 reward 上证明 dream-based policy training 可行
-- **ViZDoom Take Cover**：类似 setup，agent 在 dream 中训练后真实 env 中 sample 上 1100 step（baseline ~280 step）
+- **CarRacing-v0** (OpenAI Gym)：agent 完全在 dream rollout 中训练 policy，再直接部署到真实 environment，取得 906 ± 21 分（vs 当时 best published 591），说明 dream-based policy training 可以在该任务上得到有效 reward
+- **ViZDoom Take Cover**：采用类似设置，agent 在 dream 中训练后，在真实 environment 中可存活约 1100 step（baseline ~280 step）
 
 #### 6.1.2 实践停滞 (2018-2024)
 
-V+M+C 在玩具 task 上验证后，2018-2024 间未出现规模化 successful application：
+V+M+C 在玩具任务上验证后，2018-2024 间没有扩展到复杂真实场景，主要限制包括：
 
-- VAE 表示能力受限，无法 scale 到复杂场景 / 高分辨率
-- MDN-RNN 长 horizon 推演 drift 严重
+- VAE 表示能力受限，难以处理复杂场景和高分辨率视频
+- MDN-RNN 做长 horizon 推演时容易 drift，即预测状态逐步偏离真实环境
 - 训练数据规模与 LLM / Diffusion 时代不匹配
 
-实际突破等到 2024-2025 大模型时代（Cosmos / Genie 系列），详见 §8。
+2024-2025 年的 Cosmos / Genie 系列把 world model 扩展到更大规模的视频和交互场景，详见 §8。
 
 #### 6.1.3 路线分歧：JEPA vs LLM 主线
 
-LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，提出 JEPA (Joint Embedding Predictive Architecture, 2022)[3] 路线：在 embedding space 做 predictive learning，不做 pixel-level reconstruction。后续 V-JEPA (Bardes et al., 2024)[4]、V-JEPA-2 (Meta 2025-06)[5] 用于 video understanding。
+LeCun (Meta) 持续主张 AGI 核心是 self-supervised world model，并提出 JEPA (Joint Embedding Predictive Architecture, 2022)[3] 路线：模型在 embedding space 预测未来表示，而不是重建像素级图像。后续 V-JEPA (Bardes et al., 2024)[4]、V-JEPA-2 (Meta 2025-06)[5] 被用于 video understanding。
 
-主流 LLM / VLA 阵营则相信预训练 + 推理 scaling + RL fine-tune 路线（GPT / Gemini / Claude / DeepSeek 全部此路线）。这是 AI 领域一条公开未解决的路线分歧。
+主流 LLM / VLA 阵营则采用预训练 + 推理 scaling + RL fine-tune 路线（GPT / Gemini / Claude / DeepSeek 均在此方向上演进）。两条路线对「世界模型是否应显式建模环境」给出不同答案，公开材料中尚未出现统一路线。
 
 ### 6.2 Runway GEN-1 与视频生成
 
-GEN-1 (Esser et al., ICCV 2023)[6] 把 diffusion 思路 extend 到视频生成的工程产品；Runway research blog 公开时间为 2023-02。技术上不是最强（后续 Sora / Veo 3 性能远超），但是 video diffusion 工程化的早期里程碑，提出了 "条件生成视频" 的若干 design choice。
+GEN-1 (Esser et al., ICCV 2023)[6] 把 diffusion 用到视频生成产品中；Runway research blog 公开时间为 2023-02。后续 Sora / Veo 3 的生成质量更高，但 GEN-1 较早把 video diffusion 做成可用产品，并明确了「用源视频 + 文本 / 图像条件生成新视频」这一任务形式。
 
 #### 6.2.1 GEN-1 (2023-02)
 
-- **I/O**：source video + reference image / text prompt → stylized video（depth / mask / structure 保留 + appearance 替换）
-- **架构**：latent diffusion 扩展到 video，depth + structure 作为 conditioning
-- **应用**：商业视频后期 / 风格迁移；SaaS 形态，非技术用户可用
+- **I/O**：输入 source video 与 reference image / text prompt，输出 stylized video；生成时尽量保留 depth / mask / structure，并替换 appearance
+- **架构**：把 latent diffusion 扩展到 video，把 depth 和 structure 作为 conditioning 信号
+- **应用**：面向商业视频后期和风格迁移，以 SaaS 形态提供给非技术用户
 
 #### 6.2.2 后续主线 (2023-2024)
 
-GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hybrid），代表性 release：
+GEN-1 之后，视频生成沿三类方法展开（Diffusion / Autoregressive / Hybrid）：
 
 - **Diffusion 范式**（当前主流）：
-  - **Stable Video Diffusion** (Blattmann et al., 2023-11)[7]：开源 video diffusion，1.5B-3.5B param，14-25 frames @ 576×1024
-  - **Sora** (OpenAI 2024-02 technical report)[8]：spacetime patch + Diffusion Transformer (DiT, Peebles & Xie, ICCV 2023)[9]，60s 长视频；2024-12 公开 release 名 Sora Turbo
+  - **Stable Video Diffusion** (Blattmann et al., 2023-11)[7]：开源 video diffusion，1.5B-3.5B 参数，生成 14-25 frames @ 576×1024
+  - **Sora** (OpenAI 2024-02 technical report)[8]：把视频切成 spacetime patch，并用 Diffusion Transformer (DiT, Peebles & Xie, ICCV 2023)[9] 生成最长 60s 的视频；2024-12 公开 release 名为 Sora Turbo
   - **Veo / Veo 3** (Google DeepMind 2024-05 / 2024-12)[1]：闭源，高质量 + 长片段 + 物理一致性；集成进 Vertex AI
   - **Pika / Runway Gen-3** (2024)：商业向偏短片 / 创意
-- **Autoregressive 范式**：**VideoPoet** (Google 2023-12) 用 LLM 范式生成 video token；长 horizon 强但慢
+- **Autoregressive 范式**：**VideoPoet** (Google 2023-12) 像 LLM 生成文本 token 一样生成 video token；长 horizon 表现较强，但推理速度较慢
 - **Hybrid 范式**：latent autoregressive + diffusion refinement，探索阶段
 
-3D tensor (frame × H × W) 生成任务上，三种范式各自的 trade-off 待 video model scale 进一步放大后再观察。
+视频是 `frame × H × W` 的 3D tensor；三类方法在质量、速度、长 horizon 一致性上的取舍，仍需要在更大规模 video model 上继续观察。
 
 #### 6.2.3 与 World Models 收敛 (2024-2025)
 
 视频生成主线在 2024-2025 与 World Models 路线收敛：
 
-- 视频生成 model 是 implicit world model（隐式学环境动力学）
-- DeepMind Genie 系列把 video generation 改造为 user-action-controllable，即 explicit world model（详见 §8）
-- NVIDIA Cosmos Predict 直接以 "world model 工具链" 命名其 video diffusion model（详见 §8）
+- 视频生成模型可视为 implicit world model：它通过视频数据隐式学习环境随时间变化的规律
+- DeepMind Genie 系列把 video generation 改造成 user-action-controllable，让用户动作影响后续画面，因此更接近 explicit world model（详见 §8）
+- NVIDIA Cosmos Predict 直接把 video diffusion model 放入 "world model 工具链"（详见 §8）
 
-第四阶段（2018 V+M+C / 2023 GEN-1）是后续延伸 1（具身 VLA）与延伸 2（World Models 近期形态）的两条根：
+2018 V+M+C 与 2023 GEN-1 分别连接到后续两条延伸线：
 
-- VLA training 用 World Model dream 替代部分真机数据（§7.2.2 VLA + World Models 融合 节）
-- World Models 近期形态在 2024-2026 通过 latent video diffusion + interactive control 实现产品级（§8）
+- VLA training 使用 world model dream 补充部分真机数据（§7.2.2 VLA + World Models 融合）
+- World Models 近期形态在 2024-2026 年通过 latent video diffusion + interactive control 进入产品级 demo（§8）
 
 ### References
 
@@ -451,231 +451,225 @@ GEN-1 之后视频生成沿三种范式展开（Diffusion / Autoregressive / Hyb
 
 ## 7. 延伸 1：具身 VLA (2023-2026)
 
-VLA (Vision-Language-Action) 把视觉 + 语言 model 输出端从 token 改为 action，直接输出机器人执行序列。2023 年 Google DeepMind RT-2 是首个工业级 VLA；2024-2026 间 Physical Intelligence π 系列 / Figure Helix / NVIDIA GR00T 把 VLA 推到产品级 + 跨形态泛化；国内 GraspVLA / GO-1 / UnifoLM-VLA-0 跟进。
+VLA (Vision-Language-Action) 在视觉和语言输入之外，把模型输出从文本 token 扩展为机器人动作。2023 年 Google DeepMind RT-2 把 VLM fine-tune 成可输出动作的 VLA；2024-2026 年，Physical Intelligence π 系列、NVIDIA GR00T、Gemini Robotics、OpenVLA / Octo 等路线继续推进跨机器人形态泛化、开源 baseline 和产品化；国内 AgiBot World / GO-1、Galaxea G0、RynnBrain / RynnVLA、LingBot-VLA、UnifoLM-VLA-0、Xiaomi-Robotics-0 等路线跟进。
 
 ### 7.1 VLA 进展（按地理）
 
-VLA 进展按地理分两支：国际线（Google → Physical Intelligence → Figure → NVIDIA 四条主线）与国内线（银河通用 / 智元 / 宇树 三家 2025-2026 跟进）。两支主线时间锚点错开 ~1.5 年，国内多数 model 直接复用国际 VLM backbone（CLIP / Qwen-VL）。
+VLA 进展按地理分两支：国际线以 Google / DeepMind、Physical Intelligence、NVIDIA 等产业主线和 OpenVLA、Octo 等开源 baseline 为代表；国内线在 2025-2026 年形成以数据集、开源权重和真机部署为中心的多条路线。两支主线在时间线上错开约 1.5 年，国内多数 model 直接复用国际或国产 VLM backbone（CLIP / Qwen-VL）。
 
-#### 7.1.1 国际 VLA 时间线
+#### 7.1.1 国际 VLA 初步地图
 
-国际 VLA 主线：Google DeepMind RT-2 → Physical Intelligence π 系列 → Figure AI Helix → NVIDIA GR00T 四条线。截至 2026-05-04 主流 release：
+国际 VLA 可分为三类：RT-2 / Gemini Robotics 代表 Google / DeepMind 的闭源研究主线，π 系列 / GR00T 代表产业化 humanoid 主线，OpenVLA / Octo 代表开源学术和 baseline 主线。下表保留已有论文、开源资产、持续发布或产业工具链支撑的代表项。
 
 
-| Model      | 公司                    | Release    | Robot                | 训练数据                           | 关键贡献                                                     |
-| ---------- | --------------------- | ---------- | -------------------- | ------------------------------ | -------------------------------------------------------- |
-| RT-2       | Google DeepMind       | 2023-07    | dual-arm RT robot    | web-scale + RT-1               | VLM 直接转 VLA 的首个工作                                        |
-| π₀         | Physical Intelligence | 2024-10    | 7 个 embodiment       | ~10k hrs robot data            | generalist policy 跨形态                                    |
-| π₀.5       | Physical Intelligence | 2025-04-22 | 同 π₀ + new           | + open-world data              | open-world generalization                                |
-| π₀.7       | Physical Intelligence | 2026-04-16 | steerable foundation | scaled                         | step-change in generalization                            |
-| Helix 02   | Figure AI             | 2026-01    | Figure 02 humanoid   | full-body data                 | unified visuomotor net + 4 分钟洗碗机连续自主                     |
-| GR00T N1   | NVIDIA                | 2025-03    | humanoid (open)      | open data + sim                | 开源 humanoid foundation                                   |
-| GR00T N1.7 | NVIDIA                | 2026-04-17 | humanoid             | EgoScale 20,854 hrs egocentric | Action Cascade dual-system + dexterity scaling law (首报告) |
+| Model | 机构 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 关键贡献 | 来源 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| RT-2 | Google DeepMind | 2023-07 | dual-arm RT robot | web-scale + RT-1 | 官方模型 / 权重未开放；有第三方复现 | 将 VLM fine-tune 为 VLA | [1] |
+| Octo | UC Berkeley / Stanford 等 | 2024-05 | 多机器人 manipulation | Open X-Embodiment，约 800k robot episodes | 代码 MIT；checkpoint 公开 | 开源 generalist robot policy baseline | [2] |
+| OpenVLA | Stanford / Berkeley 等 | 2024-06 / 2025 | 多机器人 manipulation | Open X-Embodiment，970k robot demonstrations | 代码 / 权重 MIT | 7B 开源 VLA，面向可微调部署 | [3] |
+| π 系列 | Physical Intelligence | 2024-2026 | 7 个 embodiment + open-world 场景 | π₀ 使用 ~10k hrs robot data；π₀.5 / π₀.7 继续扩展泛化 | π₀ / π₀.5 代码与 checkpoint 公开（Apache-2.0）；π₀.7 公开论文 / 报告，未见公开 checkpoint | generalist policy + flow-matching action head | [4, 5, 9] |
+| GR00T N1 | NVIDIA | 2025-03 | humanoid | open data + sim | 代码 / 权重公开；N1 / N1.5 权重偏非商用许可 | humanoid foundation model | [6] |
+| Gemini Robotics 1.5 / ER 1.5 | Google DeepMind | 2025 | ALOHA / Bi-arm Franka / Apollo humanoid 等 | multi-embodiment robot data + Motion Transfer | ER 1.5 API；Robotics 1.5 面向 select partners | VLA + embodied reasoning 双模型组合 | [7] |
+| GR00T N1.7 | NVIDIA | 2026-04-17 | humanoid | EgoScale 20,854 hrs egocentric | EA；代码 / 权重公开，商业许可需按 NVIDIA release 条款核对 | Action Cascade dual-system + dexterity scaling law | [10] |
 
 
 **Google DeepMind RT-2 (2023-07)[1]**
 
-RT-2 (Brohan et al., Google DeepMind 2023-07)[1] 是首个把 VLM (PaLI-X 5B/55B / PaLM-E 12B/562B) 直接 fine-tune 成 VLA 的工作。action 被 tokenize 为 LLM vocabulary 中的 token，output 端 LLM 直接生成 action token。
+RT-2 (Brohan et al., Google DeepMind 2023-07)[1] 把 VLM (PaLI-X 5B/55B / PaLM-E 12B/562B) 直接 fine-tune 成 VLA。它把机器人动作离散化为 LLM vocabulary 中的 token，使 LLM 在输出端直接生成 action token。
 
-- **数据**：web-scale pretraining（从 PaLI-X / PaLM-E 继承）+ RT-1 收集的 13 个机器人 17 个月数据（~130k 任务 episode）
-- **泛化**：零样本对未见过的 object / instruction，closed-loop success +60% on novel objects（vs RT-1 baseline）
+- **数据**：继承 PaLI-X / PaLM-E 的 web-scale pretraining，再加入 RT-1 收集的 13 个机器人、17 个月数据（~130k 任务 episode）
+- **泛化**：对未见过的 object / instruction 做零样本执行，novel objects 上的 closed-loop success 相比 RT-1 baseline 提升 +60%
 - **影响**：把 "VLM → fine-tune → VLA" 模式确立为后续标准（LLaVA / Qwen-VL / SigLIP 等都被尝试当 V-base）
 
 **Physical Intelligence π 系列 (2024-2026)**
 
 Physical Intelligence (PI) 是 Sergey Levine 等创立的具身公司，主线 π₀ → π₀.5 → π₀.7：
 
-- **π₀** (2024-10)[2]：generalist robot policy，1 个 model 跨 7 个 embodiment（Franka / UR5e / Mobile Aloha / Trossen 等），~10k hrs 真机数据训练。VLM (PaliGemma) + flow matching action head。PI 公开 demo 在洗衣 / 折叠 / 打包多场景
-- **π₀.5** (2025-04-22)[3]：open-world generalization。用 action knowledge transfer（从 web video + lab data 联合训练）在未训练过的 home / kitchen 场景 0-shot 表现
-- **π₀.7** (2026-04-16)[4]：steerable robot foundation，PI 公开报告中描述为 "step-change in generalization"；具体 architecture 与训练 scale 待 paper release（写作时 verify）
+- **π₀** (2024-10)[4]：generalist robot policy，1 个 model 跨 7 个 embodiment（Franka / UR5e / Mobile Aloha / Trossen 等），~10k hrs 真机数据训练。VLM (PaliGemma) + flow matching action head。PI 公开 demo 在洗衣 / 折叠 / 打包多场景
+- **π₀.5** (2025-04-22)[5]：open-world generalization。用 action knowledge transfer（从 web video + lab data 联合训练）在未训练过的 home / kitchen 场景 0-shot 表现
+- **π₀.7** (2026-04-16)[9]：steerable robot foundation，PI 公开报告中描述为泛化能力进一步提升；具体 architecture 与训练规模待 paper release（写作时 verify）
 
-PI 路线：闭源 + 大规模真机数据 + flow-matching action head（区别于 RT-2 的 token-by-token autoregressive action）。
-
-**Figure AI Helix (2026-01 / 2026-03)**
-
-Figure AI 在 humanoid 方向，Helix 系列把 full-body 操作统一为单一 visuomotor net：
-
-- **Helix** (2025-02)：上半身 + 双机协作，嵌入式低功耗 GPU
-- **Helix 02** (2026-01)[5]：full-body 自主，三层 dual-system（System 0 + 1 + 2，详见 +推理融合 节）；单一神经网络（10M 参数）替代 109,504 行 C++ 工程代码；Living room tidy demo (2026-03) 显示连续 4 分钟以上长任务自主
-
-Figure 路线：humanoid 形态 + 量产硬件（Figure 03 2025-10 demo 掌内 camera + 触觉传感器）+ 算法 / 硬件协同迭代。
+PI 路线使用大规模真机数据和 flow-matching action head；`openpi` 已公开 π₀、π₀-FAST、π₀.5 的代码与 base checkpoints。π₀.7 已公开论文 / 报告，但 `openpi` 当前模型列表未包含 π₀.7 checkpoint。这与 RT-2 逐 token 自回归生成动作的方式不同。
 
 **NVIDIA GR00T (2025-03 → 2026-04-17)**
 
-NVIDIA GR00T 是 humanoid foundation model 开源线：
+NVIDIA GR00T 是 humanoid foundation model 的开放路线：
 
 - **GR00T N1** (2025-03)[6]：首个开源 humanoid foundation model，dual-system（VLM 推理 + Diffusion Transformer 动作）
 - **GR00T N1.5** (2025-06)：加入 FLARE（从人类视频学习）
 - **GR00T N1.6** (2026-04-15)：VLM 升级到 NVIDIA Cosmos-Reason-2B
-- **GR00T N1.7** (2026-04-17)[7]：3B 参数 "Action Cascade" = Cosmos-Reason2-2B (System 2) + 32-layer DiT (System 1)；EgoScale 20,854 hrs 人类 egocentric video 数据集；NVIDIA 公开报告中提出 "robot dexterity scaling law"（1k → 20k hrs 训练数据 dexterity 表现 doubling），是 VLA 领域第一次报告 scaling law 现象
+- **GR00T N1.7** (2026-04-17)[9]：3B 参数 "Action Cascade" = Cosmos-Reason2-2B (System 2) + 32-layer DiT (System 1)；使用 EgoScale 20,854 hrs 人类 egocentric video 数据集；NVIDIA 公开报告中提出 "robot dexterity scaling law"，即训练数据从 1k hrs 增至 20k hrs 后 dexterity 表现约 doubling
 
-NVIDIA 路线：open foundation + 与 Cosmos / Isaac Sim 工具链强绑定；与 Boston Dynamics / Agility / Figure 等多家 humanoid 厂商合作。
+NVIDIA 路线强调开放 foundation model，并与 Cosmos / Isaac Sim 工具链绑定；合作厂商包括 Boston Dynamics / Agility / Figure 等 humanoid 公司。
 
-> **写作时 verify（截至 2026-05-04）**：
+**开源学术与 Google 后续线**
+
+OpenVLA 与 Octo 是国际开源路线中常用的 baseline。OpenVLA 是 7B VLA，基于 Open X-Embodiment 的 970k robot demonstrations 训练；Octo 是 open-source generalist robot policy，基于约 800k robot episodes 训练，提供 27M / 93M 两种规模[2, 3]。Google DeepMind 在 RT-2 之后公开 Gemini Robotics 1.5 / Gemini Robotics-ER 1.5：前者是 multi-embodiment VLA，后者是 embodied reasoning VLM，用于空间理解、任务规划和进度估计[7]。
+
+> **写作时 verify（截至 2026-05-06）**：
 >
-> - 未见 Figure Helix 03 公开 release；留待后续追加
 > - π₀.7 (2026-04-16) 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
 
-#### 7.1.2 国内 VLA 进展
+#### 7.1.2 国内 VLA 初步地图
 
-国内 VLA 在 2025-2026 出现 3 家主线：银河通用 GraspVLA / 智元 GO-1 / 宇树 UnifoLM：
+国内 VLA / 具身 foundation model 在 2025-2026 年形成多条公开路线。主表采用三类筛选标准：公开资产较完整、数据规模清楚、真机部署或 benchmark 信息可复核。
 
+| Model | 公司 / 团队 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 来源 |
+| --- | --- | --- | --- | --- | --- | --- |
+| AgiBot GO-1 | 智元 | 2025-03-10 | 多形态机器人 | AgiBot World：1M+ trajectories，217 个任务 | 代码 / 数据 / GO-1 权重公开；权重 CC BY-NC-SA 4.0 | [11] |
+| Galaxea G0 | 星海图 Galaxea | 2025-09 | 移动双臂操作 | Galaxea Open-World Dataset：500 小时、50 个场景、150+ 任务 | 数据 / 模型公开；G0-VLA CC BY-NC-SA 4.0，G0Plus 为非商用社区许可 | [12] |
+| RynnBrain / RynnVLA | 阿里达摩院 | 2026-02 / 2025-11 | embodied foundation / LIBERO + LeRobot | RynnBrain 含 2B / 8B / 30B-A3B MoE；RynnVLA-002 统一 VLA 与 world model | 代码 / checkpoint Apache-2.0 | [13, 14] |
+| LingBot-VLA | 蚂蚁 / Robbyant | 2026-01 | 9 种双臂机器人配置 | 约 20,000 小时真实机器人数据；评估覆盖 3 个平台、100 个任务 | 代码 / 4B 权重 / benchmark data 公开，Apache-2.0 | [15] |
+| UnifoLM-VLA-0 | 宇树 | 2026-01-29 | G1 humanoid | 基于 Qwen2.5-VL-7B，面向 12 类操作任务 | 代码 BSD-3-Clause；权重 CC BY-NC-SA 4.0 | [16] |
+| Xiaomi-Robotics-0 | 小米机器人 | 2026-02 | 双臂实时控制 | 4.7B VLA；约 200M robot timesteps + 80M vision-language samples | 代码 / checkpoint Apache-2.0 | [17] |
 
-| Model         | 公司   | Release    | Robot       | 训练数据                    | 开源闭源       |
-| ------------- | ---- | ---------- | ----------- | ----------------------- | ---------- |
-| GraspVLA      | 银河通用 | 2025-01-09 | Galbot 上半身  | 10 亿帧合成 + 真机            | 闭源         |
-| AgiBot GO-1   | 智元   | 2025-03-10 | 多形态         | AgiBot World 100 万 demo | 闭源 + 公开数据集 |
-| UnifoLM-VLA-0 | 宇树   | 2026-01-29 | G1 humanoid | 真机 + 模拟                 | 开源         |
+**智元 AgiBot GO-1 (2025-03-10)[11]**
 
+GO-1 是智元 (AgiBot) 的 ViLLA (Vision-Language-Latent-Action) 架构。它不直接生成动作 token，而是在 latent space 中做中间规划，再由 action expert 输出动作：
 
-**银河通用 GraspVLA (2025-01-09)[8]**
-
-GraspVLA 是与智源 / 北大 / 港大合作的具身抓取大模型：
-
-- **数据**：10 亿帧合成 "视觉-语言-动作" 对预训练 + 真机 fine-tune
-- **七大泛化金标准**（银河通用提出）：光照 / 背景 / 平面位置 / 空间高度 / 动作策略 / 动态干扰 / 物体类别
-- **集成**：GraspVLA + TrackVLA + 人机交互模块 → GALBOT VLA agent；Galbot G1 上半身机器人在 NVIDIA CES 2025 demo 中托举 RTX 5090
-
-**智元 AgiBot GO-1 (2025-03-10)[9]**
-
-GO-1 是智元 (AgiBot) 的 ViLLA (Vision-Language-Latent-Action) 架构：
-
-- **架构**：MoE + Latent Planner + Action Expert 三件套，在 latent space 做 planning 而不是直接 action token
-- **训练数据**：AgiBot World 数据集，100 万条真实机器人 demonstration，217 个任务；国内首个公开大规模 VLA 数据集
+- **架构**：MoE + Latent Planner + Action Expert 三件套，在 latent space 做 planning，而不是直接生成 action token
+- **训练数据**：AgiBot World 数据集，1M+ trajectories，217 个任务；公开材料将其定位为大规模 robotic learning platform
 - **性能**：平均成功率 46% → 78%（vs GO-1 之前 baseline）
 
-**宇树 UnifoLM-VLA-0 (2026-01-29)[10]**
+**宇树 UnifoLM-VLA-0 (2026-01-29)[16]**
 
 UnifoLM-VLA-0 是宇树为 G1 humanoid 设计的 VLA：
 
 - **Backbone**：基于阿里 Qwen2.5-VL-7B（国内 VLA 直接复用 Qwen 系列 VLM 的代表案例）
 - **任务**：单一 policy 在 G1 上完成 12 类操作（开闭抽屉 / 插拔 / 抓放 / 工具使用）
-- **开源 + 硬件价格**：开源 + G1 售价约 $13.5K（vs Figure 02 等海外 humanoid 一个数量级低）
+- **公开状态**：UnifoLM-VLA-Base 已在 Hugging Face 公开；任务侧聚焦 G1 humanoid 操作
 
 ### 7.2 VLA 融合方向
 
-VLA 与其他范式的融合主要沿两条方向展开：与 reasoning（推理大模型）融合形成 dual-system 架构，与 World Models 融合形成 dream-based training。前者解 long-horizon 任务规划，后者解真机数据稀缺。
+VLA 与其他范式的融合主要沿两条方向展开：与 reasoning model 融合形成 dual-system 架构，与 World Models 融合形成 dream-based training。前者处理 long-horizon 任务规划，后者补充真机数据不足。
 
 #### 7.2.1 VLA + 推理融合
 
-VLA + reasoning 融合的核心模式是 dual-system：System 1 高频反射动作 (VLA policy) + System 2 慢思考 (reasoning LLM) 协同，应对 long-horizon / 多步任务。
+VLA + reasoning 融合的核心模式是 dual-system：System 1 是高频动作 policy，负责实时控制；System 2 是慢速 reasoning LLM，负责拆解任务和规划步骤。两者协同处理 long-horizon / 多步任务。
 
 **Reasoning model 极简介绍（背景，~200 字）**
 
-Reasoning model 把 chain-of-thought 推理内置为 model 能力，通过 RL on CoT 训练（而非外部 prompt-engineering）。代表工作：OpenAI o1 (2024-09)[11] / o3 (2025-04) / DeepSeek R1 (2025-01)[12] / DeepSeek R2 (2026-04，32B dense 单 24GB GPU 可跑)。性能特点：AIME / GPQA / Codeforces 等 multi-step 推理 benchmark 显著超过同期 GPT-4 / GPT-5 base。本 doc scope 偏 SLAM / 具身，不单独展开；此处仅作为 VLA + 推理融合的 background。
+Reasoning model 把 chain-of-thought 推理训练成模型能力，而不是只依赖外部 prompt-engineering。代表工作包括 OpenAI o1 (2024-09)[18] / o3 (2025-04) / DeepSeek R1 (2025-01)[19] / DeepSeek R2 (2026-04，32B dense 单 24GB GPU 可跑)。这些模型在 AIME / GPQA / Codeforces 等 multi-step 推理 benchmark 上明显超过同期 GPT-4 / GPT-5 base。本笔记偏 SLAM / 具身，只在此处作为 VLA + 推理融合背景简述。
 
 **Dual-system 三个实例**
 
-- **Figure Helix System 1+2** (2026-01)[5]：三级架构 — System 0 实时平衡 (1 kHz) / System 1 视觉运动 (200 Hz, VLA policy) / System 2 高层推理 (LLM reasoning)；公开报告中明确借鉴 Kahneman 快 / 慢思考二系统；4 分钟连续洗碗机自主 demo (2026-01) 由该架构实现
-- **π₀.5 reasoning version** (2025-04-22)[3]：π₀.5 在 base policy 之外集成 reasoning 模块；用 LLM 对当前 task 拆解为 sub-task 后由 base policy 执行
-- **GR00T N1.7 Action Cascade** (NVIDIA 2026-04-17)[7]：System 2 = Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §8.2 Cosmos），System 1 = 32-layer Diffusion Transformer；"Action Cascade" 命名强调 reasoning 输出的 plan 级联到 DiT action 生成
+- **Figure Helix System 1+2** (2026-01)[8]：三级架构包括 System 0 实时平衡 (1 kHz)、System 1 视觉运动 (200 Hz, VLA policy)、System 2 高层推理 (LLM reasoning)；公开报告中明确借鉴 Kahneman 快 / 慢思考二系统；2026-01 的 4 分钟连续洗碗机自主 demo 由该架构实现
+- **π₀.5 reasoning version** (2025-04-22)[5]：π₀.5 在 base policy 之外集成 reasoning 模块；LLM 先把当前 task 拆成 sub-task，再交由 base policy 执行
+- **GR00T N1.7 Action Cascade** (NVIDIA 2026-04-17)[10]：System 2 使用 Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §8.2 Cosmos），System 1 使用 32-layer Diffusion Transformer；"Action Cascade" 指 reasoning 输出的 plan 会级联到 DiT action 生成
 
 **关键挑战**
 
 - **System 1/2 latency 协调**：System 2 LLM 推理 ~秒级延迟，System 1 控制 ~10 ms；协调机制（event-triggered / 周期性 / 异步并行）直接影响系统响应
 - **Long-horizon planning**：System 2 输出的 plan 在 System 1 执行过程中可能偏离，何时重 plan 是开放问题
-- **Plan ↔ action 接口形式**：language token / latent vector / sub-task list，当前各家 design choice 不同，没有 standard
+- **Plan ↔ action 接口形式**：language token / latent vector / sub-task list，当前各家 design choice 不同，尚无统一接口
 
 #### 7.2.2 VLA + World Models 融合
 
-VLA + World Models 融合的核心模式是 World Model dreaming：用 world model 生成大量 rollout 数据训练 VLA policy，替代 / 补充真机数据收集。思路延续 Ha & Schmidhuber 2018 dream-based policy training（详见 §6），但 world model 从 V+M+C 升级到 latent video diffusion 大模型。
+VLA + World Models 融合的核心模式是 World Model dreaming：先用 world model 生成大量模拟 rollout，再用这些 rollout 训练 VLA policy，以补充真机数据。这个思路延续 Ha & Schmidhuber 2018 的 dream-based policy training（详见 §6），但 world model 从 V+M+C 升级为 latent video diffusion 大模型。
 
 **Cosmos / Genie / V-JEPA 在此节简提（详见 §8）**
 
-- **NVIDIA Cosmos** (2025-01 起)：physical AI world model 工具链，包括 Predict (未来状态) / Transfer (sim-to-real) / Reason (VLM)
-- **DeepMind Genie 系列** (2024-02 / 2024-12 / 2025-08)：可交互 latent world model，被多家 VLA 团队当 training playground 使用
+- **NVIDIA Cosmos** (2025-01 起)：physical AI world model 工具链，包括 Predict（预测未来状态）、Transfer（sim-to-real 数据转换）、Reason（VLM reasoning）
+- **DeepMind Genie 系列** (2024-02 / 2024-12 / 2025-08)：可交互 latent world model，可作为 VLA 的 training playground
 - **V-JEPA-2** (Meta 2025-06)：JEPA 路线的 video predictive model
 
 详细内容见 §8 World Models 近期形态；本节仅讨论与 VLA training 的融合机制。
 
 **三个融合机制**
 
-- **Sim-to-real via Cosmos Transfer**：NVIDIA Cosmos Transfer 把 sim renderer 输出经 diffusion 改造成接近真机分布的图像，用于 VLA training data augmentation；GR00T N1.7 (2026-04-17) 公开报告中使用此 pipeline
-- **Dream-based RL training**：world model 生成 rollout，VLA policy 在 dream 中做 RL；银河通用 / 宇树 UnifoLM 等公开报告中提到 dreamer-like 训练方式
-- **Reasoning + World Model 在同一 model 内**：NVIDIA GR00T N1.7 把 Cosmos-Reason2-2B 同时作 System 2 reasoning 与 world model state predictor，把 reasoning 与 dream 在同一 model 内统一
+- **Sim-to-real via Cosmos Transfer**：NVIDIA Cosmos Transfer 把 sim renderer 输出经 diffusion 改造成更接近真机分布的图像，用于 VLA training data augmentation；GR00T N1.7 (2026-04-17) 公开报告中使用了这一 pipeline[10]
+- **Dream-based RL training**：world model 先生成 rollout，VLA policy 再在这些 dream 环境中做 RL；银河通用 / 宇树 UnifoLM 等公开报告中提到 dreamer-like 训练方式
+- **Reasoning + World Model 在同一 model 内**：NVIDIA GR00T N1.7 把 Cosmos-Reason2-2B 同时用于 System 2 reasoning 与 world model state prediction，使推理和 dream 共享同一模型组件
 
 **当前局限与开放问题**
 
 - **Sim-to-real gap 仍在**：world model dream 的物理一致性与真机 distribution 仍有 gap，完全 dream-only training 在长尾任务上未广泛验证
 - **训练数据分布对齐**：world model 训练数据 vs VLA policy 训练数据 distribution 是否需要联合归一化，当前各家 design 不同
-- **真机数据规模仍是瓶颈**：GR00T N1.7 dexterity scaling law 在 1k-20k hrs 真机数据上验证，是否能用 world model dream 进一步 scale 待验证（开放问题 1，§9）
+- **真机数据规模仍是瓶颈**：GR00T N1.7 dexterity scaling law 在 1k-20k hrs 真机数据上验证；world model dream 能否进一步扩大训练数据规模仍待验证（开放问题 1，§9）
 
 ### References
 
 - [1] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
-- [2] Black et al. (Physical Intelligence), π₀: A Vision-Language-Action Flow Model for General Robot Control, arXiv 2024. arXiv:2410.24164
-- [3] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22.
-- [4] Physical Intelligence, π₀.7 release, physicalintelligence.company/blog/pi07 2026-04-16.
-- [5] Figure AI, Helix 02 release, figure.ai/news/helix 2026-01.
-- [6] NVIDIA, GR00T N1 release, developer.nvidia.com 2025-03.
-- [7] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
-- [8] 银河通用, GraspVLA + 七大泛化金标准, 银河通用 blog 2025-01-09; baike.baidu.com/item/GraspVLA
-- [9] AgiBot, GO-1 + AgiBot World 数据集 release, agibot.com 2025-03-10; tech.huanqiu.com/article/4QAL55JkZVE
-- [10] Unitree, UnifoLM-VLA-0 release, unitree.com 2026-01-29.
-- [11] OpenAI, o1 system card, openai.com/index/learning-to-reason-with-llms 2024-09-12.
-- [12] DeepSeek, DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning, arXiv 2025. arXiv:2501.12948
+- [2] Octo Model Team, Octo: An Open-Source Generalist Robot Policy, arXiv 2024. arXiv:2405.12213; GitHub: github.com/octo-models/octo; Project: octo-models.github.io
+- [3] Kim et al., OpenVLA: An Open-Source Vision-Language-Action Model, CoRL 2024 / PMLR 2025. arXiv:2406.09246; GitHub: github.com/openvla/openvla; Hugging Face: huggingface.co/openvla/openvla-7b
+- [4] Black et al. (Physical Intelligence), π₀: A Vision-Language-Action Flow Model for General Robot Control, arXiv 2024. arXiv:2410.24164; GitHub: github.com/Physical-Intelligence/openpi (Apache-2.0)
+- [5] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22; GitHub: github.com/Physical-Intelligence/openpi (Apache-2.0)
+- [6] NVIDIA, GR00T N1 release, developer.nvidia.com 2025-03; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/nvidia/GR00T-N1-2B
+- [7] Google DeepMind, Gemini Robotics 1.5: Pushing the Frontier of Generalist Robots with Advanced Embodied Reasoning, Thinking, and Motion Transfer, technical report 2025; deepmind.google/models/gemini-robotics
+- [8] Figure AI, Helix 02 release, figure.ai/news/helix 2026-01.
+- [9] Physical Intelligence, π₀.7 release, physicalintelligence.company/blog/pi07 2026-04-16.
+- [10] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/collections/nvidia/gr00t-n17
+- [11] AgiBot, GO-1 + AgiBot World 数据集 release, agibot.com 2025-03-10; GitHub: github.com/OpenDriveLab/Agibot-World; Hugging Face: huggingface.co/agibot-world/GO-1
+- [12] Galaxea, Galaxea Open-World Dataset and G0 Dual-System VLA Model, arXiv 2025. arXiv:2509.00576; GitHub: github.com/OpenGalaxea/GalaxeaVLA; Hugging Face: huggingface.co/OpenGalaxea/G0-VLA
+- [13] Alibaba DAMO Academy, RynnBrain: Open Embodied Foundation Models, arXiv 2026. arXiv:2602.14979; GitHub: github.com/alibaba-damo-academy/RynnBrain
+- [14] Alibaba DAMO Academy, RynnVLA-002: A Unified Vision-Language-Action and World Model, GitHub: github.com/alibaba-damo-academy/RynnVLA-002; Hugging Face: hf.co/Alibaba-DAMO-Academy/RynnVLA-002
+- [15] Robbyant, A Pragmatic VLA Foundation Model (LingBot-VLA), arXiv 2026. arXiv:2601.18692; GitHub: github.com/Robbyant/lingbot-vla; Hugging Face: hf.co/robbyant/lingbot-vla-4b
+- [16] Unitree, UnifoLM-VLA-0 release, unitree.com 2026-01-29; GitHub: github.com/unitreerobotics/unifolm-vla; Hugging Face: huggingface.co/unitreerobotics/UnifoLM-VLA-Base
+- [17] Xiaomi Robotics, Xiaomi-Robotics-0: An Open-Sourced Vision-Language-Action Model with Real-Time Execution, arXiv 2026. arXiv:2602.12684; GitHub: github.com/XiaomiRobotics/Xiaomi-Robotics-0; Hugging Face: huggingface.co/XiaomiRobotics/Xiaomi-Robotics-0-Pretrain
+- [18] OpenAI, o1 system card, openai.com/index/learning-to-reason-with-llms 2024-09-12.
+- [19] DeepSeek, DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning, arXiv 2025. arXiv:2501.12948
 
 ---
 
 ## 8. 延伸 2：World Models 近期形态 (2024-2026)
 
-2024-2026 间 World Models 走出 V+M+C 玩具阶段，由 latent video diffusion 大模型 + interactive control 实现产品级 / 公众级 release。DeepMind Genie 系列与 NVIDIA Cosmos 工具链是当前两大主线。
+2024-2026 间，World Models 从 V+M+C 玩具任务走向大规模视频和交互场景。DeepMind Genie 系列把 world model 做成可交互环境；NVIDIA Cosmos 则把 world model 做成 physical AI 工具链。
 
 ### 8.1 可交互世界生成（Genie 3）
 
-DeepMind Genie 系列把 video generation 改造为 user-action-controllable，即 explicit world model。
+DeepMind Genie 系列把 video generation 改造成 user-action-controllable：用户动作会影响后续画面，因此它从固定视频生成转向显式可交互 world model。
 
 #### 8.1.1 Genie 系列时间线
 
 主线 Genie 1 → Genie 2 → Genie 3 → Project Genie：
 
-- **Genie 1** (DeepMind, ICML 2024)[1]：第一代 foundation world model，256×256，11B 参数，从 200k+ 小时 unlabeled internet video 学；可生成 2D platform-style world，user 用 action token 控制 agent
-- **Genie 2** (DeepMind 2024-12)[2]：升级到 3D 环境，支持 first-person / third-person 视角，~1 分钟 horizon 一致性
-- **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；官方表述为在 720p 下可保持「几分钟」级一致性（retaining consistency for a few minutes）[3]；用户从一张图或一段文字出发实时操控生成的 3D 环境；距 2018 Ha World Models 论文 7 年，是 World Models 公众级 demo 的标志性 release
+- **Genie 1** (DeepMind, ICML 2024)[1]：第一代 foundation world model，256×256，11B 参数，从 200k+ 小时 unlabeled internet video 学习；可生成 2D platform-style world，用户用 action token 控制 agent
+- **Genie 2** (DeepMind 2024-12)[2]：扩展到 3D 环境，支持 first-person / third-person 视角，保持约 1 分钟 horizon 一致性
+- **Genie 3** (DeepMind 2025-08-05)[3]：720p / 24 fps real-time interactive，photorealistic；官方表述为在 720p 下可保持「几分钟」级一致性（retaining consistency for a few minutes）[3]；用户可以从一张图或一段文字出发，实时操控生成的 3D 环境
 - **Project Genie** (DeepMind 2026-01-29)[4]：Genie 3 商业化产品，集成 Google AI Ultra（US 18+ 用户）
 
 #### 8.1.2 应用与对比
 
 **应用线**：
 
-- **Waymo World Model** (Waymo 2026-02)[5]：自动驾驶 closed-loop 仿真，在内部 world model 中 sample edge case 训练 / evaluate L4 policy
+- **Waymo World Model** (Waymo 2026-02)[5]：用于自动驾驶 closed-loop 仿真，在内部 world model 中 sample edge case，用于训练和评估 L4 policy
 - **VLA training playground**（多家 humanoid VLA）：用 Genie 系列环境做 RL pretrain / sim2real 验证（详见 §7.2.2 VLA + World Models 融合）
 
-**与 Sora-style 视频生成的区别**：视频生成 model 是 implicit world model，但 Sora / Veo 输出的是固定 video clip，user 不能在生成中途介入。Genie 系列三个核心区别：
+**与 Sora-style 视频生成的区别**：视频生成 model 可视为 implicit world model，但 Sora / Veo 输出的是固定 video clip，用户不能在生成过程中改变动作。Genie 系列的区别在于：
 
-- **Action-conditioned**：每帧生成依赖 user 当前 action token，系统在线 sample 而非 batch 生成
-- **State maintenance**：跨 frame 维护 world state（物体位置 / 物理一致性 / 相机轨迹）
-- **Interactive latency**：real-time (~24 fps) 生成 vs offline batch generation
+- **Action-conditioned**：每帧生成依赖用户当前 action token，系统在线 sample，而不是一次性 batch 生成完整视频
+- **State maintenance**：跨 frame 维护 world state，例如物体位置、物理一致性和相机轨迹
+- **Interactive latency**：目标是 real-time (~24 fps) 交互生成，而不是 offline batch generation
 
 ### 8.2 机器人仿真训练（NVIDIA Cosmos）
 
-NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVIDIA Isaac Sim / GR00T humanoid foundation 配套形成 stack。
+NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVIDIA Isaac Sim / GR00T humanoid foundation 配套，形成仿真、数据生成、reasoning 与机器人 policy 的完整 stack。
 
 #### 8.2.1 Cosmos 体系（3 子族 + 工具链定位）
 
 **3 个子族 (2025-2026)[6, 7]**：
 
-- **Cosmos Predict (Predict 2.5, 2026-04)**：flow-based world prediction；统一接口（text-to-world / image-to-world / video-to-world）；2.5 系列在长 horizon 物理一致性上较 1.x 显著 improve
-- **Cosmos Transfer (Transfer 2.5, 2026-04)**：multi-controlnet 可控生成（depth map / segmentation / pose / sketch 等多种 input 条件）；用于 sim-to-real data augmentation（sim renderer 输出 → diffusion 改造为 real-distribution）
-- **Cosmos Reason (Reason 2, 2026-04)**：VLM 增强 spatial-temporal 理解的 reasoning model；NVIDIA GR00T N1.6 / N1.7 直接用 Reason2-2B 作为 System 2 backbone（详见 §7.2.1 VLA + 推理融合）
+- **Cosmos Predict (Predict 2.5, 2026-04)**：flow-based world prediction，统一支持 text-to-world / image-to-world / video-to-world；2.5 系列相比 1.x 改善长 horizon 物理一致性
+- **Cosmos Transfer (Transfer 2.5, 2026-04)**：multi-controlnet 可控生成，支持 depth map / segmentation / pose / sketch 等输入条件；用于 sim-to-real data augmentation，把 sim renderer 输出经 diffusion 改造成更接近真实分布的图像
+- **Cosmos Reason (Reason 2, 2026-04)**：增强 spatial-temporal 理解的 VLM reasoning model；NVIDIA GR00T N1.6 / N1.7 直接用 Reason2-2B 作为 System 2 backbone（详见 §7.2.1 VLA + 推理融合）
 
 **工具链定位**：Cosmos 不是单点 model，而是 NVIDIA "physical AI stack" 的 foundation 层：
 
-- **Foundation**：Cosmos foundation models (Predict / Transfer / Reason)
-- **Sim**：NVIDIA Isaac Sim / Isaac Lab（sim 引擎）
-- **Embodiment**：GR00T N1.x humanoid foundation
-- **Hardware**：Jetson Thor / DGX Spark（具身 inference 硬件）
+- **Foundation**：Cosmos foundation models，包括 Predict / Transfer / Reason
+- **Sim**：NVIDIA Isaac Sim / Isaac Lab，提供仿真引擎
+- **Embodiment**：GR00T N1.x humanoid foundation，提供机器人 policy
+- **Hardware**：Jetson Thor / DGX Spark，提供具身 inference 硬件
 
 #### 8.2.2 应用与对比
 
-**公开 early adopter**[7]：NVIDIA 公开报告中 Cosmos 早期 adopter 包含 humanoid + 自动驾驶两个方向：
+**公开 early adopter**[7]：NVIDIA 公开报告中，Cosmos 早期 adopter 覆盖 humanoid 与自动驾驶两个方向：
 
-- **Humanoid**：1X / Agility Robotics / Figure AI / Boston Dynamics（Cosmos Transfer 用作 sim-to-real）
+- **Humanoid**：1X / Agility Robotics / Figure AI / Boston Dynamics，Cosmos Transfer 用于 sim-to-real
 - **自动驾驶**：Uber / Waabi（Cosmos Predict 用作 closed-loop 仿真）
 
 **与 Genie 路线的差异**：Cosmos 与 Genie 共享 latent video world model 核心思路，但 design choice 不同：
 
-- **Target user**：Cosmos 偏 robot / 自动驾驶 industry developer；Genie 偏 consumer / game / general public
+- **Target user**：Cosmos 面向机器人 / 自动驾驶行业开发者；Genie 面向 consumer / game / general public
 - **Open vs closed**：Cosmos 部分模型开源 (Cosmos-Reason2-2B 等)，Genie 闭源
 - **Toolchain integration**：Cosmos 与 NVIDIA Isaac Sim 深度集成；Genie 暂无类似 sim 引擎绑定
 
@@ -693,17 +687,17 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 
 ## 9. 两个开放问题
 
-两个与具身 / 重建相关的、当前未解决的问题。仅描述现状 / 缺口 / 待观察项，不下判断。
+这里保留两个与具身 / 重建相关的开放问题，只描述现状、缺口和待观察项，不下结论。
 
 ### 9.1 VLA 在 home / 长尾场景的泛化
 
-**现状**：VLA 在工厂 / 结构化 pick-place / lab demo 任务上 robust。GR00T N1.7 (2026-04-17)[1] 在 EgoScale 20,854 hrs 数据上首次报告 robot dexterity scaling law（1k → 20k hrs 训练数据 → dexterity 表现 doubling），是 VLA scale 路线的 positive signal。
+**现状**：VLA 在工厂、结构化 pick-place 和 lab demo 任务上已有较多成功案例。GR00T N1.7 (2026-04-17)[1] 在 EgoScale 20,854 hrs 数据上报告 robot dexterity scaling law：训练数据从 1k hrs 增至 20k hrs 后，dexterity 表现约 doubling。该结果说明数据规模扩大与 dexterity 提升有关。
 
-**缺口**：home / 长尾场景的公开 benchmark + success rate 仍未广泛报告：
+**缺口**：home / 长尾场景仍缺少广泛公开的 benchmark 和 success rate：
 
 - Physical Intelligence π₀.5 (2025-04-22)[2] 在 open-world generalization 上是早期信号
 - π₀.7 (2026-04-16) "step-change in generalization" 描述待 paper 公开（写作时 verify）
-- Figure Helix 02 (2026-01) 4 分钟洗碗机 demo 是单点案例，不是统计意义上的成功率
+- Figure Helix 02 (2026-01) 4 分钟洗碗机 demo 是单点案例，不能替代统计意义上的成功率
 
 **待观察**：
 
@@ -713,10 +707,10 @@ NVIDIA Cosmos (2025-01 起) 是 physical AI 的 world model 工具链，与 NVID
 
 ### 9.2 World Models 与 metric 重建是否合流
 
-**现状**：当前两条线在工具上都 reach Transformer feed-forward 大模型化，但 design choice 仍分化：
+**现状**：当前两条线都在使用 Transformer / feed-forward 大模型，但表示方式仍分化：
 
-- **生成路线 (Genie 3 / Cosmos)**：latent video 表示，隐式 / pixel-level 一致性，无显式 metric 几何
-- **重建路线 (3DGS / DUSt3R / VGGT)**：explicit geometry 表示（point / Gaussian / camera matrix），metric 精度（PSNR / pose error）
+- **生成路线 (Genie 3 / Cosmos)**：使用 latent video 表示，强调隐式的 pixel-level 一致性，不显式输出 metric 几何
+- **重建路线 (3DGS / DUSt3R / VGGT)**：使用 explicit geometry 表示，例如 point / Gaussian / camera matrix，强调 metric 精度（PSNR / pose error）
 
 **两种合流的可能形态**：
 

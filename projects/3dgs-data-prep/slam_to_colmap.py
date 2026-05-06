@@ -37,17 +37,22 @@ DEFAULT_INTRINSICS = {
     "cy": 275.645,
 }
 
-# Rotation lidar → camera (row-major), translation (meters)
+# Rotation lidar → camera (row-major), translation (meters).
+# Updated 2026-05-06: replaced with refined extrinsics (T_cam_lidar) shared by user,
+# previous values kept here for reference:
+#   _RCL_FLAT_OLD = (-0.999865, -0.0067944, 0.0149309,
+#                    -0.0157783, 0.14933, -0.988662,
+#                     0.00448773, -0.988764, -0.149417)
 _RCL_FLAT = (
-    -0.999865,
-    -0.0067944,
-    0.0149309,
-    -0.0157783,
-    0.14933,
-    -0.988662,
-    0.00448773,
-    -0.988764,
-    -0.149417,
+    -0.999959,
+    0.00178369,
+    -0.00886425,
+    0.00901242,
+    0.117477,
+    -0.993035,
+    -0.000729917,
+    -0.993074,
+    -0.117489,
 )
 _PCL = (0.029879, -0.031769, -0.495527)
 
