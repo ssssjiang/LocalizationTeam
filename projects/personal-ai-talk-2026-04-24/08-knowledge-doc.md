@@ -2,13 +2,13 @@
 
 ## 1. 整体趋势
 
-2012-2026 间 AI 演进经历 5 个 foundation 阶段（判别式 → Transformer → 视觉与视频生成 → 多模态理解 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。时间线：
+2012-2026 间 AI 演进经历 5 个 foundation 阶段（判别式 → Transformer → 视觉与视频生成 → VLM 与多模态理解 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。时间线：
 
 - **2012-2015 判别式 AI**：AlexNet (NeurIPS 2012) / VGG / GoogLeNet / ResNet (CVPR 2016) — CNN 端到端特征学习
 - **2017 Transformer**：Vaswani et al. — self-attention 替代 RNN，LLM 工业化基础
 - **2020-2022 LLM scaling**：GPT-3 (NeurIPS 2020) / Chinchilla (NeurIPS 2022) / ChatGPT (2022-11)
 - **2020-2024 视觉与视频生成**：DDPM (NeurIPS 2020) → Stable Diffusion (2022-08) → Sora (2024-02)
-- **2020-2024 多模态理解**：CLIP (ICML 2021) → GPT-4V (2023-09) → LLaVA (NeurIPS 2023)
+- **2020-2024 VLM 与多模态理解**：CLIP (ICML 2021) → GPT-4V (2023-09) → LLaVA (NeurIPS 2023)
 - **2018 / 2023 World Models 起源**：Ha & Schmidhuber (NeurIPS 2018) V+M+C / Runway GEN-1 (2023-02)
 - **2023-2026 具身 VLA**：RT-2 (2023-07) → π₀ (2024-10) → π₀.7 (2026-04-16) / Helix 02 (2026-01) / GR00T N1.7 (2026-04-17)
 - **2024-2026 World Models 近期形态**：Genie 3 (2025-08) / Cosmos (2025-01 起)
@@ -304,11 +304,11 @@ Latent Diffusion (Rombach et al., CVPR 2022)[5] 不直接在像素空间去噪�
 
 ---
 
-## 5. 第四阶段：多模态理解 (2020-2024)
+## 5. 第四阶段：VLM 与多模态理解 (2020-2024)
 
-2020-2024 年，多模态理解沿两条线发展：CLIP (ICML 2021) 用对比学习把图像和文本编码到同一个向量空间，使图文可以直接匹配；GPT-4V (2023-09) 则把图像输入接入 LLM，让语言模型可以基于图片回答问题。前者解决图文表征对齐，后者把视觉理解并入 LLM；这两条线共同构成后续 VLM 和 VLA 的视觉理解基础。
+2020-2024 年，多模态理解从图文表征对齐走向 VLM。CLIP (ICML 2021) 用对比学习把图像和文本编码到同一个向量空间，解决图文匹配与 open-vocabulary 视觉理解；GPT-4V / LLaVA 把视觉特征接入 LLM，使语言模型可以基于图像回答问题；VLA 则在 VLM 基础上把输出从文本扩展为机器人动作。三者的关系是：CLIP 提供视觉-文本对齐，VLM 提供视觉输入下的语言推理，VLA 把这种推理接到 embodied action。
 
-### 5.1 CLIP 与多模态对齐
+### 5.1 CLIP：图文对齐
 
 CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)[1] 用 contrastive learning 训练图像 encoder 和文本 encoder，把图像与文本映射到同一个 embedding space。
 
@@ -320,35 +320,43 @@ CLIP (Contrastive Language-Image Pre-training, Radford et al., OpenAI ICML 2021)
 
 训练完成后，两个 encoder 输出到同一个 latent space；语义匹配的图像和文本向量相似度更高。同期 Google 的 ALIGN (Jia et al., ICML 2021)[2] 采用类似的图文对比学习框架，但训练数据扩大到 1.8B 对网页图文。相比 CLIP 的 400M 对相对清洗数据，ALIGN 的数据规模更大、噪声也更高；其结果说明图文对比预训练在大规模 noisy 数据上仍能学到有效的跨模态表示。
 
-#### 5.1.2 Zero-shot 分类
+CLIP 的 zero-shot 分类直接复用图文相似度：把类别名写成 prompt（如 `a photo of a {class}`）并编码成文本向量，再用输入图像向量与候选文本向量计算相似度，取最高者作为类别。ViT-L/14 在 ImageNet zero-shot top-1 达到约 76.2%，说明图文对齐不仅能做检索，也能把自然语言类别名转成开放词表视觉分类器[1]。
 
-- 给定类别名列表（如 ImageNet 1000 类），把每类写成 prompt template `a photo of a {class}`，编码得到 1000 个文本 embedding
-- 输入图像编码后，计算图像 embedding 与所有文本 embedding 的相似度，取相似度最高的类别
-- ViT-L/14 在 ImageNet zero-shot top-1 ~76.2%，接近 supervised ResNet-50 baseline
-
-#### 5.1.3 下游影响
+#### 5.1.2 下游影响
 
 - **Text-to-image generation**：Stable Diffusion / DALL-E 2 / Imagen 的 text encoder 都是 CLIP（或衍生的 OpenCLIP / T5）
 - **Open-vocabulary detection / segmentation**：OWL-ViT (Minderer et al., ECCV 2022)[3] / GroundingDINO / SAM-2 prompt
-- **VLM backbone**：LLaVA / Qwen-VL / InternVL 的 vision tower 通常用 CLIP-ViT（或 SigLIP）抽取视觉特征
+- **VLM 的视觉模块**：LLaVA / Qwen-VL / InternVL 等模型常用 CLIP-ViT（或 SigLIP）先把图像变成视觉特征；这些特征还需要通过 projection / adapter / cross-attention 对齐到 LLM 能处理的 token 表示
 
-CLIP 是后续 VLM 与 VLA（V-base = VLM）中视觉 backbone 的常见来源；§7.1.1 国际 VLA 节中 RT-2 / π₀ 等模型的 vision encoder 多来自 CLIP / SigLIP 系列。
+CLIP 是后续 VLM 与 VLA 中常见的视觉特征来源；§7.1.1 国际 VLA 节中 RT-2 / π₀ 等模型也多用 CLIP / SigLIP 系列先抽取视觉特征。
 
-### 5.2 GPT-4V 与多模态 LLM
+### 5.2 VLM：把视觉接入 LLM
 
-GPT-4V (OpenAI 2023-09 system card)[4] 是 GPT-4 的视觉扩展版本，支持把图像与文本一起输入 decoder-only LLM。此后，图像理解逐渐成为主流 LLM 的默认能力之一。
+CLIP 解决了「图像和文本如何匹配」的问题；VLM 往前走一步，把视觉 encoder 接到生成式语言模型上，让模型不再只判断图文是否相似，而是能基于图像生成开放式文本回答。对讲解这条路线来说，LLaVA 是最清楚的例子：它没有重新设计整套多模态大模型，而是把已有 CLIP 视觉特征接到已有 LLM 上，再用视觉指令数据教模型按图回答。
 
 #### 5.2.1 LLaVA (2023)
 
-LLaVA (Liu et al., NeurIPS 2023)[5] 在 2023-04 release，用较少结构改动验证了 VLM 的基本路线：保留已有 vision encoder 和 LLM，只训练中间连接层与视觉指令数据，让 LLM 能接收图像信息并回答视觉问题。
+LLaVA (Liu et al., NeurIPS 2023)[5] 在 2023-04 release，用 CLIP 特征到 LLM token space 的线性 projection，加上 visual instruction tuning，验证了这条轻量路线。相比 Flamingo 的 gated cross-attention 或 BLIP-2 的 Q-Former，LLaVA 的结构更简单，也更容易被后续开源 VLM 复用。
 
-- **模型结构**：冻结 CLIP ViT-L/14 作为 vision encoder，用 projection layer 把图像特征映射到 LLM 可接收的 token 表示，再接入 Vicuna；早期 projection 是单层 linear，后续版本改为 MLP
+- **模型结构**：冻结 CLIP ViT-L/14 作为 vision encoder，用 projection layer 把图像特征映射到 LLM 可接收的 token 表示，再接入 Vicuna
 - **Stage 1：图文对齐**：用 CC3M 子集中的 558K 图文对训练 projection layer，让图像特征能对齐到 LLM 的语言表示空间
 - **Stage 2：视觉指令微调**：用 GPT-4 生成的 158K 条视觉指令数据做 instruction tuning，让模型学会按用户问题基于图像内容作答
 
 LLaVA 开源后成为 VLM 的常见实现模板；LLaVA-1.5 (2023-10) 把 projection 从单层 linear 改为 MLP，benchmark 结果进一步提升。
 
-2024 年起，多模态逐渐成为 LLM 标准能力（Gemini / Claude 3 / GPT-4o / Qwen-VL / Qwen Omni / Kimi K2 / GLM-4.6 等）。VLM 因此成为后续 VLA（V-base = VLM）与 World Models（Cosmos-Reason 系列）的视觉理解组件来源。具体模型列表见 `09-sweeper-embodied-roadmap.md` §1。
+2024 年起，多模态能力从「冻结视觉编码器 + 桥接模块 + LLM」的模块化路线，进入更原生的多模态模型阶段：
+
+- **GPT-4o**：OpenAI 将其描述为跨文本、视觉和音频端到端训练的单一模型；输入可包含文本、音频、图像和视频，输出可包含文本、音频和图像[6]
+- **Gemini**：Google 技术报告称 Gemini 是 natively multimodal，并在文本、图像、音频、视频上联合训练[7]
+- **Claude 3**：Anthropic 公开材料支持其具备图像输入和视觉问答能力，但没有说明其视觉接入架构是否等同于 GPT-4o / Gemini 这类原生多模态路线[8]
+
+关键区别：早期 VLM 更像是在语言模型旁边接入视觉模块；新一代多模态模型则把图像、音频、视频等输入作为通用模型能力的一部分。公开材料能支持这个方向性判断，但不足以把 GPT-4o、Gemini、Claude 3 归为同一种架构。具体模型列表见 `09-sweeper-embodied-roadmap.md` §1。
+
+### 5.3 从 VLM 到 VLA
+
+VLM 的输出仍然是文本；VLA (Vision-Language-Action) 把输出空间从文本 token 扩展到机器人动作。RT-2 的做法是把机器人动作离散化为 token，让 VLM 通过 fine-tuning 直接输出 action token；π₀ / GR00T 等后续路线则常把 VLM 作为语义理解或 reasoning 模块，再接 continuous action head、diffusion transformer 或 flow-matching action head[9]。
+
+这一步改变了模型接口：VLM 解决「看图后如何用语言回答」，VLA 解决「看图和指令后如何执行动作」。因此 §7 的 VLA 不是另起一条孤立路线，而是 §5 VLM 能力接入机器人控制后的延伸。
 
 ### References
 
@@ -357,6 +365,10 @@ LLaVA 开源后成为 VLM 的常见实现模板；LLaVA-1.5 (2023-10) 把 projec
 - [3] Minderer et al., Simple Open-Vocabulary Object Detection with Vision Transformers (OWL-ViT), ECCV 2022. arXiv:2205.06230
 - [4] OpenAI, GPT-4V(ision) System Card, openai.com 2023-09.
 - [5] Liu et al., Visual Instruction Tuning (LLaVA), NeurIPS 2023. arXiv:2304.08485
+- [6] OpenAI, GPT-4o System Card, openai.com 2024-05.
+- [7] Gemini Team, Gemini: A Family of Highly Capable Multimodal Models, 2023. Technical Report.
+- [8] Anthropic, The Claude 3 Model Family: Opus, Sonnet, Haiku, 2024. Model Card.
+- [9] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
 
 ---
 
@@ -462,15 +474,15 @@ VLA 进展按地理分两支：国际线以 Google / DeepMind、Physical Intelli
 国际 VLA 可分为三类：RT-2 / Gemini Robotics 代表 Google / DeepMind 的闭源研究主线，π 系列 / GR00T 代表产业化 humanoid 主线，OpenVLA / Octo 代表开源学术和 baseline 主线。下表保留已有论文、开源资产、持续发布或产业工具链支撑的代表项。
 
 
-| Model | 机构 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 关键贡献 | 来源 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| RT-2 | Google DeepMind | 2023-07 | dual-arm RT robot | web-scale + RT-1 | 官方模型 / 权重未开放；有第三方复现 | 将 VLM fine-tune 为 VLA | [1] |
-| Octo | UC Berkeley / Stanford 等 | 2024-05 | 多机器人 manipulation | Open X-Embodiment，约 800k robot episodes | 代码 MIT；checkpoint 公开 | 开源 generalist robot policy baseline | [2] |
-| OpenVLA | Stanford / Berkeley 等 | 2024-06 / 2025 | 多机器人 manipulation | Open X-Embodiment，970k robot demonstrations | 代码 / 权重 MIT | 7B 开源 VLA，面向可微调部署 | [3] |
-| π 系列 | Physical Intelligence | 2024-2026 | 7 个 embodiment + open-world 场景 | π₀ 使用 ~10k hrs robot data；π₀.5 / π₀.7 继续扩展泛化 | π₀ / π₀.5 代码与 checkpoint 公开（Apache-2.0）；π₀.7 公开论文 / 报告，未见公开 checkpoint | generalist policy + flow-matching action head | [4, 5, 9] |
-| GR00T N1 | NVIDIA | 2025-03 | humanoid | open data + sim | 代码 / 权重公开；N1 / N1.5 权重偏非商用许可 | humanoid foundation model | [6] |
-| Gemini Robotics 1.5 / ER 1.5 | Google DeepMind | 2025 | ALOHA / Bi-arm Franka / Apollo humanoid 等 | multi-embodiment robot data + Motion Transfer | ER 1.5 API；Robotics 1.5 面向 select partners | VLA + embodied reasoning 双模型组合 | [7] |
-| GR00T N1.7 | NVIDIA | 2026-04-17 | humanoid | EgoScale 20,854 hrs egocentric | EA；代码 / 权重公开，商业许可需按 NVIDIA release 条款核对 | Action Cascade dual-system + dexterity scaling law | [10] |
+| Model                        | 机构                       | Release        | Robot / 场景                                | 数据 / 训练特点                                     | 公开状态                                                                   | 关键贡献                                               | 来源        |
+| ---------------------------- | ------------------------ | -------------- | ----------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- | --------- |
+| RT-2                         | Google DeepMind          | 2023-07        | dual-arm RT robot                         | web-scale + RT-1                              | 官方模型 / 权重未开放；有第三方复现                                                    | 将 VLM fine-tune 为 VLA                              | [1]       |
+| Octo                         | UC Berkeley / Stanford 等 | 2024-05        | 多机器人 manipulation                         | Open X-Embodiment，约 800k robot episodes       | 代码 MIT；checkpoint 公开                                                   | 开源 generalist robot policy baseline                | [2]       |
+| OpenVLA                      | Stanford / Berkeley 等    | 2024-06 / 2025 | 多机器人 manipulation                         | Open X-Embodiment，970k robot demonstrations   | 代码 / 权重 MIT                                                            | 7B 开源 VLA，面向可微调部署                                  | [3]       |
+| π 系列                         | Physical Intelligence    | 2024-2026      | 7 个 embodiment + open-world 场景            | π₀ 使用 ~10k hrs robot data；π₀.5 / π₀.7 继续扩展泛化  | π₀ / π₀.5 代码与 checkpoint 公开（Apache-2.0）；π₀.7 公开论文 / 报告，未见公开 checkpoint | generalist policy + flow-matching action head      | [4, 5, 9] |
+| GR00T N1                     | NVIDIA                   | 2025-03        | humanoid                                  | open data + sim                               | 代码 / 权重公开；N1 / N1.5 权重偏非商用许可                                           | humanoid foundation model                          | [6]       |
+| Gemini Robotics 1.5 / ER 1.5 | Google DeepMind          | 2025           | ALOHA / Bi-arm Franka / Apollo humanoid 等 | multi-embodiment robot data + Motion Transfer | ER 1.5 API；Robotics 1.5 面向 select partners                             | VLA + embodied reasoning 双模型组合                     | [7]       |
+| GR00T N1.7                   | NVIDIA                   | 2026-04-17     | humanoid                                  | EgoScale 20,854 hrs egocentric                | EA；代码 / 权重公开，商业许可需按 NVIDIA release 条款核对                                | Action Cascade dual-system + dexterity scaling law | [10]      |
 
 
 **Google DeepMind RT-2 (2023-07)[1]**
@@ -514,14 +526,16 @@ OpenVLA 与 Octo 是国际开源路线中常用的 baseline。OpenVLA 是 7B VLA
 
 国内 VLA / 具身 foundation model 在 2025-2026 年形成多条公开路线。主表采用三类筛选标准：公开资产较完整、数据规模清楚、真机部署或 benchmark 信息可复核。
 
-| Model | 公司 / 团队 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 来源 |
-| --- | --- | --- | --- | --- | --- | --- |
-| AgiBot GO-1 | 智元 | 2025-03-10 | 多形态机器人 | AgiBot World：1M+ trajectories，217 个任务 | 代码 / 数据 / GO-1 权重公开；权重 CC BY-NC-SA 4.0 | [11] |
-| Galaxea G0 | 星海图 Galaxea | 2025-09 | 移动双臂操作 | Galaxea Open-World Dataset：500 小时、50 个场景、150+ 任务 | 数据 / 模型公开；G0-VLA CC BY-NC-SA 4.0，G0Plus 为非商用社区许可 | [12] |
-| RynnBrain / RynnVLA | 阿里达摩院 | 2026-02 / 2025-11 | embodied foundation / LIBERO + LeRobot | RynnBrain 含 2B / 8B / 30B-A3B MoE；RynnVLA-002 统一 VLA 与 world model | 代码 / checkpoint Apache-2.0 | [13, 14] |
-| LingBot-VLA | 蚂蚁 / Robbyant | 2026-01 | 9 种双臂机器人配置 | 约 20,000 小时真实机器人数据；评估覆盖 3 个平台、100 个任务 | 代码 / 4B 权重 / benchmark data 公开，Apache-2.0 | [15] |
-| UnifoLM-VLA-0 | 宇树 | 2026-01-29 | G1 humanoid | 基于 Qwen2.5-VL-7B，面向 12 类操作任务 | 代码 BSD-3-Clause；权重 CC BY-NC-SA 4.0 | [16] |
-| Xiaomi-Robotics-0 | 小米机器人 | 2026-02 | 双臂实时控制 | 4.7B VLA；约 200M robot timesteps + 80M vision-language samples | 代码 / checkpoint Apache-2.0 | [17] |
+
+| Model               | 公司 / 团队       | Release           | Robot / 场景                             | 数据 / 训练特点                                                          | 公开状态                                             | 来源       |
+| ------------------- | ------------- | ----------------- | -------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------ | -------- |
+| AgiBot GO-1         | 智元            | 2025-03-10        | 多形态机器人                                 | AgiBot World：1M+ trajectories，217 个任务                              | 代码 / 数据 / GO-1 权重公开；权重 CC BY-NC-SA 4.0           | [11]     |
+| Galaxea G0          | 星海图 Galaxea   | 2025-09           | 移动双臂操作                                 | Galaxea Open-World Dataset：500 小时、50 个场景、150+ 任务                   | 数据 / 模型公开；G0-VLA CC BY-NC-SA 4.0，G0Plus 为非商用社区许可 | [12]     |
+| RynnBrain / RynnVLA | 阿里达摩院         | 2026-02 / 2025-11 | embodied foundation / LIBERO + LeRobot | RynnBrain 含 2B / 8B / 30B-A3B MoE；RynnVLA-002 统一 VLA 与 world model | 代码 / checkpoint Apache-2.0                       | [13, 14] |
+| LingBot-VLA         | 蚂蚁 / Robbyant | 2026-01           | 9 种双臂机器人配置                             | 约 20,000 小时真实机器人数据；评估覆盖 3 个平台、100 个任务                              | 代码 / 4B 权重 / benchmark data 公开，Apache-2.0        | [15]     |
+| UnifoLM-VLA-0       | 宇树            | 2026-01-29        | G1 humanoid                            | 基于 Qwen2.5-VL-7B，面向 12 类操作任务                                       | 代码 BSD-3-Clause；权重 CC BY-NC-SA 4.0               | [16]     |
+| Xiaomi-Robotics-0   | 小米机器人         | 2026-02           | 双臂实时控制                                 | 4.7B VLA；约 200M robot timesteps + 80M vision-language samples      | 代码 / checkpoint Apache-2.0                       | [17]     |
+
 
 **智元 AgiBot GO-1 (2025-03-10)[11]**
 

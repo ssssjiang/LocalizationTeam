@@ -35,8 +35,6 @@ Phase 1 关键 commit：
 
 **行业战略判断**（基于公开 release，截至 2026-05-04）：VLA frontier (RT-2 / π₀ / GR00T / Helix / GraspVLA) 已 reach pilot 与有限量产阶段[1, 2, 6, 7, 8]，2026-2027 间是消费级具身落地窗口；扫地机公司具备 SLAM + 量产硬件 + 渠道三项 leverage，与 Physical Intelligence / Figure 类纯具身公司相比，在 distribution 与 cost-down 上有结构性优势。
 
-
-
 ### References
 
 - [1] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17.
@@ -285,4 +283,3 @@ north star = **wheel-legged biped + 1 arm**（双足轮足混合 base + 单臂�
 ## 8. 开放问题
 
 > 待第二轮起草。
-

@@ -12,27 +12,27 @@
 ## 时间预算建议
 
 
-| 章节                  | 最低投入    | 完整投入    | 备注                    |
-| ------------------- | ------- | ------- | --------------------- |
-| 1 整体趋势              | 30 min  | 60 min  | 建时间线，不深挖              |
-| 2 判别式 AI            | 60 min  | 150 min | CNN / RNN / ResNet 基础 |
-| 3 Transformer / LLM | 120 min | 240 min | 重点，必须吃透               |
-| 4 Diffusion         | 75 min  | 180 min | 思想 > 数学               |
-| 5 多模态理解             | 60 min  | 150 min | CLIP + LLaVA 是核心      |
-| 6 World Models 起源   | 45 min  | 120 min | V+M+C + JEPA 分歧       |
-| 7 具身 VLA            | 120 min | 240 min | 全场命门                  |
-| 8 World Models 近期形态 | 60 min  | 150 min | Genie / Cosmos        |
-| 9 开放问题              | 60 min  | 150 min | VLA 泛化 + 3D 重建        |
+| 章节                  | 最低投入    | 完整投入    | 备注                              |
+| ------------------- | ------- | ------- | ------------------------------- |
+| 1 整体趋势              | 30 min  | 60 min  | 建时间线，不深挖                        |
+| 2 判别式 AI            | 60 min  | 150 min | CNN / RNN / ResNet 基础           |
+| 3 Transformer / LLM | 120 min | 240 min | 重点，必须吃透                         |
+| 4 Diffusion         | 90 min  | 210 min | 思想 > 数学，按 VAE→GAN→Diffusion 谱系串 |
+| 5 VLM 与多模态理解        | 60 min  | 150 min | CLIP + LLaVA 是核心                |
+| 6 World Models 起源   | 45 min  | 120 min | V+M+C + JEPA 分歧                 |
+| 7 具身 VLA            | 120 min | 240 min | 全场命门                            |
+| 8 World Models 近期形态 | 60 min  | 195 min | Genie / Cosmos                  |
+| 9 开放问题              | 60 min  | 150 min | VLA 泛化 + 3D 重建                  |
 
 
-**最低总投入**：约 10.5h
-**完整投入**：约 24h
+**最低总投入**：约 10.75h
+**完整投入**：约 25.25h
 
 **4 晚 12h 推荐分配**：
 
 - 周一晚：§3 Transformer / LLM
 - 周二晚：§7 具身 VLA
-- 周三晚：§4 Diffusion + §5 多模态理解
+- 周三晚：§4 Diffusion + §5 VLM 与多模态理解
 - 周四晚：§2 / §6 / §8 / §9 快速补齐 + 全文串讲一次
 
 ---
@@ -151,45 +151,65 @@
 
 # 章节 4：Diffusion
 
-### ⭐⭐⭐ 必读（75 min）
+> 学习目标：把 **VAE → GAN → Diffusion** 串成一条线，理解生成式模型的演进；不追数学推导，先建直觉。
 
-1. **Lilian Weng — What are Diffusion Models?**
+### ⭐⭐⭐ 必读（90 min）
+
+1. **MIT 6.S191 (2024) Lecture 4 — Deep Generative Modeling (Ava Amini)**
+  [https://www.youtube.com/watch?v=Dmm4UG-6jxA](https://www.youtube.com/watch?v=Dmm4UG-6jxA)
+  - 把 latent variable model → VAE（reparameterization trick）→ GAN（CycleGAN）→ Diffusion 串成一条主线讲。
+  - 投入：38 min（1.5x 速度）
+  - 学到：生成式模型为什么从 explicit density（VAE）→ implicit（GAN）→ score / denoising（Diffusion），各自解决了前一棒的什么问题。
+2. **Lilian Weng — What are Diffusion Models?**
   [https://lilianweng.github.io/posts/2021-07-11-diffusion-models/](https://lilianweng.github.io/posts/2021-07-11-diffusion-models/)
   - 先看图和 forward / reverse process，不要陷推导。
   - 投入：35 min
   - 学到：DDPM、score-based、denoising 的统一直觉。
-2. **Hugging Face Diffusion Course — Unit 1**
-  [https://huggingface.co/learn/diffusion-course/unit1/1](https://huggingface.co/learn/diffusion-course/unit1/1)
-  - 看 Introduction + sampling 概念。
+3. **Ari Seff — What are Diffusion Models? (YouTube, 17 min)**
+  [https://www.youtube.com/watch?v=fbLgFrlTnGU](https://www.youtube.com/watch?v=fbLgFrlTnGU)
+  - Princeton 研究者，17 分钟把 Markov chain、variational lower bound、噪声预测、score matching 等价性串完。
+  - 投入：17 min（1x 听一遍即可）
+  - 学到：为什么训练目标是「预测噪声」而不是直接生成图像；DDPM 与 score-based 模型本质同构。
+
+### ⭐⭐ 强烈建议（额外 95 min）
+
+1. **Diffusion Explainer — Polo Club @ Georgia Tech**
+  [https://poloclub.github.io/diffusion-explainer/](https://poloclub.github.io/diffusion-explainer/)
+  - IEEE VIS 2024 论文支撑（[arXiv 2305.03509](https://arxiv.org/abs/2305.03509)）；浏览器交互式教学，可拖时间步、改 prompt、看 cross-attention。
   - 投入：25 min
-  - 学到：scheduler / denoising / inference pipeline 的工程视角。
-3. **Ho et al. — Denoising Diffusion Probabilistic Models**
+  - 学到：Stable Diffusion 文生图整条管线（text encoder → latent → image refiner → denoising）每一步在算什么。
+2. **Ho et al. — Denoising Diffusion Probabilistic Models**
   [https://arxiv.org/abs/2006.11239](https://arxiv.org/abs/2006.11239)
-  - 只看 Abstract + Section 1 + Algorithm 1/2。
+  - 看 Abstract + Algorithm 1/2，确认训练 / 采样的具体形式。
   - 投入：15 min
-  - 学到：训练目标是预测噪声，不是直接生成图像。
-
-### ⭐⭐ 强烈建议（额外 90 min）
-
-1. **Rombach et al. — Latent Diffusion Models**
+  - 学到：DDPM 经典论文是哪一篇、训练目标怎么写。
+3. **Rombach et al. — Latent Diffusion Models**
   [https://arxiv.org/abs/2112.10752](https://arxiv.org/abs/2112.10752)
   - 看 Abstract + Section 3 + Figure 3。
   - 投入：30 min
-  - 学到：Stable Diffusion 为什么能在消费级 GPU 上跑。
-2. **Song et al. — DDIM**
+  - 学到：Stable Diffusion 为什么能在消费级 GPU 上跑（在 latent 空间扩散，不是像素空间）。
+4. **Hugging Face Diffusion Course — Unit 1**
+  [https://huggingface.co/learn/diffusion-course/unit1/1](https://huggingface.co/learn/diffusion-course/unit1/1)
+  - 只看 Introduction + sampling 概念。
+  - 投入：25 min
+  - 学到：scheduler / denoising / inference pipeline 的工程视角。
+
+### ⭐ 时间允许
+
+1. **Song et al. — DDIM**
   [https://arxiv.org/abs/2010.02502](https://arxiv.org/abs/2010.02502)
   - 只读 Abstract + Section 1。
   - 投入：15 min
   - 学到：为什么可以从 1000 步采样压到几十步。
-3. **How Diffusion Models Work**
-  [https://www.coursera.org/learn/how-diffusion-models-work-project](https://www.coursera.org/learn/how-diffusion-models-work-project)
-  - 短课，适合边走边看。
-  - 投入：45 min
-  - 学到：把 forward / reverse / denoising 讲顺。
+2. **The Annotated Diffusion Model — Hugging Face 官方博客**
+  [https://huggingface.co/blog/annotated-diffusion](https://huggingface.co/blog/annotated-diffusion)
+  - *Annotated Transformer* 同款风格：PyTorch 代码 + 数学 + 文字解释逐段交错，可在 Colab 跑。
+  - 投入：30 min
+  - 学到：`q_sample` / `p_losses` / `sample` 三个核心函数的实现细节。
 
 ---
 
-# 章节 5：多模态理解
+# 章节 5：VLM 与多模态理解
 
 ### ⭐⭐⭐ 必读（60 min）
 
@@ -329,7 +349,7 @@
   - 投入：20 min
   - 学到：Cosmos 作为 physical AI stack 的定位。
 
-### ⭐⭐ 强烈建议（额外 60 min）
+### ⭐⭐ 强烈建议（额外 105 min）
 
 1. **DeepMind — Genie 2**
   [https://deepmind.google/discover/blog/genie-2-a-large-scale-foundation-world-model/](https://deepmind.google/discover/blog/genie-2-a-large-scale-foundation-world-model/)
@@ -343,6 +363,11 @@
   [https://www.nvidia.com/en-us/ai/cosmos/](https://www.nvidia.com/en-us/ai/cosmos/)
   - 投入：20 min
   - 学到：产品形态和 early adopter。
+4. **Hou et al. — World Model for Robot Learning: A Comprehensive Survey**
+  [https://arxiv.org/html/2605.00080v1](https://arxiv.org/html/2605.00080v1)
+  - 读 Abstract + Figure 1/2 + Section 3/4/5 taxonomy + open challenges。
+  - 投入：45 min
+  - 学到：world model 如何在机器人学习里连接 VLA policy、learned simulator、video generation、planning / evaluation / data generation。
 
 ---
 
@@ -416,4 +441,3 @@
 - 第二选择：看权威视频讲解。
 - 第三选择：读论文 Abstract + Figure。
 - 第四选择：把具体卡住的句子贴出来问我。
-
