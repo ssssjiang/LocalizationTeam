@@ -47,7 +47,7 @@ python3 slam_to_colmap.py \
 | `--input`              | (required)                     | Dataset root                                 |
 | `--output`             | (required)                     | COLMAP-style output root                     |
 | `--downsample`         | `20`                           | Keep every N-th matched frame (recommend 7)  |
-| `--max-pcd-points`     | `100000`                       | Random subsample cap for `points3D.txt`      |
+| `--max-pcd-points`     | `100000`                       | Random subsample cap for `points3D.txt`; use `0` for all points (no sampling) |
 | `--tolerance-ms`       | `20`                           | Max \|t_pose − t_image\| when matching pose  |
 | `--cam-subdir`         | `camera/camera0`               | Relative path to NV12 frames                 |
 | `--pose-file`          | `pose.txt`                     | Relative path to TUM poses                   |

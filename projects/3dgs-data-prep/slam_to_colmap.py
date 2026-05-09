@@ -27,34 +27,44 @@ except ImportError:
 # Default calibration (Roborock long-sequence rig — rectified pinhole)
 # -----------------------------------------------------------------------------
 
+# Updated 2026-05-09 for the data_0507_test rig (different machine).
+# Previous (60采集--长序列 rig, 2026-04-30) values kept here for diff/rollback:
+#   fx = fy = 241.984, cx = 339.823, cy = 275.645
 DEFAULT_INTRINSICS = {
     "model": "PINHOLE",
     "width": 640,
     "height": 544,
-    "fx": 241.984,
-    "fy": 241.984,
-    "cx": 339.823,
-    "cy": 275.645,
+    "fx": 238.863,
+    "fy": 238.863,
+    "cx": 301.12,
+    "cy": 267.545,
 }
 
 # Rotation lidar → camera (row-major), translation (meters).
-# Updated 2026-05-06: replaced with refined extrinsics (T_cam_lidar) shared by user,
-# previous values kept here for reference:
-#   _RCL_FLAT_OLD = (-0.999865, -0.0067944, 0.0149309,
-#                    -0.0157783, 0.14933, -0.988662,
-#                     0.00448773, -0.988764, -0.149417)
+# Updated 2026-05-09 for the data_0507_test rig (different machine).
+# History (kept for diff/rollback):
+#   2026-04-30 (60采集--长序列 v1):
+#     R = (-0.999865, -0.0067944, 0.0149309,
+#          -0.0157783,  0.14933,  -0.988662,
+#           0.00448773,-0.988764, -0.149417)
+#     t = (0.029879, -0.031769, -0.495527)
+#   2026-05-06 (60采集--长序列 fast-livo refined):
+#     R = (-0.999959,    0.00178369, -0.00886425,
+#           0.00901242,  0.117477,   -0.993035,
+#          -0.000729917,-0.993074,   -0.117489)
+#     t = (0.029879, -0.031769, -0.495527)
 _RCL_FLAT = (
-    -0.999959,
-    0.00178369,
-    -0.00886425,
-    0.00901242,
-    0.117477,
-    -0.993035,
-    -0.000729917,
-    -0.993074,
-    -0.117489,
+    -0.999938,
+    0.00268727,
+    -0.0107761,
+    0.0110698,
+    0.162735,
+    -0.986608,
+    -0.000897635,
+    -0.986666,
+    -0.162755,
 )
-_PCL = (0.029879, -0.031769, -0.495527)
+_PCL = (0.029004, -0.039141, -0.497107)
 
 
 def default_T_cam_lidar() -> np.ndarray:
@@ -388,7 +398,8 @@ def pcd_to_points3d_txt(
     else:
         raise ValueError(f"unsupported rgb dtype {raw['rgb'].dtype}")
 
-    if n > max_points:
+    # max_points <= 0: keep all points (no subsampling)
+    if max_points > 0 and n > max_points:
         choice = rng.choice(n, size=max_points, replace=False)
         xyz = xyz[choice]
         rgb = rgb[choice]
@@ -416,7 +427,12 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--input", type=Path, required=True, help="dataset root")
     p.add_argument("--output", type=Path, required=True, help="COLMAP output root")
     p.add_argument("--downsample", type=int, default=20, help="keep every N-th frame")
-    p.add_argument("--max-pcd-points", type=int, default=100_000)
+    p.add_argument(
+        "--max-pcd-points",
+        type=int,
+        default=100_000,
+        help="random subsample cap for points3D.txt; use 0 for all points (no sampling)",
+    )
     p.add_argument("--tolerance-ms", type=float, default=20.0)
     p.add_argument("--cam-subdir", type=str, default="camera/camera0")
     p.add_argument("--pose-file", type=str, default="pose.txt")
@@ -429,7 +445,12 @@ def parse_args() -> argparse.Namespace:
         default=max(1, (os.cpu_count() or 4) - 1),
         help="parallel NV12 decode workers",
     )
-    p.add_argument("--seed", type=int, default=42, help="PCD subsample RNG seed")
+    p.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="RNG seed for PCD subsample (ignored when --max-pcd-points is 0)",
+    )
     return p.parse_args()
 
 
@@ -502,7 +523,12 @@ def main() -> None:
     write_images_txt(sparse_dir / "images.txt", frames_for_txt, T_cam_lidar)
 
     rng = np.random.default_rng(args.seed)
-    print(f"writing points3D.txt from {pcd_path} (max {args.max_pcd_points} points)...")
+    cap_msg = (
+        "all points (no subsample)"
+        if args.max_pcd_points <= 0
+        else f"max {args.max_pcd_points} points"
+    )
+    print(f"writing points3D.txt from {pcd_path} ({cap_msg})...")
     pcd_to_points3d_txt(pcd_path, sparse_dir / "points3D.txt", args.max_pcd_points, rng)
 
     print("done.")

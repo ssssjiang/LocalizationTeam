@@ -15,6 +15,7 @@ OUTPUT_DATA="${OUTPUT_DATA:-/mnt/data/roborock/60采集--长序列_colmap_ds5/}"
 DOWNSAMPLE="${DOWNSAMPLE:-5}"
 TOL_MS="${TOL_MS:-20}"
 MAX_PCD_POINTS="${MAX_PCD_POINTS:-100000}"
+PCD_FILE="${PCD_FILE:-0.01_downsample_rgb_0.01.pcd}"
 
 DB="${DB:-$OUTPUT_DATA/colmap_inc.db}"
 SPARSE_DIR="${SPARSE_DIR:-$OUTPUT_DATA/sparse_colmap_inc}"
@@ -40,6 +41,19 @@ TVG_MIN_INLIER_RATIO="${TVG_MIN_INLIER_RATIO:-0.25}"
 MAPPER_MIN_MODEL_SIZE="${MAPPER_MIN_MODEL_SIZE:-50}"
 MAPPER_MULTIPLE_MODELS="${MAPPER_MULTIPLE_MODELS:-0}"
 MAPPER_MAX_NUM_MODELS="${MAPPER_MAX_NUM_MODELS:-1}"
+
+# Init relaxations for forward-motion robot capture (small baseline and low
+# triangulation angle are common even when match inliers are high).
+INIT_MIN_NUM_INLIERS="${INIT_MIN_NUM_INLIERS:-50}"
+INIT_MAX_ERROR="${INIT_MAX_ERROR:-4}"
+INIT_MAX_FORWARD_MOTION="${INIT_MAX_FORWARD_MOTION:-0.98}"
+INIT_MIN_TRI_ANGLE="${INIT_MIN_TRI_ANGLE:-4}"
+INIT_MAX_REG_TRIALS="${INIT_MAX_REG_TRIALS:-3}"
+INIT_GAP_MIN_MS="${INIT_GAP_MIN_MS:-2000}"
+INIT_GAP_MAX_MS="${INIT_GAP_MAX_MS:-12000}"
+# Optional manual override for known-good initialization pair.
+INIT_IMAGE_ID1="${INIT_IMAGE_ID1:-}"
+INIT_IMAGE_ID2="${INIT_IMAGE_ID2:-}"
 
 SKIP_SAMPLING="${SKIP_SAMPLING:-0}"
 SKIP_FEATURES="${SKIP_FEATURES:-0}"
@@ -75,7 +89,8 @@ if [ "$SKIP_SAMPLING" != "1" ]; then
     --output "$OUTPUT_DATA" \
     --downsample "$DOWNSAMPLE" \
     --max-pcd-points "$MAX_PCD_POINTS" \
-    --tolerance-ms "$TOL_MS"
+    --tolerance-ms "$TOL_MS" \
+    --pcd-file "$PCD_FILE"
 else
   log "1/6 Sampling skipped (SKIP_SAMPLING=1)"
 fi
@@ -137,7 +152,11 @@ INIT_PAIR_FILE="$OUTPUT_DATA/.mapper_init_pair.txt"
 rm -f "$INIT_PAIR_FILE"
 
 log "4/6 Selecting safe initial image pair from DB"
-python3 - "$DB" "$INIT_PAIR_FILE" <<'PY'
+if [ -n "$INIT_IMAGE_ID1" ] && [ -n "$INIT_IMAGE_ID2" ]; then
+  printf "%s %s\n" "$INIT_IMAGE_ID1" "$INIT_IMAGE_ID2" > "$INIT_PAIR_FILE"
+  echo "INIT_PAIR image_id=($INIT_IMAGE_ID1,$INIT_IMAGE_ID2) source=manual"
+else
+python3 - "$DB" "$INIT_PAIR_FILE" "$INIT_GAP_MIN_MS" "$INIT_GAP_MAX_MS" <<'PY'
 import os
 import sqlite3
 import sys
@@ -155,6 +174,8 @@ def ts_from_name(name: str):
     return int(stem) if stem.isdigit() else None
 
 db_path, out_path = sys.argv[1], sys.argv[2]
+gap_min = int(sys.argv[3])
+gap_max = int(sys.argv[4])
 con = sqlite3.connect(db_path)
 cur = con.cursor()
 name_by_id = {i: n for i, n in cur.execute("SELECT image_id, name FROM images")}
@@ -181,7 +202,7 @@ for pair_id, inliers in rows:
         continue
     gap = abs(t1 - t2)  # ms
     # Avoid too-near (pure rotation risk) and too-far (overlap too small) pairs.
-    if 200 <= gap <= 5000:
+    if gap_min <= gap <= gap_max:
         best = (i1, i2, inliers, gap, n1, n2)
         break
 
@@ -193,6 +214,7 @@ else:
         f.write(f"{i1} {i2}\n")
     print(f"INIT_PAIR image_id=({i1},{i2}) inliers={inliers} gap_ms={gap} names=({n1},{n2})")
 PY
+fi
 
 MAPPER_ARGS=(
   --database_path "$DB"
@@ -204,6 +226,11 @@ MAPPER_ARGS=(
   --Mapper.ba_refine_focal_length 0
   --Mapper.ba_refine_principal_point 0
   --Mapper.ba_refine_extra_params 0
+  --Mapper.init_min_num_inliers "$INIT_MIN_NUM_INLIERS"
+  --Mapper.init_max_error "$INIT_MAX_ERROR"
+  --Mapper.init_max_forward_motion "$INIT_MAX_FORWARD_MOTION"
+  --Mapper.init_min_tri_angle "$INIT_MIN_TRI_ANGLE"
+  --Mapper.init_max_reg_trials "$INIT_MAX_REG_TRIALS"
 )
 
 if [ -f "$INIT_PAIR_FILE" ]; then
