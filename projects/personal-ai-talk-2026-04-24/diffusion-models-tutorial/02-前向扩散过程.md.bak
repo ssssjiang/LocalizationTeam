@@ -1,0 +1,237 @@
+# 第 2 章：前向扩散过程
+
+> 本章详细讲解 **前向扩散过程（forward diffusion）**：怎么从一张清晰图像 $\mathbf{x}_0$ 一步步加噪声变成纯高斯噪声 $\mathbf{x}_T$。
+> 重点是推导出**任意一步 $\mathbf{x}_t$ 都可以从 $\mathbf{x}_0$ 直接采样**的"nice property"。
+
+---
+
+## 2.1 单步加噪声的数学定义
+
+给定真实数据 $\mathbf{x}_0 \sim q(\mathbf{x})$（比如一张真实图像），前向过程在 $T$ 步内逐步加高斯噪声，得到 $\mathbf{x}_1, \mathbf{x}_2, \dots, \mathbf{x}_T$。
+
+每一步的加噪规则是：
+
+$$
+\boxed{q(\mathbf{x}*t | \mathbf{x}*{t-1}) = \mathcal{N}\big(\mathbf{x}*t; \sqrt{1-\beta_t}\mathbf{x}*{t-1}, \beta_t \mathbf{I}\big)}
+$$
+
+其中 $\beta_t_{t=1}^T$ 是**预先设定的方差表（variance schedule）**，每个 $\beta_t \in (0, 1)$ 都很小（比如从 $10^{-4}$ 线性增加到 $0.02$）。
+
+### 这个公式在说什么？
+
+它说：给定 $\mathbf{x}_{t-1}$，下一步 $\mathbf{x}_t$ 是一个高斯分布，
+
+- 均值：$\sqrt{1-\beta_t}\mathbf{x}_{t-1}$（把上一步的图像缩小一点点）
+- 方差：$\beta_t \mathbf{I}$（在每个像素上加上一点点独立的高斯噪声）
+
+用**重参数化形式**写更直观：
+
+$$
+\mathbf{x}*t = \sqrt{1-\beta_t}\mathbf{x}*{t-1} + \sqrt{\beta_t}\boldsymbol{\epsilon}*{t-1}, \quad \boldsymbol{\epsilon}*{t-1} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})
+$$
+
+### 为什么前面的系数是 $\sqrt{1-\beta_t}$ 而不是 1？
+
+**为了保证方差不爆炸。** 让我们检查一下：
+
+假设 $\mathbf{x}*{t-1}$ 已经是单位方差的（$\text{Var}(\mathbf{x}*{t-1}) = 1$）。
+
+$$
+\text{Var}(\mathbf{x}*t) = (1-\beta_t) \cdot \text{Var}(\mathbf{x}*{t-1}) + \beta_t = (1-\beta_t) \cdot 1 + \beta_t = 1
+$$
+
+> 完美！这个设计保证 $\mathbf{x}_t$ 的方差始终保持为 1，不会因为反复加噪声而无限增大。
+
+---
+
+## 2.2 整条链的联合分布
+
+由于前向过程是马尔可夫链，从 $\mathbf{x}_0$ 出发到所有后续状态 $\mathbf{x}_1, \dots, \mathbf{x}_T$ 的联合分布是：
+
+$$
+q(\mathbf{x}_{1:T} | \mathbf{x}*0) = \prod*{t=1}^T q(\mathbf{x}*t | \mathbf{x}*{t-1})
+$$
+
+> 直观理解：要走完整条链，把每一步的转移概率乘起来即可。
+
+---
+
+## 2.3 ⭐ Nice Property：直接从 $\mathbf{x}_0$ 跳到 $\mathbf{x}_t$
+
+**问题**：如果想得到 $\mathbf{x}_{100}$，难道要一步步算到 100？太慢！
+
+**好消息**：可以**一步直接从 $\mathbf{x}_0$ 采样到 $\mathbf{x}_t$**。这就是著名的 nice property。
+
+### 2.3.1 引入新记号
+
+为了简化公式，定义：
+
+$$
+\alpha_t := 1 - \beta_t, \qquad \bar{\alpha}*t := \prod*{i=1}^t \alpha_i
+$$
+
+- $\alpha_t$：**第 $t$ 步保留的信号比例**；
+- $\bar{\alpha}_t$：**前 $t$ 步累积保留的信号比例**。
+
+注意，由于 $\alpha_t < 1$，$\bar{\alpha}_t$ 随 $t$ 单调递减，最终趋近于 0。
+
+### 2.3.2 关键结论（要背！）
+
+$$
+\boxed{q(\mathbf{x}_t | \mathbf{x}_0) = \mathcal{N}\big(\mathbf{x}_t; \sqrt{\bar{\alpha}_t}\mathbf{x}_0, (1-\bar{\alpha}_t)\mathbf{I}\big)}
+$$
+
+或写成重参数化形式：
+
+$$
+\boxed{\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}, \quad \boldsymbol{\epsilon} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})}
+$$
+
+> **这个公式将贯穿整本书。**
+>
+> 它告诉我们：要采样任意一步的 $\mathbf{x}_t$，只要采一个标准高斯噪声 $\boldsymbol{\epsilon}$，按这个公式拼一下就行了，**完全不用迭代**。
+
+### 2.3.3 推导过程（详细到每一步）
+
+我们用归纳法/直接展开来证明这个公式。
+
+**第 1 步**：写出 $\mathbf{x}_t$ 的递推：
+
+$$
+\mathbf{x}*t = \sqrt{\alpha_t}\mathbf{x}*{t-1} + \sqrt{1-\alpha_t}\boldsymbol{\epsilon}_{t-1}
+$$
+
+（这里我们把 $\sqrt{1-\beta_t}$ 写成 $\sqrt{\alpha_t}$，把 $\sqrt{\beta_t}$ 写成 $\sqrt{1-\alpha_t}$，实质相同。）
+
+**第 2 步**：把 $\mathbf{x}_{t-1}$ 也展开：
+
+$$
+\mathbf{x}*{t-1} = \sqrt{\alpha*{t-1}}\mathbf{x}*{t-2} + \sqrt{1-\alpha*{t-1}}\boldsymbol{\epsilon}_{t-2}
+$$
+
+代入：
+
+$$
+\mathbf{x}*t = \sqrt{\alpha_t}\big(\sqrt{\alpha*{t-1}}\mathbf{x}*{t-2} + \sqrt{1-\alpha*{t-1}}\boldsymbol{\epsilon}*{t-2}\big) + \sqrt{1-\alpha_t}\boldsymbol{\epsilon}*{t-1}
+$$
+
+$$
+= \sqrt{\alpha_t \alpha_{t-1}}\mathbf{x}*{t-2} + \underbrace{\sqrt{\alpha_t(1-\alpha*{t-1})}\boldsymbol{\epsilon}*{t-2}}*{\text{项 A}} + \underbrace{\sqrt{1-\alpha_t}\boldsymbol{\epsilon}*{t-1}}*{\text{项 B}}
+$$
+
+**第 3 步**：合并两个独立高斯（用第 1 章的性质 2）
+
+项 A：方差 $= \alpha_t(1-\alpha_{t-1})$
+项 B：方差 $= 1-\alpha_t$
+
+它们相加，是一个新的零均值高斯，方差为：
+
+$$
+\alpha_t(1-\alpha_{t-1}) + (1-\alpha_t) = \alpha_t - \alpha_t \alpha_{t-1} + 1 - \alpha_t = 1 - \alpha_t \alpha_{t-1}
+$$
+
+所以：
+
+$$
+\mathbf{x}*t = \sqrt{\alpha_t \alpha*{t-1}}\mathbf{x}*{t-2} + \sqrt{1-\alpha_t \alpha*{t-1}}\bar{\boldsymbol{\epsilon}}_{t-2}
+$$
+
+其中 $\bar{\boldsymbol{\epsilon}}_{t-2} \sim \mathcal{N}(\mathbf{0}, \mathbf{I})$ 是合并后的标准高斯。
+
+**第 4 步**：继续递归到 $\mathbf{x}_0$
+
+继续把 $\mathbf{x}*{t-2}, \mathbf{x}*{t-3}, \dots$ 展开，每展开一次乘上一个 $\alpha$，然后合并噪声。最终：
+
+$$
+\mathbf{x}*t = \sqrt{\alpha_t \alpha*{t-1} \cdots \alpha_1}\mathbf{x}*0 + \sqrt{1 - \alpha_t \alpha*{t-1} \cdots \alpha_1}\boldsymbol{\epsilon}
+$$
+
+用 $\bar{\alpha}*t = \prod*{i=1}^t \alpha_i$ 替代：
+
+$$
+\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}
+$$
+
+✅ **证毕！**
+
+---
+
+## 2.4 直观理解 nice property
+
+把公式拆开看：
+
+$$
+\mathbf{x}_t = \underbrace{\sqrt{\bar{\alpha}_t}\mathbf{x}*0}*{\text{原图缩小到 } \sqrt{\bar{\alpha}_t} \text{ 倍}} + \underbrace{\sqrt{1-\bar{\alpha}*t}\boldsymbol{\epsilon}}*{\text{加上对应强度的噪声}}
+$$
+
+随着 $t$ 增大：
+
+- $\bar{\alpha}_t \to 0$，原图信号几乎被压成 0；
+- $1 - \bar{\alpha}_t \to 1$，噪声占主导；
+- 当 $T$ 足够大，$\mathbf{x}_T \approx \mathcal{N}(\mathbf{0}, \mathbf{I})$ —— 几乎是纯标准高斯噪声！
+
+这就是为什么 $\mathbf{x}_T$ 可以当作"纯噪声"，作为反向过程的起点。
+
+---
+
+## 2.5 方差表（Variance Schedule）的设计
+
+$\beta_t$ 怎么选？
+
+### 2.5.1 线性 schedule（DDPM 原文用的）
+
+$\beta_t$ 在 $[10^{-4}, 0.02]$ 之间线性增加。原因：
+
+> 当样本变得越来越"嘈杂"时，可以承受更大的扰动；早期 $\mathbf{x}_t$ 还很清晰，要小心翼翼地加。
+
+所以 $\beta_1 < \beta_2 < \dots < \beta_T$，对应 $\bar{\alpha}_1 > \bar{\alpha}_2 > \dots > \bar{\alpha}_T$。
+
+### 2.5.2 余弦 schedule（Nichol & Dhariwal, 2021 提出）
+
+线性 schedule 在末期 $\bar{\alpha}_t$ 衰减太快，导致信号丢失太早。余弦 schedule 给出更平滑的衰减：
+
+$$
+\bar{\alpha}_t = \frac{f(t)}{f(0)}, \quad f(t) = \cos^2\left(\frac{t/T + s}{1+s} \cdot \frac{\pi}{2}\right)
+$$
+
+其中 $s$ 是一个小偏移量，防止 $t=0$ 时 $\beta_t$ 太小。
+
+> 不必现在死记，只要知道：**schedule 是个超参数，不同选择会影响生成质量**，第 9 章会更详细讲。
+
+---
+
+## 2.6 与 Langevin 动力学的联系（选读，理解核心思想即可）
+
+物理上的 Langevin dynamics：从一个分布 $p(\mathbf{x})$ 中采样，可以用迭代规则：
+
+$$
+\mathbf{x}*t = \mathbf{x}*{t-1} + \frac{\delta}{2}\nabla_\mathbf{x}\log p(\mathbf{x}_{t-1}) + \sqrt{\delta}\boldsymbol{\epsilon}_t
+$$
+
+其中 $\nabla_\mathbf{x}\log p(\mathbf{x})$ 是分布的"score"（梯度方向告诉我们朝高密度区域走）。
+
+> 注意结构上的相似：**梯度更新 + 一点高斯噪声**。
+>
+> 这是 score-based 生成模型的灵感来源，**第 6 章**会详细讲与扩散模型的等价性。
+
+---
+
+## 2.7 自检小问题
+
+1. 写出 $q(\mathbf{x}*t | \mathbf{x}*{t-1})$ 的具体形式。
+2. 为什么前向过程的均值前面要乘 $\sqrt{1-\beta_t}$？如果改成 1 会怎样？
+3. nice property 的核心结论是什么？为什么它重要？
+4. 当 $T \to \infty$，$\mathbf{x}_T$ 服从什么分布？
+
+👉 参考答案
+
+1. $q(\mathbf{x}*t | \mathbf{x}*{t-1}) = \mathcal{N}(\mathbf{x}*t; \sqrt{1-\beta_t}\mathbf{x}*{t-1}, \beta_t \mathbf{I})$。
+2. 为了保证方差不爆炸：$\text{Var}(\mathbf{x}*t) = (1-\beta_t)\text{Var}(\mathbf{x}*{t-1}) + \beta_t$，让方差稳定在 1。如果改成 1，则方差会随 $t$ 线性增加（变成 $1 + \sum \beta_t$），最终爆炸。
+3. $\mathbf{x}_t = \sqrt{\bar{\alpha}_t}\mathbf{x}_0 + \sqrt{1-\bar{\alpha}_t}\boldsymbol{\epsilon}$。它让我们能**一步直接采样**，避免迭代，这是高效训练的关键。
+4. 接近标准正态分布 $\mathcal{N}(\mathbf{0}, \mathbf{I})$，因为 $\bar{\alpha}_T \to 0$。
+
+---
+
+✅ 前向过程理解完毕。下一章我们要面对最难的部分：**反向过程怎么推导？**
+
+➡️ 下一章：[03-反向扩散过程.md](./03-反向扩散过程.md)
