@@ -2,14 +2,13 @@
 
 ## 1. 整体趋势
 
-2012-2026 间 AI 演进经历 5 个 foundation 阶段（判别式 → Transformer → Diffusion 与视觉生成 → VLM 与多模态理解 → World Models 起源）与 2 个延伸方向（具身 VLA / World Models 近期形态）。时间线：
+2012-2026 间 AI 演进经历 4 个 foundation 阶段（判别式 → Transformer → Diffusion 与视觉生成 → VLM 与多模态理解）与 2 个延伸方向（具身 VLA / World Models 近期形态）。时间线：
 
 - **2012-2015 判别式 AI**：AlexNet （NeurIPS 2012） / VGG / GoogLeNet / ResNet （CVPR 2016） — CNN 端到端特征学习；
 - **2017 Transformer**: Vaswani et al. — self-attention 替代 RNN，LLM 工业化基础；
 - **2020-2022 LLM scaling**: GPT-3 (NeurIPS 2020) / Chinchilla (NeurIPS 2022) / ChatGPT (2022-11); 
 - **2020-2024 Diffusion 与视觉生成**：DDPM （NeurIPS 2020） → Stable Diffusion （2022-08） → Sora （2024-02）；
 - **2020-2024 VLM 与多模态理解**：CLIP （ICML 2021） → GPT-4V （2023-09） → LLaVA （NeurIPS 2023）；
-- **2018 World Models 起源**：Ha & Schmidhuber （NeurIPS 2018） V+M+C；
 - **2023-2026 具身 VLA**：RT-2 （2023-07） → π₀ （2024-10） → π₀。7 (2026-04-16) / Helix 02 (2026-01) / GR00T N1.7 (2026-04-17); 
 - **2024-2026 World Models 近期形态**：Genie 3 （2025-08） / Cosmos （2025-01 起）；
 
@@ -192,97 +191,52 @@ RLHF 思想源自 Christiano et al.（NIPS 2017）[14] 的 RL from human prefere
 
 ## 4. 第三阶段：Diffusion 与视觉生成（2020-2024）
 
-2020-2024 间，Diffusion 把生成问题改写为逐步去噪：训练阶段学习噪声预测器，推理阶段从随机噪声或加噪后的输入出发，反复调用同一个网络更新采样状态[1]。DDIM、Classifier-Free Guidance (CFG) 与 Latent Diffusion 分别改动采样路径、条件输入和计算空间，之后被 DALL-E 2、Imagen、Stable Diffusion、Stable Video Diffusion 与 Sora 等系统沿用[2][3][4][5][6][7][8][9]。
+2020 年前后，图像生成主要有 GAN、VAE、Normalizing Flow 三类做法。DDPM 选择先规定一条加噪过程：从真实图像 `x_0` 出发，每一步加入少量高斯噪声，经过 `T` 步得到接近 `N(0, I)` 的 `x_T`；模型要学习的是反方向，在给定 `x_t` 和时间步 `t` 时预测噪声[1]。
 
-### 4.1 基本机制
+沿着这条路线，后续改进集中在三处：DDPM 原始采样步数多；文生图需要让文本稳定进入每一步去噪；高分辨率图像在像素空间去噪计算量高。DDIM、Classifier-Free Guidance (CFG) 与 Latent Diffusion 分别对应这三处改动[2][3][4]，之后被 DALL-E 2、Imagen、Stable Diffusion、Stable Video Diffusion 与 Sora 等系统沿用[5][6][7][8][9]。
 
-Diffusion 的基本机制由三段构成：前置生成模型给出背景，DDPM 给出训练去噪器的接口，采样阶段反复调用同一个去噪器生成结果。
+### 4.1 三类生成路线
 
-#### 4.1.1 生成模型前史
+先把 DDPM 放到当时的生成模型背景里看：GAN、VAE、Normalizing Flow 都从随机变量生成样本，但训练目标和结构约束不同。
 
-2020 年 DDPM 出现前，深度生成模型已沿 GAN、VAE、Normalizing Flow 三条路线发展。三类方法都从随机变量生成样本，但训练稳定性、可逆性约束和样本质量之间的取舍不同。
-
-| 路线 | 生成方式 | 训练约束 | 来源 |
+| 路线 | 生成方式 | 约束 | 来源 |
 |---|---|---|---|
-| GAN | 生成器与判别器做对抗训练 | 目标函数是 min-max optimization | [10] |
+| GAN | 生成器与判别器做对抗训练 | min-max optimization | [10] |
 | VAE | 编码器学习 latent distribution，解码器从 latent 生成样本 | 用 evidence lower bound 替代直接 log-likelihood | [11] |
 | Normalizing Flow | 学习可逆变换，把简单分布映射到数据分布 | 变换需可逆，并计算 Jacobian determinant | [12] |
 
-DDPM 把从噪声到图像的映射拆成多步去噪；后续工程改动大多围绕采样步数、条件输入和计算空间展开。
+与这三类方法相比，DDPM 先规定一条不需要学习的加噪链，再学习这条链的反向去噪过程[1]。生成任务被拆成同一个网络在不同时间步上的噪声预测问题。
 
-#### 4.1.2 DDPM：训练去噪器
+### 4.2 DDPM：噪声残差
 
-DDPM (Denoising Diffusion Probabilistic Models) 把真实图像 `x_0` 逐步加噪到 `x_T`，再训练网络预测每一步加进去的噪声[1]。模型在给定噪声强度 `t` 时，估计 `x_t` 中的噪声分量。
+DDPM (Denoising Diffusion Probabilistic Models) 的训练输入由三项构成：真实图像 `x_0`、随机时间步 `t`、高斯噪声 `ε`。前向过程可直接采样任意时间步的带噪图像 `x_t`[1]：
 
 ![image.png](images/RDu8bf1ZGodRjWxGKolckxGjnwg.png)
 
-DDPM 的训练接口可以压缩成 5 行：
+$$x_t = \sqrt{\bar{\alpha}_t}x_0 + \sqrt{1-\bar{\alpha}_t}\epsilon$$
 
-```python
-t = randint(1, T)
-eps = randn_like(x_0)
-x_t = sqrt(alpha_bar[t]) * x_0 + sqrt(1 - alpha_bar[t]) * eps
-eps_pred = model(x_t, t)
-loss = mse(eps, eps_pred)
-```
-
-对应的简化损失为：
+网络输入 `x_t` 和 `t`，输出与图像同形状的噪声预测 `ε_θ(x_t, t)`。DDPM 使用的简化损失是噪声预测的 MSE[1]：
 
 $$L = \mathbb{E}_{t, x_0, \epsilon}[||\epsilon - \epsilon_\theta(x_t, t)||^2]$$
 
-其中 `ε` 是实际加入的高斯噪声，`ε_θ(x_t, t)` 是模型预测的噪声。这个目标把生成问题变成监督回归：输入带噪图和时间步，输出与图像同形状的噪声张量[1]。
-
-#### 4.1.3 推理：反复使用去噪器
-
 推理阶段没有真实图像 `x_0`。系统先采样 `x_T ~ N(0, I)`，再按 `T, T-1, ..., 1` 的顺序反复调用同一个去噪网络，把 `x_t` 更新为噪声更低的 `x_{t-1}`[1]。
+
+DDPM 的一步采样可写成：
+
+$$x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t, t)\right) + \sigma_t z,\quad z \sim \mathcal{N}(0, I)$$
 
 | 阶段 | 输入 | 网络输出 | 是否需要真实图 |
 |---|---|---|---|
 | 训练 | `x_0`、随机时间步 `t`、随机噪声 `ε` | `ε_θ(x_t, t)` | 需要 |
 | 推理 | `x_T ~ N(0, I)`、时间步序列、可选条件 `c` | `ε_θ(x_t, t, c)` | 不需要 |
 
-无条件采样循环：
+训练阶段的真实图只用于构造监督信号；推理阶段保留的是训练好的参数、随机起点和时间步序列。后续文生图、图像编辑和结构控制，主要改变采样起点与条件输入。
 
-```python
-x = randn(shape)
-for t in reversed(range(1, T + 1)):
-    eps_pred = model(x, t)
-    x = sampler_step(x, t, eps_pred)
-return x
-```
+### 4.3 快速扩展的三处改动
 
-文生图只是在每一步多传入文本条件。文本编码器先把 prompt 变成向量 `c`，去噪网络再根据 `x_t`、`t` 和 `c` 预测噪声；随机起点仍是 `x_T ~ N(0, I)`[3][4]。
+DDPM 的采样默认需要多步网络前向，且无条件模型不能直接响应文本或结构约束。2021-2022 年的三类工作分别处理采样速度、条件控制和计算成本：DDIM 减少采样步数，CFG 让文本条件影响每一步去噪，Latent Diffusion 把高分辨率图像生成搬到 latent space。
 
-```python
-c = text_encoder(prompt)
-x = randn(shape)
-for t in reversed(range(1, T + 1)):
-    eps_pred = model(x, t, c)
-    x = sampler_step(x, t, eps_pred)
-return x
-```
-
-推理阶段的工作流可以按采样起点和条件输入区分：
-
-| 使用方式 | 采样起点 | 条件输入 | 输出关系 | 来源 |
-|---|---|---|---|---|
-| 无条件生成 | `x_T ~ N(0, I)` | 无 | 从训练分布中采样新图像 | [1] |
-| 文生图 | `x_T ~ N(0, I)` | 文本 embedding | 文本条件影响每一步噪声预测 | [3][4][5][6] |
-| img2img | 输入图加噪到中间时间步 | 文本或图像条件 | 保留部分输入图结构，再沿条件去噪 | [14] |
-| inpainting | 已知区域固定，缺失区域从噪声开始 | mask 与可选文本条件 | 只更新 mask 指定区域 | [4] |
-| ControlNet | `x_T` 或图像相关起点 | 边缘、姿态、深度等控制图 | 结构条件通过额外网络进入去噪过程 | [13] |
-
-训练阶段的真实图只用于构造监督信号。推理阶段保留的是训练好的参数、随机起点、时间步序列和可选条件；不同产品形态改变的是采样起点、条件输入或 sampler。
-
-### 4.2 扩展路线
-
-DDPM 给出基本接口后，后续扩展主要发生在工程接口、去噪对象和产品交付三处。三者共同说明 diffusion 如何从图像论文方法进入图像 / 视频生成系统。
-
-#### 4.2.1 工程改进
-
-DDPM 给出训练和采样接口后，2021-2022 年的后续工作主要改动三个位置：采样路径走多少步、条件怎样进入每一步、去噪张量放在哪个空间里计算。
-
-| 问题 | 解法 | 接口变化 | 来源 |
+| 问题 | 解法 | 改动位置 | 来源 |
 |---|---|---|---|
 | 采样慢 | DDIM | 把反向过程改成 deterministic non-Markovian path，使采样可跳过部分中间时间步 | [2] |
 | 条件控制 | CFG | 同一网络同时预测有条件与无条件噪声，采样时线性组合两次预测 | [3] |
@@ -296,7 +250,33 @@ $$\epsilon = \epsilon_{\mathrm{uncond}} + w \cdot (\epsilon_{\mathrm{cond}} - \e
 
 ![image.png](images/W6jHbK4qJocDf0x9mUhcHc5Fnuc.png)
 
-#### 4.2.2 图像到视频
+### 4.4 图像应用
+
+文生图在 DDPM 推理过程中加入文本条件。文本编码器先把 prompt 变成向量 `c`，去噪网络再根据 `x_t`、`t` 和 `c` 预测噪声；随机起点仍是 `x_T ~ N(0, I)`[3][4]。条件去噪网络可写为：
+
+$$\epsilon_\theta(x_t, t, c)$$
+
+图像应用的差异可以按采样起点和条件输入区分：
+
+| 使用方式 | 采样起点 | 条件输入 | 输出关系 | 来源 |
+|---|---|---|---|---|
+| 无条件生成 | `x_T ~ N(0, I)` | 无 | 从训练分布中采样新图像 | [1] |
+| 文生图 | `x_T ~ N(0, I)` | 文本 embedding | 文本条件影响每一步噪声预测 | [3][4][5][6] |
+| img2img | 输入图加噪到中间时间步 | 文本或图像条件 | 保留部分输入图结构，再沿条件去噪 | [14] |
+| inpainting | 已知区域固定，缺失区域从噪声开始 | mask 与可选文本条件 | 只更新 mask 指定区域 | [4] |
+| ControlNet | `x_T` 或图像相关起点 | 边缘、姿态、深度等控制图 | 结构条件通过额外网络进入去噪过程 | [13] |
+
+2022-2024 间，diffusion 产品按公开方式可分为闭源图像 / 视频生成、开放权重图像生成、开放视频生成三类。三类系统都围绕采样起点、条件输入和去噪网络组织生成流程，但交付形式不同。
+
+| 路线 | 代表系统 | 公开形式 | 工具链特征 | 来源 |
+|---|---|---|---|---|
+| 闭源图像 / 视频生成 | DALL-E 2、Imagen、Sora、Veo | API、网页产品或技术报告 | 模型权重未公开，用户通过产品入口调用 | [5][6][7][17] |
+| 开放权重图像生成 | Stable Diffusion | 权重与代码生态公开 | LoRA、ControlNet、ComfyUI 等工具围绕开源权重扩展 | [4][8][13] |
+| 开放视频生成 | Stable Video Diffusion | 研究权重或代码生态公开 | 主要用于短片段生成与研究复现 | [9] |
+
+开放权重使 diffusion 从单一模型扩展成工具链：LoRA 改风格或主体，ControlNet 接入结构条件，ComfyUI 把采样器、条件、后处理组织成可编排流程。这些工具没有改变 §4.2 的训练目标，改变的是推理阶段的条件与采样流程。
+
+### 4.5 图像到视频
 
 2022-2024 间，Diffusion 的去噪对象从单张图像扩展到视频表示。图像系统在图像或图像 latent 上去噪，视频系统在带时间维度的 latent、frame sequence 或 spacetime patch 上去噪。
 
@@ -307,19 +287,7 @@ $$\epsilon = \epsilon_{\mathrm{uncond}} + w \cdot (\epsilon_{\mathrm{cond}} - \e
 | Stable Video Diffusion | 2023-11 | video latent | 基于 video diffusion 生成短视频片段 | [9] |
 | Sora | 2024-02 | spacetime patch | 把视频表示为时空 patch，再在这些 token 上做去噪生成 | [7][16] |
 
-视频生成比图像生成多出时间一致性约束：同一人物、物体位置、运动轨迹和场景状态需要跨帧保持一致。OpenAI Sora 技术报告以 "world simulators" 描述 video generation models[7]；§8 再展开可交互 world model。
-
-#### 4.2.3 产品路线
-
-2022-2024 间，diffusion 产品按公开方式可分为闭源图像 / 视频生成、开放权重图像生成、开放视频生成三类。三类系统使用相近的去噪接口，但交付形式不同。
-
-| 路线 | 代表系统 | 公开形式 | 工具链特征 | 来源 |
-|---|---|---|---|---|
-| 闭源图像 / 视频生成 | DALL-E 2、Imagen、Sora、Veo | API、网页产品或技术报告 | 模型权重未公开，用户通过产品入口调用 | [5][6][7][17] |
-| 开放权重图像生成 | Stable Diffusion | 权重与代码生态公开 | LoRA、ControlNet、ComfyUI 等工具围绕开源权重扩展 | [4][8][13] |
-| 开放视频生成 | Stable Video Diffusion | 研究权重或代码生态公开 | 主要用于短片段生成与研究复现 | [9] |
-
-产品路线没有改变 §4.1.3 的基本接口：生成结果仍由采样起点、条件输入、sampler 和训练好的去噪网络共同决定。
+视频生成比图像生成多出时间一致性约束：同一人物、物体位置、运动轨迹和场景状态需要跨帧保持一致。Sora 技术报告把视频表示为 spacetime patch，并以 "world simulators" 描述 video generation models[7]。这条线在 §7 继续连接到可交互 World Models；§5 则转向另一条相邻路线：从生成视觉内容，转向理解视觉内容并用语言回答。
 
 ### References
 
@@ -345,75 +313,91 @@ $$\epsilon = \epsilon_{\mathrm{uncond}} + w \cdot (\epsilon_{\mathrm{cond}} - \e
 
 ## 5. 第四阶段：VLM 与多模态理解 （2020-2024）
 
-2020-2024 年，多模态理解从图文表征对齐走向 VLM。
+§4 的 Diffusion 关注“按文本生成视觉内容”。VLM 处理另一侧问题：图像和文字如何落到同一个语义空间，模型如何基于图像生成回答。2020-2024 年，这条线从 CLIP 的图文匹配，走到 LLaVA / GPT-4V 这类看图回答模型。
 
-1. CLIP （ICML 2021） 用对比学习把图像和文本编码到同一个向量空间，解决图文匹配与 open-vocabulary 视觉理解；
-2. GPT-4V / LLaVA 把视觉特征接入 LLM，使语言模型可以基于图像回答问题；
-3. VLA 则在 VLM 基础上把输出从文本扩展为机器人动作。
-
-CLIP 提供视觉-文本对齐，VLM 提供视觉输入下的语言推理，VLA 把这种推理接到 embodied action。
+CLIP 先把图像和自然语言描述对齐；LLaVA 再把 CLIP 的视觉特征接到 LLM，让模型用语言回答图像相关问题。后续 VLA 沿用这类视觉-语言输入，但把输出从文本扩展为机器人动作。
 
 ![image.png](images/Rw0hbe7aUodELmx48h6cPZMNnuf.png)
 
-### 5.1 CLIP：图文对齐（2021）
+### 5.1 CLIP：图文对齐
 
-CLIP (Contrastive Language-Image Pre-training, Radford et al.， OpenAI ICML 2021）[1] 用 contrastive learning 训练图像 encoder 和文本 encoder，把图像与文本映射到同一个 embedding space。
+监督分类模型的输出类别由训练集预先规定。ImageNet 分类器最后一层对应 1000 个类别；新增类别时，需要重新收集标注数据并训练分类头。CLIP (Contrastive Language-Image Pre-training, Radford et al.，OpenAI ICML 2021）把类别标签换成自然语言描述：图像 encoder 和文本 encoder 分别输出向量，再用对比学习让匹配的图文靠近、不匹配的图文远离[1]。
 
 ![image.png](images/CInnbLRvuolFB8xWagWcrSDwnfd.png)
 
-#### 5.1.1 训练框架
+CLIP 使用 4 亿对图文数据训练，图像 encoder 可使用 ResNet 或 ViT，文本 encoder 是 Transformer[1]。一个 batch 内有 `N` 对图文样本，模型计算 `N×N` 相似度矩阵：
 
-- **数据**：400M 对图像和文本描述，从 web 收集（WIT-400M）;
-- **Encoder**：image encoder （ViT-B/16， ViT-L/14， ResNet） 把图像编码成向量，text encoder （Transformer） 把文本编码成向量，联合训练；
-- **Loss**：InfoNCE 在一个 batch 内把原本配对的 （image， text） 作为正样本，把错配图文作为负样本；训练目标是提高正样本图文向量的相似度，同时降低错配图文向量的相似度；
-  $\mathcal{L}_{\mathrm{CLIP}}=-\frac{1}{2 N} \sum_{i=1}^N\left[\log \frac{e^{\operatorname{sim}\left(v_i, t_i\right) / \tau}}{\sum_{j=1}^N e^{\sin \left(v_i, t_j\right) / \tau}}+\log \frac{e^{\operatorname{sim}\left(t_i, v_i\right) / \tau}}{\sum_{j=1}^N e^{\operatorname{sim}\left(t_i, v_j\right) / \tau}}\right]$
+$$S_{ij} = \frac{I_i^\top T_j}{\tau}$$
 
-训练完成后，匹配的图文对具有较高的余弦相似度。
+其中 `I_i` 是第 `i` 张图的归一化图像向量，`T_j` 是第 `j` 段文本的归一化文本向量，`τ` 是 temperature。矩阵对角线 `S_ii` 是真实配对，非对角线是 batch 内负例。CLIP 同时做 image-to-text 和 text-to-image 两个方向的交叉熵：
 
-#### 5.1.2 下游影响
+$$\mathcal{L}_{\text{i2t}} = -\frac{1}{N} \sum_i \log \frac{\exp(S_{ii})}{\sum_j \exp(S_{ij})}$$
 
-CLIP 展示了卓越的零样本迁移能力：在没有任何任务特定微调的情况下，它就能对图像进行分类、根据文本查询检索图像，并执行视觉推理。CLIP 的 vision encoder 成为后续 VLMs  的标准 backbone。§7.1.1 中 RT-2 / π₀ 等模型也多用 CLIP / SigLIP 系列先抽取视觉特征。
+$$\mathcal{L}_{\text{t2i}} = -\frac{1}{N} \sum_j \log \frac{\exp(S_{jj})}{\sum_i \exp(S_{ij})}$$
 
-- **Text-to-image generation**：Stable Diffusion / DALL-E 2 / Imagen 的 text encoder 都是 CLIP（或衍生的 OpenCLIP / T5）；
-- **Open-vocabulary detection / segmentation**: OWL-ViT (Minderer et al., ECCV 2022)[3] / GroundingDINO / SAM-2 prompt; 
-- **VLM 的视觉模块：**
-  - LLaVA / Qwen-VL / InternVL 等模型常用 CLIP-ViT（或 SigLIP）先把图像变成视觉特征；
-  - 这些特征还需要通过 projection / adapter / cross-attention 对齐到 LLM 能处理的 token 表示；
+$$\mathcal{L}_{\text{CLIP}} = \frac{1}{2}(\mathcal{L}_{\text{i2t}} + \mathcal{L}_{\text{t2i}})$$
 
-### 5.2 VLM：把视觉接入 LLM （Generative VLMs (2022--2023)）
+训练完成后，分类可以改写成图文匹配：把候选类别写成文本 prompt，例如 `a photo of a {class}`，再选择与图像向量相似度最高的文本向量。CLIP 在 ImageNet zero-shot 上达到 76.2% top-1，接近同论文中 ResNet-50 监督训练的 76.5%[1]。
 
-CLIP 之后，下一步是把视觉 encoder 接到生成式语言模型上。模型不再只判断图文是否匹配，而是基于图像生成开放式文本回答。
+### 5.2 CLIP 的应用
 
-#### 5.2.1 LLaVA (2023)
+CLIP 输出的是共享语义空间里的向量，因此它最直接的用法是相似度计算，而不是生成文本。
 
-LLaVA (Liu et al.， NeurIPS 2023）[5] ，用 CLIP 特征到 LLM token space 的线性 projection，加上 visual instruction tuning，验证了 VLM 的基本路线。相比需要复杂跨模态模块的方案，这条路线更轻：保留已有 vision encoder 和 LLM，**只训练中间连接层与视觉指令数据**，让 LLM 能接收图像信息并回答视觉问题。
+| 用法 | 输入 | 输出 | 来源 |
+|---|---|---|---|
+| 零样本分类 | 图像 + 类别 prompt | 相似度最高的类别文本 | [1] |
+| 图文检索 | 文本查图 / 图像查文本 | 向量空间最近邻 | [1] |
+| 文生图条件 | prompt 文本 | 文本条件向量或 CLIP latents | [4][5][6] |
+| VLM 视觉编码器 | 图像 | 视觉 token / patch features | [5] |
+
+在 Diffusion 系统里，CLIP 或相关文本编码器把 prompt 变成条件输入；在 LLaVA、Qwen-VL、InternVL 等 VLM 里，CLIP-ViT 或 SigLIP 先把图像变成视觉特征，再由 projection、adapter 或 cross-attention 接到语言模型。
+
+### 5.3 从匹配到回答
+
+CLIP 只能判断图像和文本是否匹配，不能直接生成回答。要让模型回答“图里发生了什么”“为什么这样做”，架构里需要能自回归生成文本的语言模型。
+
+2022-2023 年的 VLM 可按视觉特征如何接入文本生成分成三类：
+
+| 路线 | 代表 | 视觉如何进入文本模型 | 适合任务 | 来源 |
+|---|---|---|---|---|
+| 双编码器 | CLIP / ALIGN / SigLIP | 图像和文本各自编码，做相似度 | 检索、零样本分类 | [1][2] |
+| 编解码器 | BLIP / BLIP-2 | 视觉 encoder 后接文本 decoder；BLIP-2 用 Q-Former 压缩视觉 token | caption、VQA | [10] |
+| LLM-based | Flamingo / LLaVA / GPT-4V | 把视觉特征转成 LLM 可接收的 token 或 cross-attention 条件 | 对话、复杂指令 | [4][5][11] |
+
+这三类路线的差别不在“是否理解图像”，而在输出形式：双编码器输出相似度，编解码器输出 caption 或短回答，LLM-based 模型用 LLM 的语言生成能力处理开放式问题。
+
+### 5.4 LLaVA：视觉接入 LLM
+
+LLaVA (Liu et al.，NeurIPS 2023）把冻结的 CLIP-ViT-L/14 接到 Vicuna。图像先被 CLIP-ViT 编码成 patch features，projection layer 把这些视觉特征映射到 LLM 的 embedding 维度，再和文本 token 一起输入 Vicuna[5]。
 
 ![image.png](images/GKGTbGAAOovyipxWgo7cKVAZnbf.png)
 
-- **模型结构**：冻结 CLIP ViT-L/14 作为 vision encoder，用 projection layer 把图像特征映射到 LLM 可接收的 token 表示，再接入 Vicuna；
-> LaVA 使用一个约有 2000 万参数的 2 层 MLP 将 CLIP ViT-L（3.04 亿参数）连接到 Vicuna-13B（130 亿参数）。为什么这么小的桥接模块能够奏效？
-> 
-> 1. CLIP ViT-L 已经能产生与语言对齐的特征（通过在 4 亿对数据上的对比训练获得）；
-> 2. Vicuna-13B 已经理解语言结构、推理和遵循指令；
-> 3. MLP 桥只需要在它们的嵌入空间之间进行转换，而不必从零学习视觉或语言理解；
-- **Stage 1：图文对齐**：用 558K 图文对训练 projection layer，让图像特征能对齐到 LLM 的语言表示空间；
-- **Stage 2：视觉指令微调**：用 GPT-4 生成的 158K 条视觉指令数据做 instruction tuning，让模型学会按用户问题基于图像内容作答；
+LLaVA 的关键在于复用已有组件。CLIP-ViT 已经把图像编码成与语言相关的视觉特征，Vicuna 已经具备对话和指令跟随能力；中间的 projection layer 只需要把 CLIP 特征映射到 LLM 的 token space[5]。
 
-LLaVA 开源后成为 VLM 的常见实现模板；LLaVA-1.5 （2023-10） 把 projection 从单层 linear 改为 MLP，benchmark 结果进一步提升。
+训练分两步：
 
-2024 年起，多模态能力从「冻结视觉编码器 + 桥接模块 + LLM」的模块化路线，进入更原生的多模态模型阶段：
+- **Feature alignment**：用 558K 图文对训练 projection layer，使图像特征能进入 LLM 的表示空间[5]；
+- **Visual instruction tuning**：用 GPT-4 基于 COCO caption 与 object bounding boxes 生成的 158K 视觉指令数据训练模型回答图像问题[5]。
 
-- **GPT-4o**：OpenAI 将其描述为跨文本、视觉和音频端到端训练的单一模型；
-- **Gemini**：Google 技术报告称 Gemini 是 natively multimodal，并在文本、图像、音频、视频上联合训练[7]；
+LLaVA 发展快的原因主要在这两个选择：架构上少改 LLM，数据上用 GPT-4 生成高质量视觉指令样本。相比从零训练多模态模型，这条路线把训练目标缩小为“把已有视觉 encoder 和已有 LLM 接起来，再教它按指令回答图像问题”。
 
-> 关键区别：早期的视觉-语言模型是将视觉功能附加到语言模型上。原生多模态模型在预训练期间将所有模态视为同等重要，有可能学习到更深层的跨模态表征。
+2024 年后，开源 VLM 多沿用“视觉编码器 + projector / adapter + LLM”的结构，只是更换视觉编码器、LLM、分辨率处理和指令数据。LLaVA-1.5（2023-10）把 projection 从 linear 改为 MLP，并加入更多学术 VQA 数据[12]。
 
-### 5.3 从 VLM 到 VLA
+### 5.5 应用与后续
 
-- VLM 的输出仍然是文本；VLA （Vision-Language-Action） 把输出空间从文本 token 扩展到机器人动作。
-- RT-2 的做法是把机器人动作离散化为 token，让 VLM 通过 fine-tuning 直接输出 action token；π₀ / GR00T 等后续路线则常把 VLM 作为语义理解或 reasoning 模块，再接 continuous action head、diffusion transformer 或 flow-matching action head[6]。
+VLM 的应用按输出形式分成两类。CLIP 类模型适合相似度和检索任务；LLaVA / GPT-4V 类模型适合生成回答、描述和多轮对话。
 
-这一步改变了模型接口：VLM 解决「看图后如何用语言回答」，VLA 解决「看图和指令后如何执行动作」。
+| 任务 | 更常用的模型形态 | 原因 |
+|---|---|---|
+| 大规模图像检索 | CLIP / SigLIP | 图像向量可预先缓存，查询时做向量检索 |
+| 零样本分类 | CLIP / OpenCLIP | 类别可写成文本 prompt |
+| 图像问答 | LLaVA / Qwen-VL / GPT-4V | 需要基于图像生成文本回答 |
+| 多模态助手 | LLM-based VLM | 需要对话、格式控制和指令跟随 |
+| 机器人 VLA | VLM / VLA backbone | 视觉和语言输入继续接到动作输出 |
+
+2024 年起，GPT-4o 和 Gemini 等闭源系统开始把文本、图像、音频、视频放到同一模型训练或服务接口中[4][7]。开源路线则继续沿 LLaVA / Qwen-VL / InternVL 这类模块化结构改进视觉编码器、分辨率和指令数据。
+
+VLM 的输出仍然是文本；VLA (Vision-Language-Action) 把输出扩展到机器人动作。RT-2 把机器人动作离散化为 token，让 VLM 通过 fine-tuning 输出 action token；π₀ / GR00T 等路线则常把 VLM 作为语义理解或 reasoning 模块，再接 continuous action head、diffusion transformer 或 flow-matching action head[6]。
 
 ### References
 
@@ -425,35 +409,14 @@ LLaVA 开源后成为 VLM 的常见实现模板；LLaVA-1.5 （2023-10） 把 pr
 - [6] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
 - [7] Gemini Team, Gemini: A Family of Highly Capable Multimodal Models, 2023. Technical Report.
 - [8] Anthropic, The Claude 3 Model Family: Opus, Sonnet, Haiku, 2024. Model Card.
-- [9] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
+- [9] Zhai et al., Sigmoid Loss for Language Image Pre-Training (SigLIP), ICCV 2023. arXiv:2303.15343
+- [10] Li et al., BLIP-2: Bootstrapping Language-Image Pre-training with Frozen Image Encoders and Large Language Models, ICML 2023. arXiv:2301.12597
+- [11] Alayrac et al., Flamingo: a Visual Language Model for Few-Shot Learning, NeurIPS 2022. arXiv:2204.14198
+- [12] Liu et al., Improved Baselines with Visual Instruction Tuning (LLaVA-1.5), arXiv 2023. arXiv:2310.03744
 
 ---
 
-## 6. 第五阶段：World Models 起源（2018）
-
-2018 年 Ha & Schmidhuber 的 V+M+C 架构是 deep learning 语境下 world model 的早期代表[1]。该工作把视觉压缩、latent dynamics 与 policy training 分成三个模块；video diffusion 的产品化路径见 §4.2.2。
-
-### 6.1 V+M+C：dream-based 训练雏形
-
-Ha & Schmidhuber 提出：agent 先学一个内部 world model，再在该模型中模拟环境轨迹（dream rollout）训练 policy，而非每步与真实环境交互[1]。三模块构成：
-
-| 模块 | 功能 | 实现 |
-|---|---|---|
-| V (Vision) | 高维 observation 压缩到 latent | VAE encoder，32 维 latent z |
-| M (Memory) | 在 latent 空间预测下一时刻状态 | MDN-RNN 预测 $z_{t+1} \mid z_t, a_t$ |
-| C (Controller) | 根据 latent 输出动作 | 线性 policy，CMA-ES 训练 |
-
-agent 在 dream rollout 中训练 policy 后 0-shot 部署到真实环境，CarRacing-v0 上取得 906 ± 21 分（同期 best published 591）[1]。
-
-V+M+C 使用 VAE、MDN-RNN 与玩具环境轨迹数据[1]。§8 另列 2024-2026 年的 latent video diffusion、web-scale 视频数据和可交互 world model 路线。
-
-### References
-
-- [1] Ha & Schmidhuber, World Models, NeurIPS 2018. arXiv:1803.10122 (worldmodels.github.io)
-
----
-
-## 7. 延伸 1：具身 VLA （2023-2026）
+## 6. 延伸 1：具身 VLA （2023-2026）
 
 VLA （Vision-Language-Action） 在视觉和语言输入之外，把模型输出从文本 token 扩展为机器人动作。
 
@@ -462,14 +425,14 @@ VLA （Vision-Language-Action） 在视觉和语言输入之外，把模型输�
 - 国内 AgiBot World / GO-1、Galaxea G0、RynnBrain / RynnVLA、LingBot-VLA、UnifoLM-VLA-0、Xiaomi-Robotics-0 等路线跟进。
 - 
 
-### 7.1 VLA 进展
+### 6.1 VLA 进展
 
 VLA 进展分两支：
 
 1. 国际线以 Google / DeepMind、Physical Intelligence、NVIDIA 等产业主线和 OpenVLA、Octo 等开源 baseline 为代表；
 2. 国内线在 2025-2026 年形成以数据集、开源权重和真机部署为中心的多条路线。
 
-#### 7.1.1 国际 VLA 路线
+#### 6.1.1 国际 VLA 路线
 
 国际 VLA 可分为三类：
 
@@ -526,7 +489,7 @@ OpenVLA 与 Octo 是国际开源路线中常用的 baseline。
 
 - π₀.7 （2026-04-16） 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
 
-#### 7.1.2 国内 VLA 路线
+#### 6.1.2 国内 VLA 路线
 
 国内 VLA / 具身 foundation model 在 2025-2026 年形成多条公开路线。
 
@@ -555,11 +518,11 @@ UnifoLM-VLA-0 是宇树为 G1 humanoid 设计的 VLA：
 - **任务**：单一 policy 在 G1 上完成 12 类操作（开闭抽屉 / 插拔 / 抓放 / 工具使用）；
 - **公开状态**：UnifoLM-VLA-Base 已在 Hugging Face 公开；任务侧聚焦 G1 humanoid 操作；
 
-### 7.2 VLA 融合方向
+### 6.2 VLA 融合方向
 
 VLA 与其他范式的融合主要沿两条方向展开：与 reasoning model 融合形成 dual-system 架构，与 World Models 融合形成 dream-based training。前者处理 long-horizon 任务规划，后者补充真机数据不足。
 
-#### 7.2.1 VLA + 推理融合
+#### 6.2.1 VLA + 推理融合
 
 VLA + reasoning 融合的核心模式是 dual-system：System 1 是高频动作 policy，负责实时控制；System 2 是慢速 reasoning LLM，负责拆解任务和规划步骤。两者协同处理 long-horizon / 多步任务。
 
@@ -581,7 +544,7 @@ Reasoning model 把 chain-of-thought 推理训练成模型能力，而不是只�
   - π₀.5 在 base policy 之外集成 reasoning 模块；
   - LLM 先把当前 task 拆成 sub-task，再交由 base policy 执行；
 - **GR00T N1.7 Action Cascade** ( NVIDIA 2026-04-17) [10]: 
-  - System 2 使用 Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §8.2 Cosmos），System 1 使用 32-layer Diffusion Transformer；
+  - System 2 使用 Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §7.4 Cosmos），System 1 使用 32-layer Diffusion Transformer；
   - "Action Cascade" 指 reasoning 输出的 plan 会级联到 DiT action 生成；
 
 **关键挑战**
@@ -592,9 +555,9 @@ Reasoning model 把 chain-of-thought 推理训练成模型能力，而不是只�
 - **Long-horizon planning**：System 2 输出的 plan 在 System 1 执行过程中可能偏离，何时重 plan 是开放问题；
 - **Plan ↔ action 接口形式**：language token / latent vector / sub-task list，当前各家 design choice 不同，尚无统一接口；
 
-#### 7.2.2 VLA + World Models 融合
+#### 6.2.2 VLA + World Models 融合
 
-VLA 与 World Models 的耦合范式（5 种架构选择）以及 World Models 作为 simulator 替代真机做 RL / evaluation 的两种独立角色，统一在 §8 展开[20]。当前公开报告中可见的具体融合点包括：sim-to-real data augmentation（NVIDIA Cosmos Transfer 用于 GR00T N1.7 训练[10]）、VLA 内化 future prediction 作为辅助 loss（GR-1 / WorldVLA / UniVLA 等[20]）、dream-based RL 训练（综述 §4.1[20]）。
+VLA 与 World Models 的关系在 §7 展开：World Model 可以辅助选择动作，也可以作为 simulator 替代部分真机交互，用于 RL 训练或离线评估[20]。当前公开报告中可见的具体结合点包括：sim-to-real data augmentation（NVIDIA Cosmos Transfer 用于 GR00T N1.7 训练[10]）、把 future prediction 作为辅助 loss（GR-1 / WorldVLA / UniVLA 等[20]）、dream-based RL 训练（综述 §4.1[20]）。
 
 ### References
 
@@ -621,63 +584,83 @@ VLA 与 World Models 的耦合范式（5 种架构选择）以及 World Models �
 
 ---
 
-## 8. 延伸 2：World Models 范式与近期形态 （2024-2026）
+## 7. 延伸 2：World Models 近期形态（2024-2026）
 
-V+M+C （§6.1） 之后，World Models 在 2024-2026 沿两条线展开：与 VLA policy 的 5 种耦合范式（§8.2）、独立作为 simulator 的两种角色（§8.3）；2025-2026 进入 foundation 化阶段，代表为 DeepMind Genie 与 NVIDIA Cosmos[1]。
+§6 的 VLA 从当前观测和语言指令直接输出动作。World Model 多了一步：在动作执行前，先预测候选动作会把世界带到什么状态。它把 §4 的视频生成、§5 的视觉语言表征和 §6 的动作策略接到同一个问题上：未来是否会按动作发生变化。
 
-### 8.1 概念再定位
+本节的 World Model 指 **action-conditioned** 的未来预测器：输入当前观测、候选动作和可选语言指令，输出未来观测。视频是否真实仍然重要，但机器人任务还要求未来对动作敏感；同一画面下，向左移动和向右移动应得到不同的未来。
 
-World Model 在本节指 action-conditioned 的视觉 / 状态预测器：给定当前观测 $o_t$ 与候选动作序列 $a_{t:t+H-1}$，输出未来观测序列 $o_{t+1:t+H}$[1]。
+### 7.1 VLA 还缺少未来预测
 
-它与 §4 video generation 的差别在动作维度：换不同的 $a$ 输入，输出未来必须以物理一致的方式不同。纯文本 / 图像条件的 video diffusion 模型不满足这一性质，被综述定义为 **passive world model**[1]。
+纯 VLA 通常学习：
 
-### 8.2 范式：World Model 与 policy 的耦合
+$$\pi(a_{t:t+H-1} \mid o_t, l)$$
 
-综述按 backbone 共享程度归纳出 5 种范式，按"WM 与 policy 的耦合紧密度"递增排列[1]。下面展开 3 种主流：
+其中 `o_t` 是当前观测，`l` 是语言指令，输出是一段动作。这个形式适合短链路反应，但长任务会遇到三个问题：动作执行后才知道后果；多步动作里哪一步导致失败不容易归因；前几步的小误差会把后续状态带到训练数据较少覆盖的区域[1]。
 
-#### 8.2.1 IDM-style：先想象再行动
+World Model 学的是另一个条件分布：
 
-WM 与 policy 是两个独立模型。WM 先按 $\hat{o}_{t+1:t+H} = W(o_t, l)$ 生成未来视频，policy 再按 $\pi(a \mid o_t, l, \hat{o}_{t+1:t+H})$ 从想象的未来反推动作；本质是把联合分布做 chain-rule 两步采样[1]。代表作 UniPi[2]。
+$$p(o_{t+1:t+H} \mid o_t, a_{t:t+H-1}, l)$$
 
-#### 8.2.2 Single-backbone：联合生成
+这个分布回答的是“如果执行这串动作，接下来会看到什么”。它可以在动作执行前比较多个候选动作，也可以为 policy 生成额外的训练轨迹[1]。
 
-未来视频与未来动作拼成同一个目标向量 $x = [z_v; z_a]$，由一个共享 backbone（通常是 video diffusion transformer）联合去噪生成；动作被当作"额外的 latent frame"塞进视频生成序列[1]。代表作 Cosmos Policy[3]。
+| 模型 | 输入 | 输出 | 直接用途 |
+|---|---|---|---|
+| VLA policy | 当前观测 + 指令 | 动作 | 执行 |
+| World Model | 当前观测 + 候选动作 + 指令 | 未来观测 | 预测后果 |
+| Simulator 用 World Model | 当前观测 + 动作 | 未来观测 + reward / done | 训练或评估 policy |
 
-#### 8.2.3 Latent-space WM：表征空间预测
+### 7.2 视频生成到 World Model
 
-不预测像素或视频 latent，而是直接预测未来观测的 embedding，与 action 生成在同一个 MLLM backbone 内联合优化；推理时不解码任何视觉输出[1]。这条路线对应 LeCun 的 JEPA (Joint Embedding Predictive Architecture) 主张：未来的"语义表征"比"长什么样"更对 control 有用。代表作 VLA-JEPA[4]。
+Sora、Stable Video Diffusion 这类视频模型可以生成连贯视频，但如果输入里没有动作，模型只是在视频分布里续写未来。综述把这类模型称为 passive world model：它可以预测“接下来可能发生什么”，但不能保证“换一个动作后未来跟着变”[1]。
 
-剩余 MoE/MoT 与 Unified VLA 范式是上述 3 种之间的中间形态：MoE/MoT 在 Single-backbone 基础上保留视频与动作的专家分工，Unified VLA 在 Latent-space WM 基础上把 future prediction 当作 VLA 的辅助 loss[1]。横向对比：
+机器人里的 World Model 需要把动作放进条件里。动作条件化可以落在像素、视频 latent 或语义表征上：
 
-| 范式 | Backbone | 推理时是否生成未来 | 与 §3 - §5 的继承关系 | 代表作 |
-|---|---|---|---|---|
-| IDM-style | Video diffusion (§4) | 必须 | 沿用 §4 video diffusion 接口 | UniPi[2] |
-| Single-backbone | Video diffusion (§4) | 可选 | 把 §3 attention + §4 DiT 用作联合生成 backbone | Cosmos Policy[3] |
-| MoE/MoT | Video diffusion (§4) | 看选择 | 把 π0 双专家结构（§7.1.1）迁移到 video backbone | Motus[1] / GE-Act[1] |
-| Unified VLA | MLLM (§5) | 通常不 | 直接复用 §5 VLM backbone，加 future prediction 辅助 loss | GR-1[1] / WorldVLA[1] |
-| Latent-space WM | MLLM (§5) | 不生成 | 复用 §5 VLM 表征空间，对齐 JEPA 主张 | VLA-JEPA[4] |
+| 预测对象 | 形式 | 用途 | 代表 |
+|---|---|---|---|
+| 像素 / 视频 latent | 生成未来帧或未来视频 | 规划、可视化、评估候选动作 | UniPi[2] |
+| 视频 + 动作联合表示 | 同一个生成过程同时处理未来画面和动作 | 把视频生成与动作生成放在一个 backbone 内 | Cosmos Policy[3] |
+| 表征空间 | 预测未来 embedding，不解码图像 | 降低像素生成开销，把预测信号直接给 control 用 | VLA-JEPA[4] |
 
-<!-- REVIEW: 此处建议补 Survey arXiv:2605.00080v1 Fig. 3 (5 种范式的架构对比图)，截到 images/world-model_5paradigms_from-survey2605.png -->
+从实现上看，这里会用到前几章已经出现的模块：Diffusion 提供视频生成器，Transformer / DiT 提供序列建模，VLM 提供视觉语言表征，VLA 提供动作序列。不同之处在于条件里显式包含动作：未来不只由文本或当前图像决定，还要由候选动作决定。
 
-### 8.3 角色：policy 一部分 vs 独立 simulator
+### 7.3 三种用法
 
-WM 在系统中的角色分两类[1]：
+World Model 在机器人系统里有三类用法。它可以放在 policy 旁边辅助决策，也可以和 policy 合在同一个模型里，还可以单独作为训练环境或评估环境。
 
-- **作为 policy 的一部分**：通过 imagined future 给 action 生成提供条件或约束，对应 §8.2 的 5 种范式（§7.2.2 已涉及部分代表方法）；
-- **作为 simulator**：替代真机环境，让 policy 在想象 rollout 中做 RL 训练（WMPO[5] / WoVR[6]），或对候选 policy / checkpoint 做离线评估（WorldEval[7]）。
+| 用法 | 做法 | 代表 |
+|---|---|---|
+| 先预测未来，再选动作 | 先生成候选未来，再由 IDM 或 policy 选择动作 | UniPi[2] |
+| 未来和动作一起生成 | 将未来视觉表示和未来动作放在同一个生成过程里 | Cosmos Policy[3] |
+| 当作 simulator | 用 imagined rollout 做 RL、policy ranking 或离线评估 | WMPO[5] / WoVR[6] / WorldEval[7] |
 
-WoVR 进一步指出 simulator 角色的核心瓶颈是 **action faithfulness**——若 WM 的预测对 action 不敏感，evaluation 信号本身失效；因此 simulator-用途的 WM 与 policy 之间常采用 co-evolution 训练（policy rollout 反过来 refine WM）[6]。
+UniPi 的形式可以写成两步采样：先生成未来观测，再从未来观测反推出动作[2]。
 
-<!-- REVIEW: 此处建议补 Survey arXiv:2605.00080v1 Fig. 5 (WM as RL vs Evaluation 双角色图)，截到 images/world-model_2roles_from-survey2605.png -->
+$$p(o, a \mid o_t, l) = p(o \mid o_t, l)\,p(a \mid o, o_t)$$
 
-### 8.4 当前形态：foundation 化的代表
+Simulator 用法还需要预测 reward 或任务完成信号。policy 在 imagined environment 里最大化回报：
 
-2025-2026 间，WM 从单点模型走向通用 foundation 平台，代表为 Genie 与 Cosmos[1]。
+$$J(\theta) = \mathbb{E}_{\hat{\tau} \sim (\pi_\theta, p_\phi)}\left[\sum_t \gamma^t \hat{r}_t\right]$$
 
-- **DeepMind Genie 系列**：Genie 1 (2024-02) 256×256 / 11B 参数，2D platform-style 可交互生成[8]；Genie 2 (2024-12) 扩展到 3D，约 1 分钟一致性[9]；Genie 3 (2025-08-05) 720p / 24 fps real-time，官方表述可在 720p 下保持「几分钟」级一致性[10]；Project Genie (2026-01-29) 商业化为 Google AI Ultra 产品[11]。
-- **NVIDIA Cosmos**（2025-01 起）：physical AI 工具链。Predict 2.5 做未来状态预测、Transfer 2.5 做 sim-to-real 数据增强、Reason 2 提供 VLM reasoning（同时被 GR00T N1.6 / N1.7 用作 System 2 backbone，§7.2.1）；与 Isaac Sim / GR00T 形成完整 stack[12]。
+这个方向的风险也更直接：如果 World Model 生成的视频看起来合理，但对动作不敏感，那么它给 policy 的评估分数不可靠。WoVR 把 action faithfulness 和长时序 rollout reliability 作为 simulator 能否替代真机的前提[6]。
 
-综述对当前阶段的总结：领域瓶颈已从「生成更真实视频」转向「生成在 action 因果对齐、长 horizon 物理自洽、跨视角一致、交互稳定 4 个维度上都可信的未来」[1]。
+### 7.4 近期系统
+
+2024-2026 年的工作开始把 World Model 从单个任务里的预测器做成可复用系统。Genie 系列和 NVIDIA Cosmos 是两个清晰样例。
+
+- **DeepMind Genie 系列**：Genie 1 (2024-02) 从互联网视频中学习可交互环境；Genie 2 (2024-12) 扩展到 3D；Genie 3 (2025-08-05) 官方描述为 720p / 24 fps real-time，并能保持几分钟级一致性；Project Genie (2026-01) 开始作为 Google AI Ultra 产品提供[8][9][10][11]。
+- **NVIDIA Cosmos**：Cosmos Predict 做未来状态预测，Cosmos Transfer 做 sim-to-real 数据增强，Cosmos Reason 提供 VLM reasoning；GR00T N1.6 / N1.7 使用 Cosmos-Reason2-2B 作为 System 2 reasoning backbone[12]。
+
+这些系统对应四类应用：
+
+| 应用 | World Model 提供什么 |
+|---|---|
+| 规划 | 比较多个候选动作的未来结果 |
+| 数据扩增 | 生成额外 imagined rollout 或合成演示 |
+| 离线评估 | 在部署前比较 policy / checkpoint |
+| 仿真训练 | 替代部分真机交互，降低 RL 和回归测试成本 |
+
+World Model 的难点因此不是单纯“视频更真实”。机器人需要的是未来对动作、接触关系、长时序状态和跨视角观测都可信；否则 imagined rollout 不能支撑规划、训练或评估[1]。
 
 ### References
 
