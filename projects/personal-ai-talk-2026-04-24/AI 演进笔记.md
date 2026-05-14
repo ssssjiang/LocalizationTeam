@@ -66,7 +66,7 @@ ResNet 把每个 block 的目标从直接学习 `y = F(x)`，改成学习残差 
 
 残差连接后来进入多类深网络架构。Transformer 每个 attention / FFN 子层外都有 `x + Sublayer(x)`[8]；Diffusion U-Net 也使用跨层 skip connection。CNN 的卷积和 RNN 的循环绑定具体输入结构；残差连接的作用更通用，核心是给深层网络的信息和梯度提供更短路径。
 
-CNN、RNN、ResNet 共同构成这一阶段的主线：模型先从图像和序列中学习表示，再通过残差连接支持更深网络训练。后续大模型、VLM 和生成模型换了任务形式，但仍建立在这个工程前提上。
+CNN、RNN、ResNet 共同构成这一阶段的主线：模型先从图像和序列中学习表示，再通过残差连接支持更深网络训练。第二阶段的 Transformer 与这条主线有两层关系：用 self-attention 替换 RNN 的递归结构，改善序列建模的并行性和长距离依赖；沿用 ResNet 的残差连接，使更深的序列模型可以稳定训练。
 
 ### References
 
