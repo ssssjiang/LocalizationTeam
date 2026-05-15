@@ -19,21 +19,20 @@
 | 3 Transformer / LLM | 120 min | 240 min | 重点，必须吃透                         |
 | 4 Diffusion         | 90 min  | 210 min | 思想 > 数学，按 VAE→GAN→Diffusion 谱系串 |
 | 5 VLM 与多模态理解        | 60 min  | 150 min | CLIP + LLaVA 是核心                |
-| 6 World Models 起源   | 45 min  | 120 min | V+M+C + JEPA 分歧                 |
-| 7 具身 VLA            | 120 min | 240 min | 全场命门                            |
-| 8 World Models 近期形态 | 60 min  | 195 min | Genie / Cosmos                  |
-| 9 开放问题              | 60 min  | 150 min | VLA 泛化 + 3D 重建                  |
+| 6 具身 VLA            | 150 min | 300 min | VLM → action，动作表示，连续控制          |
+| 7 World Models 近期形态 | 60 min  | 195 min | Genie / Cosmos                  |
+| 补充：开放问题             | 60 min  | 150 min | VLA 泛化 + 3D 重建                  |
 
 
-**最低总投入**：约 10.75h
-**完整投入**：约 25.25h
+**最低总投入**：约 10.5h
+**完整投入**：约 24.25h
 
 **4 晚 12h 推荐分配**：
 
 - 周一晚：§3 Transformer / LLM
-- 周二晚：§7 具身 VLA
+- 周二晚：§6 具身 VLA
 - 周三晚：§4 Diffusion + §5 VLM 与多模态理解
-- 周四晚：§2 / §6 / §8 / §9 快速补齐 + 全文串讲一次
+- 周四晚：§2 / §7 / 开放问题快速补齐 + 全文串讲一次
 
 ---
 
@@ -244,92 +243,86 @@
 
 ---
 
-# 章节 6：World Models 起源
+# 章节 6：具身 VLA
 
-### ⭐⭐⭐ 必读（45 min）
+> 学习目标：先把 **VLM → VLA** 的接口变化讲清楚，再看动作表示怎么从 token 走向 action chunk / flow matching。读模型列表前，先回答一个问题：机器人动作为什么不能只当成普通文本 token？
 
-1. **World Models interactive site**
-  [https://worldmodels.github.io/](https://worldmodels.github.io/)
-  - 先看交互式版本，再看论文。
-  - 投入：25 min
-  - 学到：VAE + RNN + Controller，什么叫 dream rollout。
-2. **Ha & Schmidhuber — World Models**
-  [https://arxiv.org/abs/1803.10122](https://arxiv.org/abs/1803.10122)
-  - 读 Abstract + Section 1 + Figure 1/2 + CarRacing 实验。
-  - 投入：20 min
-  - 学到：为什么可以在内部模型里训练 policy。
+### 资料权威性核对
 
-### ⭐⭐ 强烈建议（额外 75 min）
+| 资料 | 权威性判断 | 适合放在本章的位置 |
+| --- | --- | --- |
+| **Vision-Language-Action Models for Robotics: A Review Towards Real-World Applications** | arXiv 综述，作者来自 University of Tokyo / Oxford / UT Austin，覆盖 VLA 定义、架构、训练、数据、平台和评估；适合作为全栈框架参考，不作为单个模型指标的唯一来源。 | 主骨架：定义 VLA、梳理发展阶段、列挑战 |
+| **A Survey on Vision-Language-Action Models: An Action Tokenization Perspective** | arXiv 综述，作者来自 PKU / PKU-PsiBot Joint Lab；视角集中在 action token taxonomy，适合作为教程解释“动作怎么表示”。 | 教程核心：action token / trajectory / latent / raw action |
+| **Large VLM-based Vision-Language-Action Models for Robotic Manipulation: A Survey** | arXiv 综述，作者来自 HIT Shenzhen，聚焦 large VLM-based VLA；适合解释 VLM backbone、single-system / dual-system / hierarchical 三类结构。 | 承接 §5：VLM 怎么接到 action expert |
+| **A Pragmatic VLA Foundation Model (LingBot-VLA)** | arXiv 原始模型论文，配套公开 code、base model、benchmark data；适合作为国内公开工程路线案例，不是综述。 | 案例：Qwen2.5-VL + MoT + Flow Matching |
 
-1. **LeCun — A Path Towards Autonomous Machine Intelligence**
-  [https://openreview.net/pdf?id=BZ5a1r-kVsf](https://openreview.net/pdf?id=BZ5a1r-kVsf)
-  - 只读 Section 1 + Section 2。
-  - 投入：30 min
-  - 学到：JEPA 路线为什么强调 world model。
-2. **Meta AI — V-JEPA blog**
-  [https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/](https://ai.meta.com/blog/v-jepa-yann-lecun-ai-model-video-joint-embedding-predictive-architecture/)
-  - 官方 blog 比论文更适合入门。
-  - 投入：20 min
-  - 学到：在表示空间预测，而不是重建像素。
-3. **Runway GEN-1 paper**
-  [https://openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html](https://openaccess.thecvf.com/content/ICCV2023/html/Esser_Structure_and_Content-Guided_Video_Synthesis_with_Diffusion_Models_ICCV_2023_paper.html)
-  - 只看 Abstract + Figure 2。
-  - 投入：25 min
-  - 学到：视频生成如何从风格迁移走向 world model 叙事。
+### ⭐⭐⭐ 必读（150 min）
 
----
-
-# 章节 7：具身 VLA
-
-### ⭐⭐⭐ 必读（120 min）
-
-1. **RT-2 project page**
+1. **Vision-Language-Action Models for Robotics: A Review Towards Real-World Applications**
+  [https://arxiv.org/pdf/2510.07077](https://arxiv.org/pdf/2510.07077)
+  - 读 Abstract + Definition I.1 + Figure 1/2 + Section III。
+  - 投入：45 min
+  - 学到：VLA 的严格定义：输入视觉观测和自然语言指令，输出机器人控制命令；以及 VLA 为什么需要同时处理数据、embodiment、算力和部署问题。
+2. **A Survey on Vision-Language-Action Models: An Action Tokenization Perspective**
+  [https://arxiv.org/abs/2507.01925](https://arxiv.org/abs/2507.01925)
+  - 读 Abstract + Executive Summary + Figure 1 + action token taxonomy。
+  - 投入：40 min
+  - 学到：动作不只有 raw action，还可以是 language description、code、affordance、trajectory、goal state、latent representation、reasoning；这一篇用来支撑 §6 的教程主线。
+3. **RT-2 project page**
   [https://robotics-transformer2.github.io/](https://robotics-transformer2.github.io/)
   - 先看项目页 demo 和图，再读论文。
   - 投入：25 min
-  - 学到：VLM 如何输出机器人 action token。
-2. **OpenVLA project page**
-  [https://openvla.github.io/](https://openvla.github.io/)
-  - 看 architecture / dataset / results。
-  - 投入：25 min
-  - 学到：开源 VLA baseline 怎么训练。
-3. **openpi / π 系列**
+  - 学到：VLM 如何把机器人动作离散化成 action token。
+4. **openpi / π 系列**
   [https://github.com/Physical-Intelligence/openpi](https://github.com/Physical-Intelligence/openpi)
   - 看 README 的 model list、requirements、checkpoint table。
-  - 投入：35 min
-  - 学到：π₀、π₀-FAST、π₀.5 的公开 checkpoint 与 fine-tuning 方式。
-4. **NVIDIA Isaac-GR00T GitHub**
-  [https://github.com/NVIDIA/Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T)
-  - 看 N1.7 release / model card / license。
-  - 投入：35 min
-  - 学到：GR00T 如何把 VLM reasoning 和 action head 组合起来。
+  - 投入：40 min
+  - 学到：π₀ / π₀-FAST / π₀.5 如何用 VLM backbone + flow matching action head 表示连续动作。
 
-### ⭐⭐ 强烈建议（额外 120 min）
+### ⭐⭐ 强烈建议（额外 150 min）
 
-1. **Brohan et al. — RT-2**
+1. **Large VLM-based Vision-Language-Action Models for Robotic Manipulation: A Survey**
+  [https://arxiv.org/abs/2508.13073](https://arxiv.org/abs/2508.13073)
+  - 读 Abstract + Figure 2/3 + Section 2.1 / 2.2 + monolithic / hierarchical taxonomy。
+  - 投入：40 min
+  - 学到：VLM-based VLA 如何分成 single-system、dual-system、hierarchical；这一篇适合用来承接 §5 的 VLM。
+2. **Brohan et al. — RT-2**
   [https://arxiv.org/abs/2307.15818](https://arxiv.org/abs/2307.15818)
   - 读 Abstract + Section 1 + Figure 1/3。
   - 投入：30 min
-  - 学到：VLM → VLA 的范式定义。
-2. **Kim et al. — OpenVLA**
+  - 学到：VLM → VLA 的早期标准做法：把动作作为 token 接到语言模型输出端。
+3. **Kim et al. — OpenVLA**
   [https://arxiv.org/abs/2406.09246](https://arxiv.org/abs/2406.09246)
   - 读 Abstract + Section 1 + Section 3。
+  - 投入：25 min
+  - 学到：Open X-Embodiment + 7B VLA，为什么 OpenVLA 适合作开源 baseline。
+4. **A Pragmatic VLA Foundation Model (LingBot-VLA)**
+  [https://arxiv.org/abs/2601.18692](https://arxiv.org/abs/2601.18692)
+  - 读 Abstract + Section 4.1 + Figure 1 + 数据与评估概览。
   - 投入：30 min
-  - 学到：Open X-Embodiment + 7B VLA。
-3. **Google DeepMind — Gemini Robotics**
+  - 学到：LingBot-VLA 如何用 Qwen2.5-VL、Mixture-of-Transformers 和 Flow Matching 做连续动作建模；为什么它适合作为国内公开工程路线案例。
+5. **NVIDIA Isaac-GR00T GitHub**
+  [https://github.com/NVIDIA/Isaac-GR00T](https://github.com/NVIDIA/Isaac-GR00T)
+  - 看 N1.7 release / model card / license。
+  - 投入：25 min
+  - 学到：GR00T 如何把 VLM reasoning 和 diffusion action head 组合起来。
+
+### ⭐ 时间允许
+
+1. **Google DeepMind — Gemini Robotics**
   [https://deepmind.google/technologies/gemini-robotics/](https://deepmind.google/technologies/gemini-robotics/)
   - 看 Gemini Robotics / ER 的产品页。
   - 投入：20 min
   - 学到：VLA + embodied reasoning 双模型组合。
-4. **VLA Survey**
-  [https://arxiv.org/pdf/2510.07077](https://arxiv.org/pdf/2510.07077)
-  - 只看 taxonomy 和 open challenges。
-  - 投入：40 min
-  - 学到：VLA 当前挑战和分类。
+2. **OpenVLA project page**
+  [https://openvla.github.io/](https://openvla.github.io/)
+  - 看 architecture / dataset / results。
+  - 投入：20 min
+  - 学到：开源 VLA baseline 的训练和部署入口。
 
 ---
 
-# 章节 8：World Models 近期形态
+# 章节 7：World Models 近期形态
 
 ### ⭐⭐⭐ 必读（60 min）
 
@@ -371,11 +364,11 @@
 
 ---
 
-# 章节 9：开放问题
+# 补充：开放问题
 
 ### ⭐⭐⭐ 必读（60 min）
 
-1. **VLA Survey**
+1. **Vision-Language-Action Models for Robotics: A Review Towards Real-World Applications**
   [https://arxiv.org/pdf/2510.07077](https://arxiv.org/pdf/2510.07077)
   - 看 generalization / real-world deployment / data scaling 相关章节。
   - 投入：30 min

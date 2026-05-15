@@ -418,249 +418,188 @@ VLM 的输出仍然是文本；VLA (Vision-Language-Action) 把输出扩展到�
 
 ## 6. 延伸 1：具身 VLA （2023-2026）
 
-VLA （Vision-Language-Action） 在视觉和语言输入之外，把模型输出从文本 token 扩展为机器人动作。
+VLM 把图像和语言接到同一个模型里，输出通常还是文本。VLA (Vision-Language-Action) 把输出换成机器人动作：模型输入视觉观测和自然语言指令，直接生成控制命令[1]。
 
-- 2023 年 Google DeepMind RT-2 把 VLM fine-tune 成可输出动作的 VLA；
-- 2024-2026 年，Physical Intelligence π 系列、NVIDIA GR00T、Gemini Robotics、OpenVLA / Octo 等路线继续推进跨机器人形态泛化、开源 baseline 和产品化；
-- 国内 AgiBot World / GO-1、Galaxea G0、RynnBrain / RynnVLA、LingBot-VLA、UnifoLM-VLA-0、Xiaomi-Robotics-0 等路线跟进。
-- 
+这一步把前三条线接到机器人上：Transformer 提供序列建模骨架，VLM 提供视觉-语言表征，Diffusion / flow matching 提供连续动作轨迹的生成方式。VLA 的难点在输出侧：语义理解必须落到可执行动作上。
 
-### 6.1 VLA 进展
+### 6.1 从 VLM 到 VLA
 
-VLA 进展分两支：
+VLM 的典型形式可以写成：
 
-1. 国际线以 Google / DeepMind、Physical Intelligence、NVIDIA 等产业主线和 OpenVLA、Octo 等开源 baseline 为代表；
-2. 国内线在 2025-2026 年形成以数据集、开源权重和真机部署为中心的多条路线。
+$$p(y_{1:N} \mid I, q)$$
 
-#### 6.1.1 国际 VLA 路线
+其中 $I$ 是图像，$q$ 是文本问题或指令，$y_{1:N}$ 是文本 token。VLA 的输出变成动作序列：
 
-国际 VLA 可分为三类：
+$$p(a_{t:t+H-1} \mid o_t, l, s_t)$$
 
-1. RT-2 / Gemini Robotics 代表 Google / DeepMind 的闭源研究主线；
-2. π 系列 / GR00T 代表产业化 humanoid 主线；
-3. OpenVLA / Octo 代表开源学术和 baseline 主线。
+其中 $o_t$ 是当前视觉观测，$l$ 是语言指令，$s_t$ 是可选机器人状态，$a_{t:t+H-1}$ 是未来一段动作。这个接口变化带来 3 个差异：
 
-| Model | 机构 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 关键贡献 | 来源 |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| RT-2 | Google DeepMind | 2023-07 | dual-arm RT robot | web-scale + RT-1 | 官方模型 / 权重未开放；有第三方复现 | 将 VLM fine-tune 为 VLA | [1] |
-| Octo | UC Berkeley / Stanford 等 | 2024-05 | 多机器人 manipulation | Open X-Embodiment，约 800k robot episodes | 代码 MIT；checkpoint 公开 | 开源 generalist robot policy baseline | [2] |
-| OpenVLA | Stanford / Berkeley 等 | 2024-06 / 2025 | 多机器人 manipulation | Open X-Embodiment, 970k robot demonstrations | 代码 / 权重 MIT | 7B 开源 VLA，面向可微调部署 | [3] |
-| π 系列 | Physical Intelligence | 2024-2026 | 7 个 embodiment + open-world 场景 | π₀ 使用 ～10k hrs robot data；π₀.5 / π₀.7 继续扩展泛化 | π₀ / π₀.5 代码与 checkpoint 公开（Apache-2.0）；π₀.7 公开论文 / 报告，未见公开 checkpoint | generalist policy + flow-matching action head | [4, 5, 9] |
-| GR00T N1 | NVIDIA | 2025-03 | humanoid | open data + sim | 代码 / 权重公开；N1 / N1.5 权重偏非商用许可 | humanoid foundation model | [6] |
-| Gemini Robotics 1.5 / ER 1.5 | Google DeepMind | 2025 | ALOHA / Bi-arm Franka / Apollo humanoid 等 | multi-embodiment robot data + Motion Transfer | ER 1.5 API; Robotics 1.5 面向 select partners | VLA + embodied reasoning 双模型组合 | [7] |
-| GR00T N1.7 | NVIDIA | 2026-04-17 | humanoid | EgoScale 20,854 hrs egocentric | EA; 代码 / 权重公开，商业许可需按 NVIDIA release 条款核对 | Action Cascade dual-system + dexterity scaling law | [10] |
+- **输出可执行**：文本回答只要语义合理即可，动作必须能被机器人控制器执行；
+- **动作有频率和维度**：单臂、双臂、移动底盘、humanoid 的 action space 不同，动作还要满足控制频率；
+- **错误会进入环境**：文本错误停在屏幕上，动作错误会改变场景，下一帧观测也随之改变。
 
-**Google DeepMind RT-2 (2023-07)[1]**
+RT-2 选择把动作离散化为 LLM vocabulary 中的 token，让 VLM 在输出端生成 action token[2]。这条路线继承了 §3 的自回归 token 生成，也继承了 §5 的 VLM 视觉-语言 backbone。
 
-RT-2 (Brohan et al.， Google DeepMind 2023-07）[1] 把 VLM （PaLI-X 5B/55B / PaLM-E 12B/562B） 直接 fine-tune 成 VLA。
+### 6.2 动作表示
 
-它把机器人动作离散化为 LLM vocabulary 中的 token，使 LLM 在输出端直接生成 action token。
+动作不能只按“是否输出 raw action”来理解。Action token 综述把 VLA 中的动作表示归为 language description、code、affordance、trajectory、goal state、latent representation、raw action、reasoning 等类型[3]。这组分类适合用来读 2023-2026 年的 VLA：不同模型的差别，往往不在是否使用 VLM，而在动作被表示成什么。
 
-- **数据**：继承 PaLI-X / PaLM-E 的 web-scale pretraining，再加入 RT-1 收集的 13 个机器人、17 个月数据（～130k 任务 episode）；
-- **泛化**：对未见过的 object / instruction 做零样本执行，novel objects 上的 closed-loop success 相比 RT-1 baseline 提升 +60%；
-- **影响**：把 "VLM → fine-tune → VLA" 模式确立为后续标准（LLaVA / Qwen-VL / SigLIP 等都被尝试当 V-base）；
+| 动作表示 | 输出内容 | 适合解释的路线 |
+|---|---|---|
+| action token | 离散动作 token | RT-2[2] |
+| action chunk / trajectory | 一段未来连续动作 | OpenVLA / Octo[4][5] |
+| latent action | 中间 latent，再由 action expert 输出动作 | AgiBot GO-1 / 部分 hierarchical VLA[6] |
+| flow / diffusion action | 从噪声或 flow 生成连续动作轨迹 | π₀ / LingBot-VLA / GR00T[7][8][9] |
+| reasoning / plan | 任务分解、子目标或高层计划 | Gemini Robotics / GR00T Action Cascade[10][9] |
 
-**Physical Intelligence π 系列 （2024-2026）**
+RT-2 的 action token 做法容易和 LLM 对齐，但连续控制常需要输出多个自由度、多个时间步的动作。π₀ 直接把 action chunk 当成连续对象，用 flow matching 生成动作序列[7]；LingBot-VLA 也使用 Flow Matching 做连续动作建模[8]。§4 的生成模型方法在这里换了生成对象：从图像 latent 变成动作轨迹。
 
-Physical Intelligence （PI） 是 Sergey Levine 等创立的具身公司，主线 π₀ → π₀。5 → π₀.7: 
+### 6.3 代表路线
 
-- **π₀** （2024-10）[4]：generalist robot policy，1 个 model 跨 7 个 embodiment（Franka / UR5e / Mobile Aloha / Trossen 等），～10k hrs 真机数据训练；VLM (PaliGemma) + flow matching action head. PI 公开 demo 在洗衣 / 折叠 / 打包多场景；
-- **π₀.5** (2025-04-22)[5]: open-world generalization. 用 action knowledge transfer（从 web video + lab data 联合训练）在未训练过的 home / kitchen 场景 0-shot 表现；
-- **π₀.7** （2026-04-16）[8]：steerable robot foundation，PI 公开报告中描述为泛化能力进一步提升；具体 architecture 与训练规模待 paper release（写作时 verify）；
+2023-2026 年的 VLA 可以按“动作接口”分成 4 条路线。
 
-PI 路线使用闭源模型、大规模真机数据和 flow-matching action head；这与 RT-2 逐 token 自回归生成动作的方式不同。
+| 路线 | 代表 | 做法 | 与前文关系 |
+|---|---|---|---|
+| VLM fine-tune 成 action token policy | RT-2[2] | PaLI-X / PaLM-E 加机器人数据，输出 action token | 继承 §3 token 生成和 §5 VLM |
+| 开源 generalist policy baseline | OpenVLA / Octo[4][5] | 用 Open X-Embodiment 训练可微调 policy | 把 VLA 变成可复现 baseline |
+| VLM backbone + continuous action head | π₀ / LingBot-VLA[7][8] | VLM 编码观测和指令，flow matching 生成 action chunk | 把 §4 diffusion / flow matching 接到动作 |
+| dual-system / humanoid policy | GR00T / Gemini Robotics[9][10][11] | 慢速 VLM reasoning 负责计划，高频 action head 负责执行 | 承接 §5 VLM reasoning，并引出 §7 World Models |
 
-**NVIDIA GR00T (2025-03 → 2026-04-17)**
+**RT-2 (2023-07)** 把 PaLI-X / PaLM-E 这类 VLM fine-tune 成 VLA，动作被表示为 token 并接入语言模型输出端[2]。RT-2 的关键作用在接口：它把 web-scale 视觉语言预训练中的语义知识迁移到机器人控制任务上。
 
-NVIDIA GR00T 是 humanoid foundation model 的开放路线：
+**OpenVLA / Octo** 代表开源 baseline。OpenVLA 是 7B VLA，基于 Open X-Embodiment 的 970k robot demonstrations 训练，并提供代码和权重[4]；Octo 基于约 800k robot episodes 训练，提供 27M / 93M 两种规模的 generalist policy[5]。这类工作让 VLA 不只停留在闭源 demo，而是可以被复现、微调和对比。
 
-- **GR00T N1** （2025-03）[6]：首个开源 humanoid foundation model，dual-system（VLM 推理 + Diffusion Transformer 动作）；
-- **GR00T N1.5** （2025-06）：加入 FLARE（从人类视频学习）；
-- **GR00T N1.6** （2026-04-15）：VLM 升级到 NVIDIA Cosmos-Reason-2B；
-- **GR00T N1.7** （2026-04-17）[9]：3B 参数 "Action Cascade" = Cosmos-Reason2-2B （System 2） + 32-layer DiT （System 1）；GR00T N1.7 使用 EgoScale 数据集训练，该数据集包含 20,854 小时人类第一视角操作视频。NVIDIA 公开报告中提出 robot dexterity scaling law：当 EgoScale 训练数据从 1k 小时增加到 20k 小时时，模型在灵巧操作任务上的表现约翻倍；这说明更大规模的人类操作视频可能有助于提升 humanoid 的操作能力。
+**π₀ / LingBot-VLA** 代表 continuous action head。π₀ 使用 PaliGemma 作为 VLM backbone，并用 flow matching action head 生成动作[7]。LingBot-VLA 使用 Qwen2.5-VL、Mixture-of-Transformers 和 action expert，训练数据约 20,000 小时，来自 9 种双臂机器人配置；评估覆盖 3 个平台、每个平台 100 个任务，并公开 code、base model 和 benchmark data[8]。LingBot 适合作为国内公开路线的案例：它同时给出数据规模、训练效率和真实机器人评估三个工程维度。
 
-NVIDIA 路线强调开放 foundation model，并与 Cosmos / Isaac Sim 工具链绑定；合作厂商包括 Boston Dynamics / Agility / Figure 等 humanoid 公司。
+**GR00T / Gemini Robotics** 代表 dual-system。GR00T N1 使用 VLM 推理加 Diffusion Transformer 动作模块[9]；N1.7 的 Action Cascade 使用 Cosmos-Reason2-2B 作为 System 2，32-layer DiT 作为 System 1，并使用 EgoScale 20,854 小时第一视角数据训练[11]。Gemini Robotics 1.5 / ER 1.5 把 embodied reasoning 与 VLA policy 分开，用一个模型做空间理解、任务规划和进度估计，另一个模型负责动作执行[10]。
 
-**开源学术与 Google 后续线**
+### 6.4 数据、部署与下一步
 
-OpenVLA 与 Octo 是国际开源路线中常用的 baseline。
+VLA 在 2023-2026 年进展集中在 3 个条件上。
 
-- OpenVLA 是 7B VLA，基于 Open X-Embodiment 的 970k robot demonstrations 训练；Octo 是 open-source generalist robot policy，基于约 800k robot episodes 训练，提供 27M / 93M 两种规模[2， 3]。Google DeepMind 在 RT-2 之后公开 Gemini Robotics 1.5 / Gemini Robotics-ER 1.5：前者是 multi-embodiment VLA，后者是 embodied reasoning VLM，用于空间理解、任务规划和进度估计[7]。
+- **VLM backbone 可复用**：RT-2、OpenVLA、π₀、LingBot-VLA 都复用已有 VLM 或 LLM-VLM backbone，再用机器人数据把输出接到动作上[2][4][7][8]；
+- **机器人数据规模上升**：OpenVLA 使用 970k demonstrations[4]，π₀ 使用约 10k 小时机器人数据[7]，LingBot-VLA 使用约 20,000 小时真实机器人数据[8]，GR00T N1.7 使用 EgoScale 20,854 小时第一视角数据[11]；
+- **动作生成从 token 转向连续轨迹**：flow matching / diffusion action head 被用于生成 action chunk，减少逐 token 输出对连续控制的限制[7][8][9]。
 
-- π₀.7 （2026-04-16） 是 PI 当前主线，是否取代 π₀ 作为 default baseline 待后续 paper / release 明确
-
-#### 6.1.2 国内 VLA 路线
-
-国内 VLA / 具身 foundation model 在 2025-2026 年形成多条公开路线。
-
-| Model | 公司 / 团队 | Release | Robot / 场景 | 数据 / 训练特点 | 公开状态 | 来源 |
-| --- | --- | --- | --- | --- | --- | --- |
-| AgiBot GO-1 | 智元 | 2025-03-10 | 多形态机器人 | AgiBot World：1M+ trajectories，217 个任务 | 代码 / 数据 / GO-1 权重公开；权重 CC BY-NC-SA 4.0 | [11] |
-| Galaxea G0 | 星海图 Galaxea | 2025-09 | 移动双臂操作 | Galaxea Open-World Dataset：500 小时、50 个场景、150+ 任务 | 数据 / 模型公开；G0-VLA CC BY-NC-SA 4.0，G0Plus 为非商用社区许可 | [12] |
-| RynnBrain / RynnVLA | 阿里达摩院 | 2026-02 / 2025-11 | embodied foundation / LIBERO + LeRobot | RynnBrain 含 2B / 8B / 30B-A3B MoE；RynnVLA-002 统一 VLA 与 world model | 代码 / checkpoint Apache-2.0 | [13, 14] |
-| LingBot-VLA | 蚂蚁 / Robbyant | 2026-01 | 9 种双臂机器人配置 | 约 20,000 小时真实机器人数据；评估覆盖 3 个平台、100 个任务 | 代码 / 4B 权重 / benchmark data 公开，Apache-2.0 | [15] |
-| UnifoLM-VLA-0 | 宇树 | 2026-01-29 | G1 humanoid | 基于 Qwen2.5-VL-7B，面向 12 类操作任务 | 代码 BSD-3-Clause；权重 CC BY-NC-SA 4.0 | [16] |
-| Xiaomi-Robotics-0 | 小米机器人 | 2026-02 | 双臂实时控制 | 4.7B VLA; 约 200M robot timesteps + 80M vision-language samples | 代码 / checkpoint Apache-2.0 | [17] |
-
-**智元 AgiBot GO-1 （2025-03-10）[11]**
-
-GO-1 是智元 （AgiBot） 的 ViLLA （Vision-Language-Latent-Action） 架构。它不直接生成动作 token，而是在 latent space 中做中间规划，再由 action expert 输出动作：
-
-- **架构**：MoE + Latent Planner + Action Expert 三件套，在 latent space 做 planning，而不是直接生成 action token；
-- **训练数据**：AgiBot World 数据集，1M+ trajectories，217 个任务；公开材料将其定位为大规模 robotic learning platform；
-- **性能**：平均成功率 46% → 78%（vs GO-1 之前 baseline）；
-
-**宇树 UnifoLM-VLA-0 （2026-01-29）[16]**
-
-UnifoLM-VLA-0 是宇树为 G1 humanoid 设计的 VLA：
-
-- **Backbone**：基于阿里 Qwen2.5-VL-7B（国内 VLA 直接复用 Qwen 系列 VLM 的代表案例）；
-- **任务**：单一 policy 在 G1 上完成 12 类操作（开闭抽屉 / 插拔 / 抓放 / 工具使用）；
-- **公开状态**：UnifoLM-VLA-Base 已在 Hugging Face 公开；任务侧聚焦 G1 humanoid 操作；
-
-### 6.2 VLA 融合方向
-
-VLA 与其他范式的融合主要沿两条方向展开：与 reasoning model 融合形成 dual-system 架构，与 World Models 融合形成 dream-based training。前者处理 long-horizon 任务规划，后者补充真机数据不足。
-
-#### 6.2.1 VLA + 推理融合
-
-VLA + reasoning 融合的核心模式是 dual-system：System 1 是高频动作 policy，负责实时控制；System 2 是慢速 reasoning LLM，负责拆解任务和规划步骤。两者协同处理 long-horizon / 多步任务。
-
-**Reasoning model 介绍**
-
-Reasoning model 把 chain-of-thought 推理训练成模型能力，而不是只依赖外部 prompt-engineering。
-
-代表工作包括 OpenAI o1 （2024-09）[18] / o3 （2025-04） / DeepSeek R1 （2025-01）[19] / DeepSeek R2 （2026-04，32B dense 单 24GB GPU 可跑）。
-
-这些模型在 AIME / GPQA / Codeforces 等 multi-step 推理 benchmark 上明显超过同期 GPT-4 / GPT-5 base。
-
-**Dual-system 三个实例**
-
-- **Figure Helix System 1+2** ( 2026-01) [8]: 
-  - 三级架构包括 System 0 实时平衡 （1 kHz）、System 1 视觉运动 （200 Hz， VLA policy）、System 2 高层推理 （LLM reasoning）；
-  - 公开报告中明确借鉴 Kahneman 快 / 慢思考二系统；
-  - 2026-01 的 4 分钟连续洗碗机自主 demo 由该架构实现；
-- **π₀.5 reasoning version** (2025-04-22)[5]: 
-  - π₀.5 在 base policy 之外集成 reasoning 模块；
-  - LLM 先把当前 task 拆成 sub-task，再交由 base policy 执行；
-- **GR00T N1.7 Action Cascade** ( NVIDIA 2026-04-17) [10]: 
-  - System 2 使用 Cosmos-Reason2-2B（NVIDIA 自家 reasoning VLM，详见 §7.4 Cosmos），System 1 使用 32-layer Diffusion Transformer；
-  - "Action Cascade" 指 reasoning 输出的 plan 会级联到 DiT action 生成；
-
-**关键挑战**
-
-- **System 1/2 latency 协调**：
-  - System 2 LLM 推理 ～秒级延迟，System 1 控制 ～10 ms；
-  - 协调机制（event-triggered / 周期性 / 异步并行）直接影响系统响应
-- **Long-horizon planning**：System 2 输出的 plan 在 System 1 执行过程中可能偏离，何时重 plan 是开放问题；
-- **Plan ↔ action 接口形式**：language token / latent vector / sub-task list，当前各家 design choice 不同，尚无统一接口；
-
-#### 6.2.2 VLA + World Models 融合
-
-VLA 与 World Models 的关系在 §7 展开：World Model 可以辅助选择动作，也可以作为 simulator 替代部分真机交互，用于 RL 训练或离线评估[20]。当前公开报告中可见的具体结合点包括：sim-to-real data augmentation（NVIDIA Cosmos Transfer 用于 GR00T N1.7 训练[10]）、把 future prediction 作为辅助 loss（GR-1 / WorldVLA / UniVLA 等[20]）、dream-based RL 训练（综述 §4.1[20]）。
+VLA 仍然是从当前观测直接输出动作。长任务中，当前动作会改变后续观测，错误会沿时间累积；如果 policy 不能先比较候选动作的未来后果，就只能依赖训练中见过的模式。§7 的 World Models 讨论的就是下一步：在执行前先预测未来，再用未来结果辅助 policy 选动作。
 
 ### References
 
-- [1] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
-- [2] Octo Model Team, Octo: An Open-Source Generalist Robot Policy, arXiv 2024. arXiv:2405.12213; GitHub: github.com/octo-models/octo; Project: octo-models.github.io
-- [3] Kim et al., OpenVLA: An Open-Source Vision-Language-Action Model, CoRL 2024 / PMLR 2025. arXiv:2406.09246; GitHub: github.com/openvla/openvla; Hugging Face: huggingface.co/openvla/openvla-7b
-- [4] Black et al. (Physical Intelligence), π₀: A Vision-Language-Action Flow Model for General Robot Control, arXiv 2024. arXiv:2410.24164; GitHub: github.com/Physical-Intelligence/openpi (Apache-2.0)
-- [5] Physical Intelligence, π₀.5 release, physicalintelligence.company/blog/pi05 2025-04-22; GitHub: github.com/Physical-Intelligence/openpi (Apache-2.0)
-- [6] NVIDIA, GR00T N1 release, developer.nvidia.com 2025-03; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/nvidia/GR00T-N1-2B
-- [7] Google DeepMind, Gemini Robotics 1.5: Pushing the Frontier of Generalist Robots with Advanced Embodied Reasoning, Thinking, and Motion Transfer, technical report 2025; deepmind.google/models/gemini-robotics
-- [8] Figure AI, Helix 02 release, figure.ai/news/helix 2026-01.
-- [9] Physical Intelligence, π₀.7 release, physicalintelligence.company/blog/pi07 2026-04-16.
-- [10] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/collections/nvidia/gr00t-n17
-- [11] AgiBot， GO-1 + AgiBot World 数据集 release， agibot.com 2025-03-10； GitHub: github.com/OpenDriveLab/Agibot-World; Hugging Face: huggingface.co/agibot-world/GO-1
-- [12] Galaxea, Galaxea Open-World Dataset and G0 Dual-System VLA Model, arXiv 2025. arXiv:2509.00576; GitHub: github.com/OpenGalaxea/GalaxeaVLA; Hugging Face: huggingface.co/OpenGalaxea/G0-VLA
-- [13] Alibaba DAMO Academy, RynnBrain: Open Embodied Foundation Models, arXiv 2026. arXiv:2602.14979; GitHub: github.com/alibaba-damo-academy/RynnBrain
-- [14] Alibaba DAMO Academy, RynnVLA-002: A Unified Vision-Language-Action and World Model, GitHub: github.com/alibaba-damo-academy/RynnVLA-002; Hugging Face: hf.co/Alibaba-DAMO-Academy/RynnVLA-002
-- [15] Robbyant, A Pragmatic VLA Foundation Model (LingBot-VLA), arXiv 2026. arXiv:2601.18692; GitHub: github.com/Robbyant/lingbot-vla; Hugging Face: hf.co/robbyant/lingbot-vla-4b
-- [16] Unitree, UnifoLM-VLA-0 release, unitree.com 2026-01-29; GitHub: github.com/unitreerobotics/unifolm-vla; Hugging Face: huggingface.co/unitreerobotics/UnifoLM-VLA-Base
-- [17] Xiaomi Robotics, Xiaomi-Robotics-0: An Open-Sourced Vision-Language-Action Model with Real-Time Execution, arXiv 2026. arXiv:2602.12684; GitHub: github.com/XiaomiRobotics/Xiaomi-Robotics-0; Hugging Face: huggingface.co/XiaomiRobotics/Xiaomi-Robotics-0-Pretrain
-- [18] OpenAI, o1 system card, openai.com/index/learning-to-reason-with-llms 2024-09-12.
-- [19] DeepSeek, DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning, arXiv 2025. arXiv:2501.12948
-- [20] NTU MARS et al., World Model for Robot Learning: A Comprehensive Survey, arXiv 2026. arXiv:2605.00080v1
+- [1] Kawaharazuka et al., Vision-Language-Action Models for Robotics: A Review Towards Real-World Applications, arXiv 2025. arXiv:2510.07077
+- [2] Brohan et al., RT-2: Vision-Language-Action Models Transfer Web Knowledge to Robotic Control, arXiv 2023. arXiv:2307.15818
+- [3] Zhong et al., A Survey on Vision-Language-Action Models: An Action Tokenization Perspective, arXiv 2025. arXiv:2507.01925
+- [4] Kim et al., OpenVLA: An Open-Source Vision-Language-Action Model, CoRL 2024 / PMLR 2025. arXiv:2406.09246; GitHub: github.com/openvla/openvla; Hugging Face: huggingface.co/openvla/openvla-7b
+- [5] Octo Model Team, Octo: An Open-Source Generalist Robot Policy, arXiv 2024. arXiv:2405.12213; GitHub: github.com/octo-models/octo; Project: octo-models.github.io
+- [6] AgiBot， GO-1 + AgiBot World 数据集 release， agibot.com 2025-03-10； GitHub: github.com/OpenDriveLab/Agibot-World; Hugging Face: huggingface.co/agibot-world/GO-1
+- [7] Black et al. (Physical Intelligence), π₀: A Vision-Language-Action Flow Model for General Robot Control, arXiv 2024. arXiv:2410.24164; GitHub: github.com/Physical-Intelligence/openpi (Apache-2.0)
+- [8] Robbyant, A Pragmatic VLA Foundation Model (LingBot-VLA), arXiv 2026. arXiv:2601.18692; GitHub: github.com/Robbyant/lingbot-vla; Hugging Face: hf.co/robbyant/lingbot-vla-4b
+- [9] NVIDIA, GR00T N1 release, developer.nvidia.com 2025-03; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/nvidia/GR00T-N1-2B
+- [10] Google DeepMind, Gemini Robotics 1.5: Pushing the Frontier of Generalist Robots with Advanced Embodied Reasoning, Thinking, and Motion Transfer, technical report 2025; deepmind.google/models/gemini-robotics
+- [11] NVIDIA, GR00T N1.7: Action Cascade and EgoScale, huggingface.co/blog/nvidia/gr00t-n1-7 2026-04-17; GitHub: github.com/NVIDIA/Isaac-GR00T; Hugging Face: huggingface.co/collections/nvidia/gr00t-n17
 
 ---
 
-## 7. 延伸 2：World Models 近期形态（2024-2026）
+## 7. 延伸 2：World Models 范式与近期形态 （2024-2026）
 
-§6 的 VLA 从当前观测和语言指令直接输出动作。World Model 多了一步：在动作执行前，先预测候选动作会把世界带到什么状态。它把 §4 的视频生成、§5 的视觉语言表征和 §6 的动作策略接到同一个问题上：未来是否会按动作发生变化。
+VLA 从当前观测和语言指令直接输出动作；World Model 多做一步预测：给定当前观测和候选动作，先估计未来观测，再让 policy 基于这个未来做决策[1]。它和普通视频生成的差别在动作条件：同一张当前画面下，向左移动和向右移动应该得到不同的未来。
 
-本节的 World Model 指 **action-conditioned** 的未来预测器：输入当前观测、候选动作和可选语言指令，输出未来观测。视频是否真实仍然重要，但机器人任务还要求未来对动作敏感；同一画面下，向左移动和向右移动应得到不同的未来。
+这条线接在前面几章之后：Diffusion 提供生成连续视觉序列的能力，VLM 提供视觉和语言表征，VLA 提供动作输出；World Model 把未来视觉序列和动作后果连在一起。机器人真机数据贵、长任务容易累积误差，预测未来因此成为 planning、数据扩增和离线评估的共同工具。
 
-### 7.1 VLA 还缺少未来预测
+### 7.1 定义
 
-纯 VLA 通常学习：
-
-$$\pi(a_{t:t+H-1} \mid o_t, l)$$
-
-其中 `o_t` 是当前观测，`l` 是语言指令，输出是一段动作。这个形式适合短链路反应，但长任务会遇到三个问题：动作执行后才知道后果；多步动作里哪一步导致失败不容易归因；前几步的小误差会把后续状态带到训练数据较少覆盖的区域[1]。
-
-World Model 学的是另一个条件分布：
+World Model 在本节指 **action-conditioned** 的视觉 / 状态预测器：
 
 $$p(o_{t+1:t+H} \mid o_t, a_{t:t+H-1}, l)$$
 
-这个分布回答的是“如果执行这串动作，接下来会看到什么”。它可以在动作执行前比较多个候选动作，也可以为 policy 生成额外的训练轨迹[1]。
+其中 $o_t$ 是当前观测，$a_{t:t+H-1}$ 是候选动作序列，$l$ 是可选语言指令，$o_{t+1:t+H}$ 是未来观测。普通视频生成更接近 $p(o_{t+1:t+H} \mid o_t, l)$：它可以生成看起来合理的未来，但没有显式动作输入。机器人 policy 评估需要的是前者；如果动作换了，预测出的未来不变，这个模型就不能判断哪个动作更好[1]。
 
-| 模型 | 输入 | 输出 | 直接用途 |
-|---|---|---|---|
-| VLA policy | 当前观测 + 指令 | 动作 | 执行 |
-| World Model | 当前观测 + 候选动作 + 指令 | 未来观测 | 预测后果 |
-| Simulator 用 World Model | 当前观测 + 动作 | 未来观测 + reward / done | 训练或评估 policy |
+World Model 和 policy 的关系可以从一个联合分布看起：
 
-### 7.2 视频生成到 World Model
+$$p(o_{t+1:t+H}, a_{t:t+H-1} \mid o_t, l)$$
 
-Sora、Stable Video Diffusion 这类视频模型可以生成连贯视频，但如果输入里没有动作，模型只是在视频分布里续写未来。综述把这类模型称为 passive world model：它可以预测“接下来可能发生什么”，但不能保证“换一个动作后未来跟着变”[1]。
+不同方法的差别在于怎么拆这个联合分布：先生成未来再反推动作，还是把未来和动作放进同一个生成过程，或者只在 latent 表征里预测未来。
 
-机器人里的 World Model 需要把动作放进条件里。动作条件化可以落在像素、视频 latent 或语义表征上：
+### 7.2 五种范式
 
-| 预测对象 | 形式 | 用途 | 代表 |
-|---|---|---|---|
-| 像素 / 视频 latent | 生成未来帧或未来视频 | 规划、可视化、评估候选动作 | UniPi[2] |
-| 视频 + 动作联合表示 | 同一个生成过程同时处理未来画面和动作 | 把视频生成与动作生成放在一个 backbone 内 | Cosmos Policy[3] |
-| 表征空间 | 预测未来 embedding，不解码图像 | 降低像素生成开销，把预测信号直接给 control 用 | VLA-JEPA[4] |
+综述把 World Model 与 policy 的组合方式分成 5 类[1]。这 5 类可以按“模型之间怎么分工”来读。
 
-从实现上看，这里会用到前几章已经出现的模块：Diffusion 提供视频生成器，Transformer / DiT 提供序列建模，VLM 提供视觉语言表征，VLA 提供动作序列。不同之处在于条件里显式包含动作：未来不只由文本或当前图像决定，还要由候选动作决定。
+#### 7.2.1 IDM-style：先想象再行动
 
-### 7.3 三种用法
-
-World Model 在机器人系统里有三类用法。它可以放在 policy 旁边辅助决策，也可以和 policy 合在同一个模型里，还可以单独作为训练环境或评估环境。
-
-| 用法 | 做法 | 代表 |
-|---|---|---|
-| 先预测未来，再选动作 | 先生成候选未来，再由 IDM 或 policy 选择动作 | UniPi[2] |
-| 未来和动作一起生成 | 将未来视觉表示和未来动作放在同一个生成过程里 | Cosmos Policy[3] |
-| 当作 simulator | 用 imagined rollout 做 RL、policy ranking 或离线评估 | WMPO[5] / WoVR[6] / WorldEval[7] |
-
-UniPi 的形式可以写成两步采样：先生成未来观测，再从未来观测反推出动作[2]。
+IDM-style 使用两个模型。World Model 先生成未来画面，Inverse Dynamics Model (IDM) 再根据当前画面和未来画面反推出动作[1]：
 
 $$p(o, a \mid o_t, l) = p(o \mid o_t, l)\,p(a \mid o, o_t)$$
 
-Simulator 用法还需要预测 reward 或任务完成信号。policy 在 imagined environment 里最大化回报：
+UniPi 是这条路线的代表：语言指令先生成未来视频，再由 inverse dynamics 推出可执行动作[2]。这个做法把 §4 的视频生成能力接到 policy 上，但它依赖生成视频的可执行性；如果生成的视频物理上不可执行，IDM 推出的动作也会失效。
 
-$$J(\theta) = \mathbb{E}_{\hat{\tau} \sim (\pi_\theta, p_\phi)}\left[\sum_t \gamma^t \hat{r}_t\right]$$
+#### 7.2.2 Single-backbone：联合生成
 
-这个方向的风险也更直接：如果 World Model 生成的视频看起来合理，但对动作不敏感，那么它给 policy 的评估分数不可靠。WoVR 把 action faithfulness 和长时序 rollout reliability 作为 simulator 能否替代真机的前提[6]。
+Single-backbone 不把 World Model 和 policy 拆成两个模型，而是用一个 backbone 同时生成未来视觉表示和动作。未来视频 latent 与未来动作拼成一个目标向量：
 
-### 7.4 近期系统
+$$x = [z_v; z_a]$$
 
-2024-2026 年的工作开始把 World Model 从单个任务里的预测器做成可复用系统。Genie 系列和 NVIDIA Cosmos 是两个清晰样例。
+模型在同一个去噪过程里更新 $z_v$ 和 $z_a$[1]。Cosmos Policy 属于这一类[3]。这条路线的好处是视觉未来和动作在同一个模型里协调；代价是训练目标更重，模型需要同时学会视频预测和动作生成。
 
-- **DeepMind Genie 系列**：Genie 1 (2024-02) 从互联网视频中学习可交互环境；Genie 2 (2024-12) 扩展到 3D；Genie 3 (2025-08-05) 官方描述为 720p / 24 fps real-time，并能保持几分钟级一致性；Project Genie (2026-01) 开始作为 Google AI Ultra 产品提供[8][9][10][11]。
-- **NVIDIA Cosmos**：Cosmos Predict 做未来状态预测，Cosmos Transfer 做 sim-to-real 数据增强，Cosmos Reason 提供 VLM reasoning；GR00T N1.6 / N1.7 使用 Cosmos-Reason2-2B 作为 System 2 reasoning backbone[12]。
+#### 7.2.3 MoE / MoT：专家分工
 
-这些系统对应四类应用：
+MoE / MoT 保留专家分工：视觉、动作、时序或任务条件可以由不同专家处理，再通过 attention 或 routing 交换信息[1]。这类方法不要求一个模块同时承担所有工作，也不完全拆成独立模型。
 
-| 应用 | World Model 提供什么 |
-|---|---|
-| 规划 | 比较多个候选动作的未来结果 |
-| 数据扩增 | 生成额外 imagined rollout 或合成演示 |
-| 离线评估 | 在部署前比较 policy / checkpoint |
-| 仿真训练 | 替代部分真机交互，降低 RL 和回归测试成本 |
+它适合处理多形体或多任务场景。机器人手臂、移动底盘和 humanoid 的动作空间不同，但部分视觉和语言表征可以共享；专家分工给这些差异留下空间。
 
-World Model 的难点因此不是单纯“视频更真实”。机器人需要的是未来对动作、接触关系、长时序状态和跨视角观测都可信；否则 imagined rollout 不能支撑规划、训练或评估[1]。
+#### 7.2.4 Unified VLA：预测未来作为训练约束
+
+Unified VLA 仍以 policy 为主：模型直接输出动作，但训练时加入未来预测任务[1]。推理时它不一定真的生成未来视频；未来预测更多用于约束中间表征，使视觉、语言和动作表示包含后续状态信息。
+
+这类方法适合不希望推理变慢的场景。policy 保持单次前向输出动作，训练阶段用 future prediction 补充监督信号。
+
+#### 7.2.5 Latent-space WM：表征空间预测
+
+Latent-space WM 不预测像素，也不一定预测视频 latent，而是预测未来观测的 embedding[1]。VLA-JEPA 是这条路线的代表[4]。
+
+这条路线和 §5 的 VLM 表征更接近：对控制来说，未来“语义状态”有时比未来“长什么样”更有用。机器人要判断杯子是否会被推倒、目标是否会靠近夹爪，不一定需要还原每个像素；它需要的是能支持动作选择的状态表示。
+
+5 种范式对照如下：
+
+| 范式 | 做法 | 推理时是否生成未来 | 代表作 |
+|---|---|---|---|
+| IDM-style | 先生成未来，再反推动作 | 是 | UniPi[2] |
+| Single-backbone | 一个 backbone 联合生成视觉未来和动作 | 看具体实现 | Cosmos Policy[3] |
+| MoE / MoT | 不同专家处理视觉、动作或时序 | 看具体实现 | Motus[1] / GE-Act[1] |
+| Unified VLA | policy 主干中加入未来预测训练 | 通常不生成 | GR-1[1] / WorldVLA[1] |
+| Latent-space WM | 预测未来 embedding | 不生成像素 | VLA-JEPA[4] |
+
+<!-- REVIEW: 此处建议补 Survey arXiv:2605.00080v1 Fig. 3 (5 种范式的架构对比图)，截到 images/world-model_5paradigms_from-survey2605.png -->
+
+### 7.3 作为 simulator
+
+上面 5 种范式讨论的是 World Model 怎么接进 policy。另一类用法是把 World Model 当环境：policy 不在真机上试错，而是在 World Model 里 rollout、拿到 reward 或候选结果，再更新或筛选动作[1]。
+
+| 用法 | World Model 提供什么 | 代表 |
+|---|---|---|
+| RL 训练 | imagined transition、reward、done signal | WMPO[5] / WoVR[6] |
+| 候选动作打分 | 多个动作序列的未来 rollout | IRASim / World-in-World[1] |
+| policy 评估 | 不同 checkpoint 的离线对比 | WorldEval[7] |
+
+这类用法对 **action faithfulness** 要求更高。若 World Model 预测的未来不随动作变化，评估信号会失效：所有候选动作都可能得到相似的“成功未来”。WoVR 因此把 policy rollout 反过来加入 World Model 更新，让 simulator 和 policy 交替改进[6]。
+
+<!-- REVIEW: 此处建议补 Survey arXiv:2605.00080v1 Fig. 5 (WM as RL vs Evaluation 双角色图)，截到 images/world-model_2roles_from-survey2605.png -->
+
+### 7.4 应用与近期形态
+
+World Model 的应用集中在 4 类：
+
+| 应用 | 做什么 | 价值 |
+|---|---|---|
+| Planning | 生成候选未来，辅助选动作 | 执行前先比较后果 |
+| Data | 生成 imagined rollout 或演示 | 减少真机采集 |
+| RL | 在 imagined environment 中训练 | 降低试错成本 |
+| Evaluation | 离线比较 policy / checkpoint | 减少真机评测次数 |
+
+近期代表主要有两条：
+
+- **DeepMind Genie 系列**：Genie 1 (2024-02) 生成 2D platform-style 可交互环境[8]；Genie 2 (2024-12) 扩展到 3D 并保持约 1 分钟一致性[9]；Genie 3 (2025-08-05) 官方描述为 720p / 24 fps real-time，并可保持“几分钟”级一致性[10]。
+- **NVIDIA Cosmos**（2025-01 起）：Predict 2.5 做未来状态预测，Transfer 2.5 做 sim-to-real 数据增强，Reason 2 提供 VLM reasoning；GR00T N1.6 / N1.7 使用 Cosmos-Reason2 作为 System 2 backbone（§6.2.1）[11]。
+
+World Model 的难点不在“视频更真实”这一项。机器人需要的是动作因果对齐、长时序物理自洽、跨视角一致和交互稳定；这些性质决定预测结果能不能用于 policy 训练和评估[1]。
 
 ### References
 
@@ -674,5 +613,4 @@ World Model 的难点因此不是单纯“视频更真实”。机器人需要�
 - [8] Bruce et al., Genie: Generative Interactive Environments, ICML 2024. arXiv:2402.15391
 - [9] DeepMind, Genie 2: A large-scale foundation world model, deepmind.google 2024-12.
 - [10] DeepMind, Genie 3: A new frontier for world models, deepmind.google/en/blog/genie-3 2025-08-05.
-- [11] DeepMind, Project Genie + Google AI Ultra release, deepmind.google 2026-01-29.
-- [12] NVIDIA, Advancing Physical AI with Cosmos 2.5 + Reason2, developer.nvidia.com/blog 2026-04.
+- [11] NVIDIA, Advancing Physical AI with Cosmos 2.5 + Reason2, developer.nvidia.com/blog 2026-04.
