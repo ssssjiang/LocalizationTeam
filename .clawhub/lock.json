@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "openclaw-tavily-search": {
+      "version": "0.1.0",
+      "installedAt": 1773143554833
+    },
+    "xiucheng-self-improving-agent": {
+      "version": "1.0.0",
+      "installedAt": 1773143659211
+    },
+    "find-skills-skill": {
+      "version": "1.0.0",
+      "installedAt": 1773143774424
+    },
+    "proactive-agent-lite": {
+      "version": "1.0.0",
+      "installedAt": 1773143954125
+    },
+    "skill-vetter": {
+      "version": "1.0.0",
+      "installedAt": 1773144195671
+    },
+    "ai-humanizer": {
+      "version": "2.1.0",
+      "installedAt": 1773144201410
+    }
+  }
+}
