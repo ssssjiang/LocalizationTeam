@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <pattern id="rowGapHatch" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
+      <rect width="8" height="8" fill="#ffcccc"/>
+      <line x1="0" y1="0" x2="0" y2="8" stroke="#e53935" stroke-width="2"/>
+    </pattern>
+    <pattern id="turnMissHatch" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(-45)">
+      <rect width="6" height="6" fill="#ffcdd2"/>
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#c62828" stroke-width="1.5"/>
+    </pattern>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <text x="400" y="32" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#222">定量漏割示意图（10×10m 弓字割草）</text>
+
+  <rect x="60" y="55" width="420" height="420" fill="#fafafa" stroke="#222" stroke-width="2.5"/>
+  <text x="270" y="48" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#444">10 m</text>
+  <text x="42" y="270" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#444" transform="rotate(-90 42 270)">10 m</text>
+  <text x="270" y="495" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#666">草坪边界</text>
+
+  <g id="coverage-bands" opacity="0.55">
+    <rect x="95" y="93" width="340" height="44" fill="#a5d6a7" stroke="#66bb6a" stroke-width="0.5"/>
+    <rect x="95" y="163" width="340" height="44" fill="#a5d6a7" stroke="#66bb6a" stroke-width="0.5"/>
+    <rect x="95" y="233" width="340" height="44" fill="#a5d6a7" stroke="#66bb6a" stroke-width="0.5"/>
+    <rect x="95" y="303" width="340" height="44" fill="#a5d6a7" stroke="#66bb6a" stroke-width="0.5"/>
+    <rect x="95" y="373" width="340" height="44" fill="#a5d6a7" stroke="#66bb6a" stroke-width="0.5"/>
+  </g>
+
+  <rect x="95" y="207" width="340" height="26" fill="url(#rowGapHatch)" stroke="#e53935" stroke-width="1.2" stroke-dasharray="4,2"/>
+  <text x="270" y="224" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#b71c1c" font-weight="bold">行间漏割带</text>
+
+  <path d="M 455,93 L 475,93 L 475,137 L 445,137 L 445,163 L 468,163 L 468,207 L 438,207 L 438,233 L 472,233 L 472,277 L 442,277 L 442,303 L 465,303 L 465,347 L 435,347 L 435,373 L 460,373 L 460,417 L 455,417 Z"
+        fill="url(#turnMissHatch)" stroke="#c62828" stroke-width="1.2" opacity="0.85"/>
+  <text x="458" y="255" font-family="sans-serif" font-size="10" fill="#b71c1c" font-weight="bold" transform="rotate(90 458 255)">调头漏割带</text>
+
+  <g id="path-lines" fill="none" stroke="#222" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 110,115 L 455,115"/>
+    <path d="M 455,115 Q 478,115 478,150 Q 478,185 455,185"/>
+    <path d="M 455,185 L 110,185"/>
+    <path d="M 110,185 Q 87,185 87,220 Q 87,255 110,255"/>
+    <path d="M 110,255 L 438,255"/>
+    <path d="M 438,255 Q 461,255 461,290 Q 461,325 438,325"/>
+    <path d="M 438,325 L 110,325"/>
+    <path d="M 110,325 Q 87,325 87,360 Q 87,395 110,395"/>
+    <path d="M 110,395 L 460,395"/>
+  </g>
+
+  <g id="endpoints" fill="#1565c0">
+    <circle cx="455" cy="115" r="4"/>
+    <circle cx="455" cy="185" r="4"/>
+    <circle cx="438" cy="255" r="4"/>
+    <circle cx="438" cy="325" r="4"/>
+    <circle cx="460" cy="395" r="4"/>
+  </g>
+  <line x1="480" y1="93" x2="480" y2="417" stroke="#1565c0" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="492" y="110" font-family="sans-serif" font-size="9" fill="#1565c0">最长端头</text>
+  <text x="492" y="400" font-family="sans-serif" font-size="9" fill="#1565c0">最短端头</text>
+
+  <line x1="520" y1="185" x2="520" y2="255" stroke="#333" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="535" y="225" font-family="sans-serif" font-size="11" fill="#333">弓字间距</text>
+
+  <line x1="30" y1="163" x2="30" y2="207" stroke="#2e7d32" stroke-width="1.2" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="18" y="190" font-family="sans-serif" font-size="10" fill="#2e7d32" transform="rotate(-90 18 190)">刀盘宽度 w</text>
+  <text x="18" y="205" font-family="sans-serif" font-size="9" fill="#2e7d32" transform="rotate(-90 18 205)">(20 cm)</text>
+
+  <rect x="510" y="55" width="270" height="95" fill="#fff8e1" stroke="#ffb300" stroke-width="1.2" rx="6"/>
+  <text x="520" y="78" font-family="sans-serif" font-size="12" fill="#333" font-weight="bold">行间漏割</text>
+  <text x="520" y="98" font-family="sans-serif" font-size="11" fill="#333">= 弓字间距 − 刀盘宽度 w</text>
+  <text x="520" y="118" font-family="sans-serif" font-size="10" fill="#666">（相邻覆盖带之间的窄条）</text>
+  <text x="520" y="138" font-family="sans-serif" font-size="10" fill="#666">例：间距 30cm − w 20cm = 10cm</text>
+
+  <rect x="510" y="165" width="270" height="95" fill="#ffebee" stroke="#e53935" stroke-width="1.2" rx="6"/>
+  <text x="520" y="188" font-family="sans-serif" font-size="12" fill="#333" font-weight="bold">调头漏割</text>
+  <text x="520" y="208" font-family="sans-serif" font-size="11" fill="#333">= 最长端头距边界 − 最短端头距边界</text>
+  <text x="520" y="228" font-family="sans-serif" font-size="10" fill="#666">（端头参差不齐，沿边界锯齿带）</text>
+  <text x="520" y="248" font-family="sans-serif" font-size="10" fill="#666">例：最长 5cm − 最短 1cm = 4cm</text>
+
+  <rect x="510" y="285" width="270" height="175" fill="#fff" stroke="#999" stroke-width="1" rx="6"/>
+  <text x="645" y="308" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#222" font-weight="bold">图例</text>
+
+  <line x1="525" y1="328" x2="565" y2="328" stroke="#222" stroke-width="2"/>
+  <text x="575" y="332" font-family="sans-serif" font-size="11" fill="#333">弓字路径线（中心线 + U 形调头）</text>
+
+  <rect x="525" y="342" width="40" height="14" fill="#a5d6a7" opacity="0.7" stroke="#66bb6a" stroke-width="0.5"/>
+  <text x="575" y="354" font-family="sans-serif" font-size="11" fill="#333">刀盘覆盖带（宽度 w = 20 cm）</text>
+
+  <rect x="525" y="366" width="40" height="14" fill="url(#rowGapHatch)" stroke="#e53935" stroke-width="0.8"/>
+  <text x="575" y="378" font-family="sans-serif" font-size="11" fill="#333">行间漏割带</text>
+
+  <rect x="525" y="390" width="40" height="14" fill="url(#turnMissHatch)" stroke="#c62828" stroke-width="0.8"/>
+  <text x="575" y="402" font-family="sans-serif" font-size="11" fill="#333">调头漏割带</text>
+
+  <circle cx="535" cy="424" r="4" fill="#1565c0"/>
+  <text x="575" y="428" font-family="sans-serif" font-size="11" fill="#333">弓字端头（调头对齐参考点）</text>
+
+  <text x="400" y="575" text-anchor="middle" font-family="sans-serif" font-size="11" fill="#888">示意图非实测比例，仅说明两类漏割的几何来源</text>
+</svg>
