@@ -1,0 +1,52 @@
+{
+  "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh": {
+    "mtime": 1777776057.8315747,
+    "ast_hash": "9d997fd1a97c72b052b695cfacccf871",
+    "semantic_hash": "9d997fd1a97c72b052b695cfacccf871"
+  },
+  "projects/3dgs-data-prep/scripts/pipeline_ds5_colmap_mapper.sh": {
+    "mtime": 1778432028.0663795,
+    "ast_hash": "f32e4a7a3105d6f9c6836371c455fb67",
+    "semantic_hash": "f32e4a7a3105d6f9c6836371c455fb67"
+  },
+  "projects/3dgs-data-prep/scripts/run_sfm_v3_aliked_mapper.sh": {
+    "mtime": 1777776057.8337998,
+    "ast_hash": "69fd5ff32495da6f07ebebd04a6b8a19",
+    "semantic_hash": "69fd5ff32495da6f07ebebd04a6b8a19"
+  },
+  "projects/3dgs-data-prep/slam_to_colmap.py": {
+    "mtime": 1778432028.0665426,
+    "ast_hash": "98eb345d2223f7025d89b5b5fbf84d8e",
+    "semantic_hash": "98eb345d2223f7025d89b5b5fbf84d8e"
+  },
+  "projects/exhibition-mode-2026-06/howto/convert_pcd_to_las.py": {
+    "mtime": 1777776057.835012,
+    "ast_hash": "9721773bcdd06f78792efa58d0ddb165",
+    "semantic_hash": "9721773bcdd06f78792efa58d0ddb165"
+  },
+  "projects/exhibition-mode-2026-06/howto/convert_pcd_to_ply.py": {
+    "mtime": 1777776057.8353484,
+    "ast_hash": "a358721922f57014968e4351bf589941",
+    "semantic_hash": "a358721922f57014968e4351bf589941"
+  },
+  "projects/exhibition-mode-2026-06/howto/pcd_to_3dgs.py": {
+    "mtime": 1777776057.8356678,
+    "ast_hash": "960e0e28a2324b1e09b1554a35001fb8",
+    "semantic_hash": "960e0e28a2324b1e09b1554a35001fb8"
+  },
+  "projects/exhibition-mode-2026-06/howto/pcd_to_plotly_html.py": {
+    "mtime": 1777776057.8360882,
+    "ast_hash": "8cb67ca76ad36a1fb5da5f5bd2603439",
+    "semantic_hash": "8cb67ca76ad36a1fb5da5f5bd2603439"
+  },
+  "projects/exhibition-mode-2026-06/howto/peek_pcd_color.py": {
+    "mtime": 1777776057.8365045,
+    "ast_hash": "de5ba6f60d0a43a0586256b38f226751",
+    "semantic_hash": "de5ba6f60d0a43a0586256b38f226751"
+  },
+  "projects/trajectory-align-2d-demo/align_2d.py": {
+    "mtime": 1782647834.992677,
+    "ast_hash": "312f57b3a818f9a760d0426bed50a045",
+    "semantic_hash": "312f57b3a818f9a760d0426bed50a045"
+  }
+}

@@ -1,0 +1,240 @@
+{
+  "communities": {
+    "0": [
+      "projects_trajectory_align_2d_demo_align_2d_py_ndarray",
+      "trajectory_align_2d_demo_align_2d",
+      "trajectory_align_2d_demo_align_2d_align_2d",
+      "trajectory_align_2d_demo_align_2d_cum_arclen",
+      "trajectory_align_2d_demo_align_2d_first_meters_mask",
+      "trajectory_align_2d_demo_align_2d_load_tum",
+      "trajectory_align_2d_demo_align_2d_main",
+      "trajectory_align_2d_demo_align_2d_quat_to_yaw",
+      "trajectory_align_2d_demo_align_2d_rationale_58",
+      "trajectory_align_2d_demo_align_2d_rationale_90",
+      "trajectory_align_2d_demo_align_2d_resample_to",
+      "trajectory_align_2d_demo_align_2d_run",
+      "trajectory_align_2d_demo_align_2d_se2",
+      "trajectory_align_2d_demo_align_2d_se2_apply",
+      "trajectory_align_2d_demo_align_2d_se2_r",
+      "trajectory_align_2d_demo_align_2d_traj"
+    ],
+    "1": [
+      "3dgs_data_prep_slam_to_colmap",
+      "3dgs_data_prep_slam_to_colmap_align_timestamps",
+      "3dgs_data_prep_slam_to_colmap_decode_all_nv12",
+      "3dgs_data_prep_slam_to_colmap_decode_job",
+      "3dgs_data_prep_slam_to_colmap_default_t_cam_lidar",
+      "3dgs_data_prep_slam_to_colmap_list_cam_files",
+      "3dgs_data_prep_slam_to_colmap_main",
+      "3dgs_data_prep_slam_to_colmap_nv12_to_rgb",
+      "3dgs_data_prep_slam_to_colmap_parse_pcd",
+      "3dgs_data_prep_slam_to_colmap_pcd_to_points3d_txt",
+      "3dgs_data_prep_slam_to_colmap_rationale_139",
+      "3dgs_data_prep_slam_to_colmap_write_cameras_txt",
+      "scripts_install_colmap_glomap_cuda_path"
+    ],
+    "2": [
+      "scripts_install_colmap_glomap_cuda",
+      "scripts_install_colmap_glomap_cuda_cc",
+      "scripts_install_colmap_glomap_cuda_check_host_compiler",
+      "scripts_install_colmap_glomap_cuda_cmake_prefix_path",
+      "scripts_install_colmap_glomap_cuda_cudahostcxx",
+      "scripts_install_colmap_glomap_cuda_cxx",
+      "scripts_install_colmap_glomap_cuda_ld_library_path",
+      "scripts_install_colmap_glomap_cuda_log",
+      "users_songshu_projects_localizationteam_projects_3dgs_data_prep_scripts_install_colmap_glomap_cuda_sh__entry"
+    ],
+    "3": [
+      "3dgs_data_prep_slam_to_colmap_pose_row_to_t_world_lidar",
+      "3dgs_data_prep_slam_to_colmap_quat_xyzw_to_r",
+      "3dgs_data_prep_slam_to_colmap_rationale_184",
+      "3dgs_data_prep_slam_to_colmap_rationale_203",
+      "3dgs_data_prep_slam_to_colmap_rationale_254",
+      "3dgs_data_prep_slam_to_colmap_se3_inv",
+      "3dgs_data_prep_slam_to_colmap_world_to_cam_from_pose_row",
+      "projects_3dgs_data_prep_slam_to_colmap_py_ndarray"
+    ],
+    "4": [
+      "howto_convert_pcd_to_ply",
+      "howto_convert_pcd_to_ply_main",
+      "howto_convert_pcd_to_ply_parse_pcd",
+      "howto_convert_pcd_to_ply_rationale_55",
+      "howto_convert_pcd_to_ply_write_ply_binary"
+    ],
+    "5": [
+      "3dgs_data_prep_slam_to_colmap_rationale_221",
+      "3dgs_data_prep_slam_to_colmap_rationale_362",
+      "3dgs_data_prep_slam_to_colmap_rotation_matrix_to_quaternion_wxyz",
+      "3dgs_data_prep_slam_to_colmap_write_images_txt"
+    ],
+    "6": [
+      "scripts_pipeline_ds5_colmap_mapper",
+      "scripts_pipeline_ds5_colmap_mapper_die",
+      "scripts_pipeline_ds5_colmap_mapper_log",
+      "users_songshu_projects_localizationteam_projects_3dgs_data_prep_scripts_pipeline_ds5_colmap_mapper_sh__entry"
+    ],
+    "7": [
+      "scripts_run_sfm_v3_aliked_mapper",
+      "scripts_run_sfm_v3_aliked_mapper_die",
+      "scripts_run_sfm_v3_aliked_mapper_log",
+      "users_songshu_projects_localizationteam_projects_3dgs_data_prep_scripts_run_sfm_v3_aliked_mapper_sh__entry"
+    ],
+    "8": [
+      "howto_convert_pcd_to_las",
+      "howto_convert_pcd_to_las_convert",
+      "howto_convert_pcd_to_las_parse_pcd"
+    ],
+    "9": [
+      "howto_pcd_to_3dgs",
+      "howto_pcd_to_3dgs_main",
+      "howto_pcd_to_3dgs_parse_pcd"
+    ],
+    "10": [
+      "howto_pcd_to_plotly_html",
+      "howto_pcd_to_plotly_html_main",
+      "howto_pcd_to_plotly_html_parse_pcd"
+    ],
+    "11": [
+      "howto_peek_pcd_color",
+      "howto_peek_pcd_color_main",
+      "howto_peek_pcd_color_parse_pcd"
+    ],
+    "12": [
+      "3dgs_data_prep_slam_to_colmap_load_poses",
+      "3dgs_data_prep_slam_to_colmap_rationale_126"
+    ],
+    "13": [
+      "3dgs_data_prep_slam_to_colmap_parse_args",
+      "namespace"
+    ]
+  },
+  "cohesion": {
+    "0": 0.26666666666666666,
+    "1": 0.34615384615384615,
+    "2": 0.3055555555555556,
+    "3": 0.35714285714285715,
+    "4": 0.6,
+    "5": 0.5,
+    "6": 0.8333333333333334,
+    "7": 0.8333333333333334,
+    "8": 1.0,
+    "9": 1.0,
+    "10": 1.0,
+    "11": 1.0,
+    "12": 1.0,
+    "13": 1.0
+  },
+  "gods": [
+    {
+      "id": "scripts_install_colmap_glomap_cuda_path",
+      "label": "PATH",
+      "degree": 13
+    },
+    {
+      "id": "3dgs_data_prep_slam_to_colmap_main",
+      "label": "main()",
+      "degree": 10
+    },
+    {
+      "id": "trajectory_align_2d_demo_align_2d_run",
+      "label": "run()",
+      "degree": 9
+    },
+    {
+      "id": "3dgs_data_prep_slam_to_colmap_write_images_txt",
+      "label": "write_images_txt()",
+      "degree": 7
+    },
+    {
+      "id": "3dgs_data_prep_slam_to_colmap_world_to_cam_from_pose_row",
+      "label": "world_to_cam_from_pose_row()",
+      "degree": 6
+    },
+    {
+      "id": "3dgs_data_prep_slam_to_colmap_load_poses",
+      "label": "load_poses()",
+      "degree": 5
+    },
+    {
+      "id": "3dgs_data_prep_slam_to_colmap_pose_row_to_t_world_lidar",
+      "label": "pose_row_to_T_world_lidar()",
+      "degree": 5
+    },
+    {
+      "id": "trajectory_align_2d_demo_align_2d_load_tum",
+      "label": "load_tum()",
+      "degree": 5
+    },
+    {
+      "id": "trajectory_align_2d_demo_align_2d_resample_to",
+      "label": "resample_to()",
+      "degree": 5
+    },
+    {
+      "id": "trajectory_align_2d_demo_align_2d_align_2d",
+      "label": "align_2d()",
+      "degree": 5
+    }
+  ],
+  "surprises": [
+    {
+      "source": "load_poses()",
+      "target": "PATH",
+      "source_files": [
+        "projects/3dgs-data-prep/slam_to_colmap.py",
+        "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "write_images_txt()",
+      "target": "PATH",
+      "source_files": [
+        "projects/3dgs-data-prep/slam_to_colmap.py",
+        "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "load_tum()",
+      "target": "PATH",
+      "source_files": [
+        "projects/trajectory-align-2d-demo/align_2d.py",
+        "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "main()",
+      "target": "PATH",
+      "source_files": [
+        "projects/trajectory-align-2d-demo/align_2d.py",
+        "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "run()",
+      "target": "PATH",
+      "source_files": [
+        "projects/trajectory-align-2d-demo/align_2d.py",
+        "projects/3dgs-data-prep/scripts/install_colmap_glomap_cuda.sh"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
