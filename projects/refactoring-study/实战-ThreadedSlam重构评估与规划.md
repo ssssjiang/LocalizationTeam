@@ -1,6 +1,6 @@
 # 实战案例：ThreadedSlam.cpp 重构评估与规划
 
-> 对象：`okvis_multisensor_processing/src/ThreadedSlam.cpp`（类 `ThreadedSlam`，~4058 行）。
+> 对象：`okvis_multisensor_processing/src/ThreadedSlam.cpp`（类 `ThreadedSlam`，4057 行）。
 > 目的：把《重构》第 2~5 章的原则落到一个真实的多线程 SLAM 大文件上——先评估、再规划，**不在本文件里动代码**。
 > 置信度约定：`[确认]`=代码/构建脚本可见；`[高置信]`=强证据未运行验证；`[待验证]`=需运行时/更多上下文确认。
 
@@ -8,7 +8,7 @@
 
 ## 0. 结论先行（TL;DR）
 
-> - **现状**：单类 4058 行的 God Class，坏味道以「**重复代码**」和「**无测试网**」两项最致命。
+> - **现状**：单类 4057 行的 God Class，坏味道以「**重复代码**」和「**无测试网**」两项最致命。
 > - **最大红线**：`ThreadedSlam` 目前**没有任何有效的自动化测试** `[确认]`——`test/` 下的用例引用的是已删除的旧类 `ThreadedKFVio.hpp`，且 CMake 测试目标只编译 `test_main.cpp`（`CMakeLists.txt` L92–94），那些用例未被 build。叠加 6+ 线程的并发复杂度，**当前任何重构都是"无保护高空作业"**。
 > - **策略**：严格「测试先行 → 纯函数提炼消重复 → 提炼类 → 数据/状态收口 → 并发编排收尾」。**并发相关改动放到最后、且必须在测试网建立后再动**。
 > - **不建议**：一次性大重写（rewrite）。风险不可控、无法小步验证、丢历史。
@@ -34,7 +34,7 @@
 | 类别 | 代表 | 密度 |
 |---|---|---|
 | 重复代码 | 「构建 State/发布数据」抄 4 份（L1383/1760/1919/2916）；omega_S 片段 ≥7 处；trackingQuality→enum ×5 | **极高** |
-| 过长函数 | frontendLoop(~510) / backendLoop(~444) / processFrame(~374) / optimisePublishMarginalise(~261) | 高 |
+| 过长函数 | frontendLoop(513, L2079–2591) / backendLoop(446, L2592–3037) / processFrame(376, L900–1275) / optimisePublishMarginalise(263, L1276–1538) | 高 |
 | 魔法数字 | `<15`、`0.01/0.3`、`dt=0.01`、`%100`、队列大小 `3` | 高 |
 | 死代码/注释 | 成段注释（L1184/2532/2785-2805）、`// Renamed to avoid conflict` 大量 | 中 |
 | 并发/资源 | `system("mkdir")`、手拼 JSON、`const_cast` mutex、裸 `reinitThread_` check-then-act、`static` 隐藏状态 | 中高 |
@@ -137,6 +137,7 @@
 |---|---|---|---|---|
 | P0 测试 | ★★★★★ | 低 | 中 | **立刻，先于一切** |
 | P1 清理 | ★★ | 极低 | 低 | 与 P0 并行热身 |
+| PX 拆 .cpp | ★★★（编译体验） | 低 | 中 | **P1 后、P2 前**（编译加速专线） |
 | P2 消重复 | ★★★★★ | 低-中 | 中 | P0 后立即 |
 | P3 拆类 | ★★★★ | 中 | 中-高 | P2 后 |
 | P4 数据/状态 | ★★★ | 中 | 中 | P3 后 |
@@ -190,6 +191,14 @@
 | C0.3 | P0 | 表征测试：addImu/addWheel 入队与过滤、addImages 丢帧 | 自测试代码 | 不改生产代码 | 新测试绿、覆盖 §4 P0 路径 |
 | C1.1 | P1 | 删死代码块 + 去重复 include + 修文件头注释 | 移除死代码(237) | 单文件、无行为变更 | 编译 + 表征测试绿 |
 | C1.2 | P1 | 魔法数字提 `constexpr` 具名常量 | 符号常量化 | 不改数值本身 | 同上 |
+| PX.0 | PX | 建 `ThreadedSlam_internal.hpp`，抽跨域 internal 符号 + 消重复定义 | 移动声明/定义 | **不拆域**、不改行为、绑核实现不动 | 编译 exit 0 + 4 表征测试绿 |
+| PX.1 | PX | 拆 `ThreadedSlam_debug.cpp`（最独立，DebugRecorder 预演） | 搬移函数(198) | 纯搬移 + 同步 CMake SOURCES | 同上 |
+| PX.2 | PX | 拆 `ThreadedSlam_map.cpp`（含 `resolveRelocMapLoadDir`） | 搬移函数(198) | 纯搬移 | 同上 |
+| PX.3 | PX | 拆 `ThreadedSlam_publish.cpp` | 搬移函数(198) | 纯搬移 | 同上 |
+| PX.4 | PX | 拆 `ThreadedSlam_state.cpp`（含 `CameraMoveThreshold`） | 搬移函数(198) | 纯搬移 | 同上 |
+| PX.5 | PX | 拆 `ThreadedSlam_reloc.cpp` | 搬移函数(198) | 纯搬移 | 同上 |
+| PX.6 | PX | 拆 `ThreadedSlam_backend.cpp`（大块：backendLoop 446 + optimise 263） | 搬移函数(198) | 纯搬移 | 同上 |
+| PX.7 | PX | 拆 `ThreadedSlam_frontend.cpp`（最大块：frontendLoop 513 + processFrame 376） | 搬移函数(198) | 纯搬移 | 同上 |
 | C2.1 | P2 | 提炼 `trackingQualityToEnum` / `computeOmegaS` | 提炼函数(106) | 纯函数、无副作用 | 单测 + 全量测试绿 |
 | C2.2 | P2 | 提炼 `PublicationBuilder::build*`，同步/异步四处共用 | 提炼函数/类 | **保留同步路径（约束1）** | 四处行为一致、测试绿 |
 | C2.3 | P2 | 提炼 measurement 收集 / deque 剪枝 helper | 提炼函数(106) | 同步异步共用 | 测试绿 |
@@ -203,8 +212,20 @@
 | C5.2 | P5 | `reinitThread_` check-then-act 收口为 `RestartController` | 提炼类(182) | 行为保持 | TSan + 压力测试 |
 | C5.3 | P5 `[seam]` | 按需对 estimator_/frontend_ 局部引入可注入接缝 + Mock | 以委托取代继承/接口抽取 | 仅隔离所需最小面 | Mock 单测绿 |
 
-### 8.4 构建 / 验证方式（**待定，阻塞 G1**）
-> 这是 §8.2 G1 的落地方式，决定主会话能否给"通过/不通过"的证据。选定前不派会改生产代码的卡。
+### 8.4 构建 / 验证方式（**已验证可用，G1 满足**）
+> 主会话对每张卡的固定校验命令（本机全量编译，2026-07-03 验证：编译 exit 0、测试 exit 0、当前 0 用例）：
+
+```bash
+# 一次性 configure（已生成 build/）
+cmake -B build -DBUILD_TESTS=ON -DBUILD_APPS=OFF -DCMAKE_BUILD_TYPE=Release
+
+# 每张卡校验：编译测试目标（首次全量 ~11min，增量快）
+cmake --build build --target okvis_multisensor_processing_test -j$(nproc)
+
+# 运行测试
+./build/okvis_multisensor_processing/okvis_multisensor_processing_test
+```
+- DI 决策：**渐进 seam**（约束 4）——先 public API 表征测试 + 拆独立类单测，暂不接口化 estimator_/frontend_。
 
 ---
 
