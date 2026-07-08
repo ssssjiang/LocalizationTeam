@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第02章 · 重构的原则</title>
+<style>
+
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei",
+    "Noto Sans CJK SC", "Source Han Sans SC", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.75;
+  color: #24292f;
+  background: #f6f8fa;
+}
+.wrap {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 32px 96px;
+  background: #ffffff;
+  min-height: 100vh;
+  box-shadow: 0 0 24px rgba(0,0,0,0.04);
+}
+h1, h2, h3, h4 { line-height: 1.3; font-weight: 650; }
+h1 {
+  font-size: 1.9rem;
+  border-bottom: 2px solid #d0d7de;
+  padding-bottom: .4em;
+  margin-top: 0;
+}
+h2 {
+  font-size: 1.45rem;
+  border-bottom: 1px solid #eaecef;
+  padding-bottom: .3em;
+  margin-top: 2.2em;
+}
+h3 { font-size: 1.2rem; margin-top: 1.8em; }
+h4 { font-size: 1.05rem; margin-top: 1.5em; }
+p, li { font-size: 1rem; }
+a { color: #0969da; text-decoration: none; }
+a:hover { text-decoration: underline; }
+code {
+  font-family: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular,
+    Menlo, Consolas, monospace;
+  font-size: .9em;
+  background: rgba(175,184,193,.2);
+  padding: .15em .4em;
+  border-radius: 6px;
+}
+pre {
+  background: #f6f8fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px 18px;
+  overflow: auto;
+  line-height: 1.55;
+}
+pre code { background: none; padding: 0; font-size: .875rem; }
+blockquote {
+  margin: 1.2em 0;
+  padding: .6em 1.1em;
+  color: #57606a;
+  border-left: 4px solid #d0d7de;
+  background: #f6f8fa;
+  border-radius: 0 8px 8px 0;
+}
+blockquote p { margin: .4em 0; }
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.2em 0;
+  font-size: .95rem;
+  display: block;
+  overflow-x: auto;
+}
+th, td { border: 1px solid #d0d7de; padding: 8px 12px; text-align: left; vertical-align: top; }
+th { background: #f0f3f6; font-weight: 650; }
+tr:nth-child(even) td { background: #fafbfc; }
+hr { border: none; border-top: 1px solid #e5e7eb; margin: 2.4em 0; }
+ul.task-list { list-style: none; padding-left: 1.2em; }
+.task-list-item { list-style: none; }
+.task-list-item input { margin-right: .5em; }
+.chapter-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px dashed #d0d7de;
+}
+.chapter-nav a {
+  font-size: .85rem;
+  padding: 4px 12px;
+  border: 1px solid #d0d7de;
+  border-radius: 999px;
+  color: #57606a;
+}
+.chapter-nav a.active { background: #0969da; color: #fff; border-color: #0969da; }
+@media (prefers-color-scheme: dark) {
+  body { color: #c9d1d9; background: #0d1117; }
+  .wrap { background: #0d1117; box-shadow: none; }
+  h1 { border-color: #30363d; }
+  h2 { border-color: #21262d; }
+  a { color: #58a6ff; }
+  code { background: rgba(110,118,129,.4); }
+  pre, blockquote, th { background: #161b22; }
+  pre { border-color: #30363d; }
+  th, td { border-color: #30363d; }
+  tr:nth-child(even) td { background: #161b22; }
+  blockquote { color: #8b949e; border-color: #30363d; }
+  .highlight { background: #161b22 !important; }
+}
+
+pre { line-height: 125%; }
+td.linenos .normal { color: #666666; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: #666666; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.highlight .hll { background-color: #ffffcc }
+.highlight { background: #f0f0f0; }
+.highlight .c { color: #60A0B0; font-style: italic } /* Comment */
+.highlight .err { border: 1px solid #F00 } /* Error */
+.highlight .k { color: #007020; font-weight: bold } /* Keyword */
+.highlight .o { color: #666 } /* Operator */
+.highlight .ch { color: #60A0B0; font-style: italic } /* Comment.Hashbang */
+.highlight .cm { color: #60A0B0; font-style: italic } /* Comment.Multiline */
+.highlight .cp { color: #007020 } /* Comment.Preproc */
+.highlight .cpf { color: #60A0B0; font-style: italic } /* Comment.PreprocFile */
+.highlight .c1 { color: #60A0B0; font-style: italic } /* Comment.Single */
+.highlight .cs { color: #60A0B0; background-color: #FFF0F0 } /* Comment.Special */
+.highlight .gd { color: #A00000 } /* Generic.Deleted */
+.highlight .ge { font-style: italic } /* Generic.Emph */
+.highlight .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.highlight .gr { color: #F00 } /* Generic.Error */
+.highlight .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.highlight .gi { color: #00A000 } /* Generic.Inserted */
+.highlight .go { color: #888 } /* Generic.Output */
+.highlight .gp { color: #C65D09; font-weight: bold } /* Generic.Prompt */
+.highlight .gs { font-weight: bold } /* Generic.Strong */
+.highlight .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.highlight .gt { color: #04D } /* Generic.Traceback */
+.highlight .kc { color: #007020; font-weight: bold } /* Keyword.Constant */
+.highlight .kd { color: #007020; font-weight: bold } /* Keyword.Declaration */
+.highlight .kn { color: #007020; font-weight: bold } /* Keyword.Namespace */
+.highlight .kp { color: #007020 } /* Keyword.Pseudo */
+.highlight .kr { color: #007020; font-weight: bold } /* Keyword.Reserved */
+.highlight .kt { color: #902000 } /* Keyword.Type */
+.highlight .m { color: #40A070 } /* Literal.Number */
+.highlight .s { color: #4070A0 } /* Literal.String */
+.highlight .na { color: #4070A0 } /* Name.Attribute */
+.highlight .nb { color: #007020 } /* Name.Builtin */
+.highlight .nc { color: #0E84B5; font-weight: bold } /* Name.Class */
+.highlight .no { color: #60ADD5 } /* Name.Constant */
+.highlight .nd { color: #555; font-weight: bold } /* Name.Decorator */
+.highlight .ni { color: #D55537; font-weight: bold } /* Name.Entity */
+.highlight .ne { color: #007020 } /* Name.Exception */
+.highlight .nf { color: #06287E } /* Name.Function */
+.highlight .nl { color: #002070; font-weight: bold } /* Name.Label */
+.highlight .nn { color: #0E84B5; font-weight: bold } /* Name.Namespace */
+.highlight .nt { color: #062873; font-weight: bold } /* Name.Tag */
+.highlight .nv { color: #BB60D5 } /* Name.Variable */
+.highlight .ow { color: #007020; font-weight: bold } /* Operator.Word */
+.highlight .w { color: #BBB } /* Text.Whitespace */
+.highlight .mb { color: #40A070 } /* Literal.Number.Bin */
+.highlight .mf { color: #40A070 } /* Literal.Number.Float */
+.highlight .mh { color: #40A070 } /* Literal.Number.Hex */
+.highlight .mi { color: #40A070 } /* Literal.Number.Integer */
+.highlight .mo { color: #40A070 } /* Literal.Number.Oct */
+.highlight .sa { color: #4070A0 } /* Literal.String.Affix */
+.highlight .sb { color: #4070A0 } /* Literal.String.Backtick */
+.highlight .sc { color: #4070A0 } /* Literal.String.Char */
+.highlight .dl { color: #4070A0 } /* Literal.String.Delimiter */
+.highlight .sd { color: #4070A0; font-style: italic } /* Literal.String.Doc */
+.highlight .s2 { color: #4070A0 } /* Literal.String.Double */
+.highlight .se { color: #4070A0; font-weight: bold } /* Literal.String.Escape */
+.highlight .sh { color: #4070A0 } /* Literal.String.Heredoc */
+.highlight .si { color: #70A0D0; font-style: italic } /* Literal.String.Interpol */
+.highlight .sx { color: #C65D09 } /* Literal.String.Other */
+.highlight .sr { color: #235388 } /* Literal.String.Regex */
+.highlight .s1 { color: #4070A0 } /* Literal.String.Single */
+.highlight .ss { color: #517918 } /* Literal.String.Symbol */
+.highlight .bp { color: #007020 } /* Name.Builtin.Pseudo */
+.highlight .fm { color: #06287E } /* Name.Function.Magic */
+.highlight .vc { color: #BB60D5 } /* Name.Variable.Class */
+.highlight .vg { color: #BB60D5 } /* Name.Variable.Global */
+.highlight .vi { color: #BB60D5 } /* Name.Variable.Instance */
+.highlight .vm { color: #BB60D5 } /* Name.Variable.Magic */
+.highlight .il { color: #40A070 } /* Literal.Number.Integer.Long */
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="chapter-nav"><a href="第02章-重构的原则.html" class="active">第 2 章 · 原则</a><a href="第03章-代码的坏味道.html">第 3 章 · 坏味道</a><a href="第04章-构筑测试体系.html">第 4 章 · 测试</a><a href="第05章-介绍重构名录.html">第 5 章 · 名录</a></nav>
+<h1 id="2">第 2 章 重构的原则</h1>
+<blockquote>
+<p>本章是<strong>纯理念章，几乎没有代码</strong>。讲清楚「重构是什么、为什么、什么时候做、会遇到什么坑」，以及它和测试 / 持续集成 / 架构 / 性能的关系。
+原书点名（未展开）的手法：提炼函数、改变函数声明、函数参数化、以多态取代条件表达式。本笔记给这些手法配 C++ 概念级片段。
+源：<a href="https://book-refactoring2.ifmicro.com/docs/ch2.html">https://book-refactoring2.ifmicro.com/docs/ch2.html</a></p>
+</blockquote>
+<hr />
+<h2 id="0">0. 一页纸决策速查</h2>
+<p><strong>一句话</strong>：重构 = 在<strong>不改变可观察行为</strong>的前提下，用<strong>一连串微小且保持行为的步骤</strong>，改善代码的可理解性、降低修改成本。它的<strong>唯一目的是让你开发得更快</strong>（经济驱动，不是道德/洁癖驱动）。</p>
+<h3 id="01">0.1 核心口诀</h3>
+<ul>
+<li><strong>小步走</strong>：每步都小到不会让代码进入「不可工作」状态；任何时刻能停、能回滚。</li>
+<li><strong>两顶帽子</strong>：要么「加功能」，要么「重构」，<strong>同一时刻只戴一顶</strong>，心里始终清楚戴的是哪顶。</li>
+<li><strong>事不过三，三则重构</strong>（三次法则）。</li>
+<li><strong>先让修改变容易，再做这次容易的修改</strong>（Kent Beck）。</li>
+<li><strong>度量，别臆测</strong>：性能问题永远先用 profiler 量，再优化。</li>
+</ul>
+<h3 id="02">0.2 何时重构（决策表）</h3>
+<table>
+<thead>
+<tr>
+<th>触发场景</th>
+<th>该不该重构</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>要加新功能，但现有结构别扭</td>
+<td>✅ 预备性重构</td>
+<td>先铺路再加功能，更快</td>
+</tr>
+<tr>
+<td>修 bug、找根因时发现重复/纠缠逻辑</td>
+<td>✅ 预备性重构</td>
+<td>让<strong>这次修复</strong>更容易，并降低复发</td>
+</tr>
+<tr>
+<td>读不懂某段代码</td>
+<td>✅ 帮助理解的重构</td>
+<td>改名/拆函数，把理解写进代码</td>
+</tr>
+<tr>
+<td>已懂代码、但发现写得差（好改）</td>
+<td>✅ 捡垃圾式重构</td>
+<td>帮助理解的变体；「让营地比来时干净」</td>
+</tr>
+<tr>
+<td>大型清理（换库/拆组件）</td>
+<td>⚠️ 长期重构</td>
+<td>全队共识，逐步推进，别专设重构期</td>
+</tr>
+<tr>
+<td>烂代码但<strong>不需要改它</strong></td>
+<td>❌ 不重构</td>
+<td>能藏在 API 之下就容忍</td>
+</tr>
+<tr>
+<td>重写比重构还容易</td>
+<td>❌ 改重写</td>
+<td>需经验判断</td>
+</tr>
+<tr>
+<td>大重构必要、但新功能很小</td>
+<td>⚠️ 先加功能</td>
+<td>偶尔的权衡，靠判断力</td>
+</tr>
+</tbody>
+</table>
+<h3 id="03">0.3 重构的前置条件（缺了就危险）</h3>
+<ol>
+<li><strong>自测试代码</strong>：一套快速、可频繁运行的测试套件，是安全重构的基础。</li>
+<li><strong>持续集成 / 主干开发</strong>：让重构（尤其是广泛改名）的语义冲突尽早暴露。</li>
+<li>没测试时：只用 <strong>IDE 自动化的、保证安全的重构手法</strong>（如静态类型语言的改名）。</li>
+</ol>
+<blockquote>
+<p>三大实践协同：<strong>自测试代码 + 持续集成 + 重构</strong>（后两者合流成 TDD），互相增效。</p>
+</blockquote>
+<hr />
+<h2 id="1-21">1. 何谓重构（2.1）</h2>
+<h3 id="11">1.1 两个定义（名词 + 动词）</h3>
+<ul>
+<li><strong>重构（名词）</strong>：对软件内部结构的一种调整，目的是在<strong>不改变可观察行为</strong>的前提下，提高可理解性、降低修改成本。指那些「有名字的手法」（提炼函数、以多态取代条件表达式……）。</li>
+<li><strong>重构（动词）</strong>：使用一系列重构手法，在不改变可观察行为的前提下调整结构。</li>
+</ul>
+<blockquote>
+<p>一次「重构（动词）」可能花一两小时，其间用掉几十个「重构（名词）」。</p>
+</blockquote>
+<h3 id="12">1.2 关键特征：微小步骤</h3>
+<ul>
+<li><strong>术语澄清</strong>：过去十几年很多人把「重构」泛指任何代码清理；本书的定义是<strong>一种特定的</strong>清理方式——用大量微小且保持行为的步骤，一步步达成大规模修改。</li>
+<li>每个单独的重构<strong>要么本身很小，要么由若干小步骤组合而成</strong>。</li>
+<li>过程中代码<strong>很少进入不可工作状态</strong>；<strong>即便重构没完成，也可在任何时刻停下来</strong>。</li>
+<li><strong>判据</strong>：若有人说重构期间代码一两天不可用，那他做的基本不是重构。</li>
+<li>「结构调整（restructuring）」是泛称，重构是其中<strong>保持行为</strong>的一类。</li>
+<li>为何小步反而更快：这些小步骤能<strong>完美彼此组合</strong>，而且整个过程<strong>几乎不花时间调试</strong>——所以「看似一大步能做完的事拆成小步」并不低效。</li>
+</ul>
+<h3 id="13">1.3 「可观察行为」的边界</h3>
+<ul>
+<li>原文措辞：整体而言，重构后代码做的事应与重构前<strong>大致一样</strong>；这个说法<strong>并非完全严格，是故意留的空间</strong>：</li>
+<li>提炼函数会改变调用栈 → <strong>性能可能变</strong>。</li>
+<li>改变函数声明 / 搬移函数 → <strong>模块接口可能变</strong>。</li>
+<li>但<strong>用户该关心的行为不变</strong>。</li>
+<li>已有 bug：重构后同样的 bug 应仍在（若是没人发现的潜在 bug，可顺手改掉）。</li>
+</ul>
+<h3 id="14-vs">1.4 重构 vs 性能优化</h3>
+<ul>
+<li>相同：都改代码、都不改整体功能。</li>
+<li><strong>不同在目的</strong>：</li>
+<li>重构 → 为了「更易理解、更易修改」，可能变快也可能变慢。</li>
+<li>性能优化 → 只为更快，最终代码<strong>有可能更难理解和维护，且对此有心理准备</strong>。</li>
+</ul>
+<hr />
+<h2 id="2-22">2. 两顶帽子（2.2）</h2>
+<p>Kent Beck 的比喻：开发时把时间分给两种<strong>截然不同</strong>的行为，且分清自己当前戴哪顶。</p>
+<table>
+<thead>
+<tr>
+<th>帽子</th>
+<th>在做什么</th>
+<th>能不能改既有结构</th>
+<th>测试怎么处理</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>加功能帽</strong></td>
+<td>只加新功能</td>
+<td>❌ 不改既有代码</td>
+<td>✅ 加测试并让其通过，以此衡量进度</td>
+</tr>
+<tr>
+<td><strong>重构帽</strong></td>
+<td>只调结构</td>
+<td>✅ 调整结构</td>
+<td>❌ 不加任何测试（除非发现先前遗漏的东西）；只在<strong>绝对必要</strong>（处理接口变化）时才改测试</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>开发中会<strong>频繁换帽</strong>，典型两轮循环：</li>
+<li>想加功能 → 发现先改结构会让功能更容易加 → 换重构帽铺路 → 换回加功能帽；</li>
+<li>功能跑通后 → 发现自己的编码让程序难懂 → 再换重构帽整理。</li>
+<li>整个来回也许只花 10 分钟，但任何时刻都清楚戴的是哪顶帽子，并明白<strong>不同帽子对编程状态的不同要求</strong>。</li>
+</ul>
+<h3 id="21-c">2.1 C++ 体会「换帽」</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 加功能帽：原来只有一行计价，想加 VIP/节日折扣，发现要塞进一坨 if，先停。</span>
+<span class="kt">double</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">qty</span><span class="p">;</span><span class="w">   </span><span class="c1">// 此步只跑现有测试，确认行为没变</span>
+
+<span class="c1">// 换重构帽：先把计价逻辑提炼出来（不改行为，不加功能，不加新测试）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">basePrice</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">qty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">qty</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// 换回加功能帽：现在加折扣很容易（此步再补新功能的测试）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">finalPrice</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">qty</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">Discount</span><span class="o">&amp;</span><span class="w"> </span><span class="n">d</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">d</span><span class="p">.</span><span class="n">apply</span><span class="p">(</span><span class="n">basePrice</span><span class="p">(</span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="n">qty</span><span class="p">));</span><span class="w">   </span><span class="c1">// 新功能干净地接上去</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="3-23">3. 为何重构（2.3）</h2>
+<p>重构不是银弹，但是一把「银钳子」——帮你始终控制住代码。四个目的：</p>
+<h3 id="31">3.1 改进设计</h3>
+<ul>
+<li>没有重构，内部设计会<strong>逐渐腐败</strong>：只为短期目的、<strong>没完全理解架构整体设计</strong>就改代码 → 结构流失 → 越难看懂设计意图 → 越难保护设计 → 腐败越快（累积效应）。<strong>经常性重构有助于代码维持该有的形态。</strong></li>
+<li>设计欠佳的程序<strong>往往需要更多代码</strong>（同样的事在多处用相同语句做）；所以改进设计的重要方向：<strong>消除重复代码</strong>。</li>
+<li>重复的危害：同一件事在多处表述，改一处忘改另一处 → bug。</li>
+<li>「所有事物和行为只表述一次」是优秀设计的根本。</li>
+<li>代码量减少不会让程序更快（对资源占用几乎无影响），但让<strong>未来修改更容易</strong>——代码越多越难做正确的修改。</li>
+</ul>
+<h3 id="32">3.2 更容易理解</h3>
+<ul>
+<li>编程是<strong>与计算机对话</strong>，核心在「<strong>准确说出我想要的</strong>」，填补「我想要它做什么」和「我告诉它做什么」之间的缝隙。</li>
+<li>但源码除了计算机还有别的读者：<strong>几个月后来读、来改代码的另一个程序员（很可能就是你自己）才是最重要的读者</strong>。</li>
+<li>重构让代码更易读、更清晰地表达意图。「我是个懒程序员，记不住自己写过的代码，所以把该记的东西写进代码里。」</li>
+</ul>
+<h3 id="33-bug">3.3 帮助找 bug</h3>
+<ul>
+<li>「我承认我不太擅长找 bug。」但重构能<strong>深入理解代码所作所为，并立即把新理解反映回代码</strong>；搞清结构的同时<strong>验证了对代码的假设</strong> → bug 自然浮现。</li>
+<li>Kent Beck：「我不是特别好的程序员，只是一个有一些特别好习惯的还不错的程序员。」</li>
+</ul>
+<h3 id="34">3.4 提高编程速度（最终归宿）</h3>
+<ul>
+<li>前面一切都归结到这一点，虽反直觉但这是重点：<strong>重构让你开发更快</strong>。</li>
+<li>两类团队对比：</li>
+<li><strong>内部质量差</strong>：一开始快，如今加功能越来越慢，越来越多时间用来想「怎么把新功能塞进现有代码库」，补丁摞补丁、要考古才能弄懂系统，bug 越修越慢，最后恨不得从头重写。</li>
+<li><strong>内部质量好</strong>：容易找到在哪改/如何改；良好模块划分让你只需理解一小部分；代码清晰则少引 bug、调试也容易；代码库逐步演化成<strong>可快速构造新功能的平台</strong>。</li>
+<li><strong>设计耐久性假说</strong>：投入精力改善内部设计 → 软件「耐久性」增加 → 长期保持开发速度。作者声明<strong>这是「假说」、无法科学证明，但他与认识的上百名优秀程序员的经验都支持它</strong>。</li>
+<li>20 年前行业陈规认为「设计必须在写代码前完成、之后只会腐败」；重构推翻了它：可以先做设计，再边改功能边持续改善。<strong>预先做出良好设计非常困难，想既体面又快速地开发，重构必不可少。</strong></li>
+</ul>
+<hr />
+<h2 id="4-24">4. 何时重构（2.4）</h2>
+<blockquote>
+<p><strong>三次法则</strong>（Don Roberts）：第一次做就做；第二次做类似的事会反感但照做；<strong>第三次再做，就该重构</strong>。</p>
+</blockquote>
+<p>绝大多数重构是<strong>见机行事</strong>的，融入日常编程流，不专门安排时间——「正如你不会专门安排时间写 if 语句」。</p>
+<h3 id="41">4.1 三种见机行事的重构</h3>
+<p>三者<strong>触发状态不同，但有层级关系</strong>：帮助理解（还不懂）→ 捡垃圾（已懂但写得差，是帮助理解的<strong>变体</strong>）；预备性则是为即将做的修改铺路。</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>触发</th>
+<th>做法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>预备性重构</strong></td>
+<td>加功能前；或修 bug 找根因时发现结构障碍</td>
+<td>先调结构让接下来的修改更容易（「先看地图找最快路径」——Jessica Kerr）。例：已有函数能满足大半需求、只是几个字面量不符 → 用<strong>函数参数化</strong>而非复制粘贴</td>
+</tr>
+<tr>
+<td><strong>帮助理解的重构</strong></td>
+<td>还读不懂代码、要先弄清它在做什么</td>
+<td>改名、拆长函数，把脑中理解搬进代码（Ward Cunningham），再<strong>运行软件检查理解是否正确</strong>；小处变清晰后，会<strong>看见之前看不见的设计问题</strong>（Ralph Johnson「扫去窗上尘埃才看见风景」）</td>
+</tr>
+<tr>
+<td><strong>捡垃圾式重构</strong></td>
+<td><strong>已理解</strong>代码，但发现写得不好（逻辑迂回 / 两个函数几乎相同）</td>
+<td>好改就马上改；难改就便笺记下、做完手头任务再回来。即便几个月后才清理完、每次不彻底，<strong>代码也不会被破坏</strong>。「让营地比来时干净」</td>
+</tr>
+</tbody>
+</table>
+<h3 id="42-vs">4.2 有计划 vs 见机行事</h3>
+<ul>
+<li><strong>肮脏代码必须重构，漂亮代码也需要很多重构</strong>（写代码时的权衡——参数化到什么程度、函数边界划在哪——会随需求变化而过时）。</li>
+<li><strong>Kent Beck</strong>：每次要修改时，<strong>先令修改变容易</strong>（警告：这件事有时会很难），然后再做这次容易的修改。加新功能最快的方法往往是先改现有代码使其容易加入；<strong>软件永远不应被视为「完成」</strong>。</li>
+<li>有计划的重构应该<strong>很少</strong>：只有团队过去欠债、或某区域问题累积长大时，才专门花时间集中清理（在重构上花一周，会在未来几个月发挥价值）。</li>
+<li>关于「把重构提交和功能提交分开」：好处是可<strong>各自独立审阅批准</strong>；但作者<strong>不认同强制分开</strong>——重构常与新功能紧密交织，分开反而丢上下文、看不出价值。各团队按需自己定，这不是毋庸置疑的原则。</li>
+</ul>
+<h3 id="43">4.3 长期重构</h3>
+<ul>
+<li>量级：大多数重构<strong>几分钟到几小时</strong>完成；大型重构（换正在用的库、把整块代码抽取成组件共享给另一团队、理顺一大堆混乱依赖）才可能要几周。</li>
+<li>仍<strong>不专设重构团队/重构期</strong>：全队共识，谁靠近「重构区」就往目标方向推一点，系统始终可工作。</li>
+<li>典型手法：<strong>Branch By Abstraction</strong>（先加一层抽象兼容新旧两套接口，调用方全切到抽象层后，再换掉底层）。</li>
+</ul>
+<h3 id="44">4.4 复审代码时重构 / 怎么对经理说 / 何时不该重构</h3>
+<ul>
+<li><strong>复审时重构</strong>：代码复审本身能传播知识、让有经验者带新人、帮更多人理解大型系统（我的代码对我清晰、对他人未必）。重构能让复审更进一步：边读边重构能真实「看见」建议落地后的样子，且<strong>许多建议能立刻实现</strong> → 复审结果更具体、更有成就感。三档体验：纯 PR 模式（作者不在场）效果不好 &lt; 作者在旁边（提供上下文、认同意图）好很多 &lt; 与原作者肩并肩边读边重构最佳（自然导向结对编程）。</li>
+<li><strong>怎么对经理说</strong>（作者最常被问到的问题）：</li>
+<li>懂技术的经理 → 讲「设计耐久性假说」即可；这样的经理会鼓励日常重构、并留意「重构不够」的征兆（「重构过度」比「不够」罕见得多）。</li>
+<li>不懂技术、把重构当「弥补错误 / 不增值」的 → 作者给出有争议的建议：<strong>别专门说</strong>。理由：软件开发者是专业人士，经理只关心尽快交付，<strong>怎么交付是程序员的事</strong>；我领工资是因为擅长快速实现功能，而最快的方式就是重构。</li>
+<li>（注：「别用整洁/道德论证、重构永远讲经济账」是 §5.1 的要点，见下。）</li>
+<li><strong>何时不该重构</strong>：
+  1. 烂代码<strong>不需要改</strong>、且能藏在 API 之下 → 容忍它丑。
+  2. <strong>重写比重构更容易</strong> → 别重构（需经验判断）。</li>
+</ul>
+<h3 id="45-branch-by-abstraction-c">4.5 Branch By Abstraction 的 C++ 形态</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 目标：把底层 OldLogger 换成 NewLogger，但调用方很多，不能一次性换</span>
+
+<span class="c1">// 1) 先引入抽象层</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">ILogger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="p">)</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">ILogger</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+
+<span class="c1">// 2) 让旧实现适配抽象（系统照常工作）</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">OldLoggerAdapter</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ILogger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">old_log</span><span class="p">(</span><span class="n">m</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
+
+<span class="c1">// 3) 调用方逐步改为依赖 ILogger，而非直接调 old_log()</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">doWork</span><span class="p">(</span><span class="n">ILogger</span><span class="o">&amp;</span><span class="w"> </span><span class="n">logger</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">logger</span><span class="p">.</span><span class="n">log</span><span class="p">(</span><span class="s">&quot;done&quot;</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// 4) 调用方全切到 ILogger 后，再加新实现并替换工厂，底层切换对调用方透明</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">NewLoggerAdapter</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">ILogger</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">log</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">new_log</span><span class="p">(</span><span class="n">m</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+
+<hr />
+<h2 id="5-25">5. 重构的挑战（2.5）</h2>
+<p>任何技术都有取舍，重构也有 6 个常见挑战。</p>
+<h3 id="51">5.1 延缓新功能开发</h3>
+<ul>
+<li>最大阻力的误解：「重构拖慢进度」。回应：<strong>重构的唯一目的就是开发更快</strong>（更少工作量、更大价值）。</li>
+<li>唯一真实需权衡的情况：大重构必要，但马上要加的功能很小 → 可先加功能（作者也说<strong>很难描述和量化</strong>这个判断，只能靠经验）。倾向重构的信号：能让新功能更易实现就一定做、问题见过几次、代码常被触碰；倾向不重构：很少碰、不常惹麻烦，或还没想清优化方向。</li>
+<li>行业现状：<strong>重构不足远多于重构过度</strong> → 绝大多数人应多做重构（很多人体会不到，因为没在健康代码库上工作过）。</li>
+<li>压制重构的不只是管理者，<strong>程序员自己也常这么干</strong>；有时程序员觉得不该重构，领导其实挺希望他们做。</li>
+<li>技术 leader 责任：表明你重视代码库健康；给年轻人有意指导，加速他们积累「何时该/不该重构」的判断力。</li>
+<li><strong>别用道德论证</strong>：拿「整洁代码 / 良好工程实践」当理由是陷阱；重构的意义是<strong>纯经济考量</strong>——加功能更快、修 bug 更快，<strong>应永远由经济利益驱动</strong>。</li>
+</ul>
+<h3 id="52">5.2 代码所有权</h3>
+<ul>
+<li>正面例子：能找到所有调用者时，<strong>改变函数声明（124）</strong> 可一次改完声明和全部调用点。</li>
+<li>但很多手法会跨模块影响调用方。若调用方代码<strong>由别的团队拥有（你没写权限）</strong>、或是已发布给客户的 API，就难直接改。这类函数是<strong>已发布接口（published interface）</strong>：使用者与声明者彼此独立，<strong>声明者无权改使用者的代码</strong>——自作主张改一定会破坏使用者程序。</li>
+<li>应对：改名时<strong>保留旧声明转调新函数</strong>（接口会变复杂，是避免破坏使用者的代价），旧接口标记为 deprecated，过段时间退休（有时得永久保留）。</li>
+<li>所有制建议：<strong>别搞细粒度强代码所有制</strong>（每段代码唯一所有者）→ 接口维护成本爆炸（作者见过 3 人团队互相发布接口，直接改库本会简单得多）。推荐<strong>团队代码所有制</strong>：分工体现为<strong>监控自己责任区的修改，而非禁止别人改</strong>；跨团队可用「类开源模式」（在分支改别队代码、提交给对方审核），是「强所有制」与「混乱修改」两极端之间的折中。</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1">// published interface：不能直接删旧函数，保留薄包装转调新名</span>
+<span class="p">[[</span><span class="n">deprecated</span><span class="p">(</span><span class="s">&quot;use computeNetPrice&quot;</span><span class="p">)]]</span>
+<span class="kt">double</span><span class="w"> </span><span class="n">calcPrice</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Order</span><span class="o">&amp;</span><span class="w"> </span><span class="n">o</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">computeNetPrice</span><span class="p">(</span><span class="n">o</span><span class="p">);</span><span class="w"> </span><span class="p">}</span><span class="w">  </span><span class="c1">// 旧接口转调新接口</span>
+
+<span class="kt">double</span><span class="w"> </span><span class="n">computeNetPrice</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Order</span><span class="o">&amp;</span><span class="w"> </span><span class="n">o</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* 真正实现 */</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="53">5.3 分支</h3>
+<ul>
+<li>特性分支拥趸的理由：保持主线不受未完成代码侵扰、保留清晰的功能版本记录、出问题易撤销。</li>
+<li><strong>特性分支</strong>的缺点：隔离越久，集成（integrate）回主线越难；合并难度随分支寿命<strong>指数上升</strong>（存在 4 周的分支集成难度比 2 周<strong>不止翻倍</strong>）。频繁从主线 merge/rebase 只是缓解，几个人同时各开分支时并不能根治。</li>
+<li>合并 ≠ 集成：</li>
+<li>合并（merge）：单向，主线 → 我的分支。</li>
+<li>集成（integrate）：双向，主线 ↔ 我的分支。</li>
+<li>版本控制只懂文本、<strong>不懂语义</strong>：我改了函数名、Rachel 在她分支新增了对旧名的调用（<strong>她集成前我看不见</strong>）→ 集成后<strong>编译/语义就坏了</strong>。</li>
+<li>重构尤其制造这类语义冲突（广泛改名）→ 用特性分支的团队常因此放弃重构。</li>
+<li>推荐 <strong>持续集成（CI）/ 主干开发（Trunk-Based）</strong>：每人每天至少向主线集成一次。代价：主线要随时健康、大功能拆小、用<strong>特性开关（feature toggle/flag）</strong> 藏未完成功能。</li>
+<li>CI 与重构<strong>天生互补</strong>（Kent Beck 把两者一起放进极限编程）；用 CI 的团队软件交付更高效 [Forsgren et al]。</li>
+<li>作者<strong>并非</strong>说绝不能用特性分支：足够短（一两天）就没大问题；开源项目（偶有不信任的提交者）可能合适；但对全职团队阻碍太大。即便没完全上 CI，也应<strong>尽可能频繁集成</strong>。</li>
+</ul>
+<h3 id="54">5.4 测试</h3>
+<ul>
+<li>重构「不改可观察行为」，但人总会出错 → 关键是<strong>快速发现错误</strong>。每个重构都是小修改，出错只需查<strong>最后一步</strong>；查不出原因就<strong>回滚到版本控制最后一个可用版本</strong>。</li>
+<li>前提：一套<strong>完备、运行快</strong>的测试套件（慢就不愿频繁跑）。测试一挂，只需看上次成功后改的那几行。</li>
+<li>自测试代码不只让重构可行，也让<strong>加新功能更安全</strong>（很快发现并干掉新引入的 bug）。</li>
+<li>这正面回应「重构风险太大会引 bug」：没自测试代码时这担忧成立，所以才如此重视测试。</li>
+<li>没测试的退路：</li>
+<li>只用 <strong>IDE 自动化、保证安全的重构手法</strong>，可不跑测试（会损失很多手法，但够用）。</li>
+<li>一个较新的流派：只用「经验证安全、特定于语言」的手法，能在测试覆盖很低的大型代码库上推进（行业了解还不足；参 Jay Bazuzi 讲 C++ 中安全运用提炼函数）。</li>
+<li>自测试代码与 CI 紧密相关（靠 CI 捕获分支集成的语义冲突），是极限编程与持续交付的关键环节。</li>
+</ul>
+<h3 id="55">5.5 遗留代码</h3>
+<ul>
+<li>遗留代码的痛：复杂、缺测试、别人写的。</li>
+<li>重构能帮理解遗留系统（改名、理顺结构），但<strong>绕不开「没测试」这条恶龙</strong>。</li>
+<li>答案「没测试就加测试」说易行难、<strong>没有简单解决办法</strong>：可测的系统一开始就该考虑可测性（可那样它早就有测试了）。</li>
+<li>最佳建议：读 Michael Feathers《修改代码的艺术》（出版十多年，建议仍管用）——<strong>找接缝（seam），在接缝处插测试</strong>，把系统纳入测试覆盖。制造接缝的重构本身有风险（无测试覆盖），此时安全的自动化重构是天赐福音。</li>
+<li><strong>就算有测试</strong>，也别想一鼓作气把复杂混乱的遗留代码重构成完美；<strong>每次触碰让它好一点</strong>，越频繁使用的代码回报越高。</li>
+</ul>
+<h3 id="56">5.6 数据库</h3>
+<ul>
+<li>第 1 版说数据库是「重构常出问题的领域」，但<strong>仅一年后</strong>情况就变了：<strong>Pramod Sadalage 的渐进式数据库设计</strong> + <strong>《数据库重构》（Ambler &amp; Sadalage 共著）</strong> 的方法已被广泛使用。</li>
+<li>精要：<strong>用数据迁移脚本，把数据库结构修改与代码一起提交、纳入版本控制</strong>。要迁到某版本，就跑当前版到目标版之间的所有迁移脚本（改字段同改变函数声明（124）一样，找声明处 + 所有调用处，但旧数据也要转到新字段）。</li>
+<li>同样<strong>小步 + 每步完整</strong>，每次迁移后系统仍能运行。</li>
+<li>与常规重构不同：数据库重构最好<strong>分散到多次生产发布</strong>，便于回滚。</li>
+<li>字段改名的安全套路 = <strong>并行修改（Parallel Change / expand-contract，扩展-收缩）</strong>：
+  1. 加新字段（暂不用）；
+  2. 写入逻辑<strong>同时写新旧两个字段</strong>；
+  3. 读取逻辑逐个改读新字段；
+  4. 观察一段时间无 bug；
+  5. 删掉旧字段。</li>
+</ul>
+<blockquote>
+<p>「并行修改 / expand-contract」是一个通用思想，不止用于数据库——任何「不能瞬间切换的接口替换」都可用：先扩展（新旧并存）、再收缩（删旧）。</p>
+</blockquote>
+<hr />
+<h2 id="6-yagni26">6. 重构、架构与 YAGNI（2.6）</h2>
+<ul>
+<li>旧观念：架构必须在写代码前定死，之后只会腐败。重构推翻了它——<strong>生产环境跑了多年的软件也能大幅改架构</strong>。</li>
+<li>重构对架构最大的影响：能得到一个<strong>能优雅应对需求变化</strong>的代码库。</li>
+<li>「先把架构定死」的根本问题：<strong>假设需求能预先充分理解</strong>，但现实<strong>多数时候</strong>做不到——只有真正用过软件、看到它对工作的影响，人们才想明白要什么。</li>
+<li>应对未来变化的办法<strong>之一</strong>是在软件里植入灵活性机制（如给函数预加十多个参数）；但它<strong>不是免费午餐</strong>：</li>
+<li>当前场景下变复杂；</li>
+<li><strong>少考虑一个参数会让后面新添参数更麻烦</strong>；</li>
+<li>经常猜错（需求没按预期变 / 机制设计不好）；</li>
+<li>反而拖慢响应变化的速度。</li>
+<li><strong>YAGNI</strong>（You Aren't Going To Need It，你不会需要它）= 简单设计 / 增量式设计：与其猜未来要哪些灵活性，不如<strong>只按当前需求构造软件、但把设计质量做高</strong>；需求理解加深后再重构以应对新需要。</li>
+<li><strong>两条决策规则</strong>：
+  1. 不同调用者<strong>不会传入不同参数值</strong> → 就不要加这个参数（真要时用<strong>函数参数化（310）</strong> 也很容易）。
+  2. 加灵活性会增加复杂度时 → 评估「<strong>以后再重构有多难</strong>」，只有未来重构很难才现在就加；不增加复杂度（如加几个命名良好的小函数）则乐意加。</li>
+<li>YAGNI ≠ 不做架构思考（确有人这样误用）；它是把架构/设计/开发融合的工作方式，<strong>必须以重构为基础</strong>才可靠。总有些时候缺少预先思考重构会难以开展，但平衡点已偏向「<strong>先等一等，理解更充分再动手</strong>」。延伸：演进式架构（Ford et al.）。</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1">// 反例：为「将来可能需要」预加一堆参数 —— 函数签名与实现因未使用的参数而臃肿、易猜错</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">qty</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">vip</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">holiday</span><span class="p">,</span>
+<span class="w">             </span><span class="kt">double</span><span class="w"> </span><span class="n">coupon</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="w"> </span><span class="n">member</span><span class="w"> </span><span class="cm">/* ... */</span><span class="p">);</span>
+
+<span class="c1">// YAGNI：先按当前需求写最简版</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">qty</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">qty</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="c1">// 真到「不同调用者要传不同折扣率」时，再用「函数参数化」加一个参数即可（见 §10.3）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">price</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">base</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">qty</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">discountRate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">qty</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">discountRate</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<hr />
+<h2 id="7-27">7. 重构与软件开发过程（2.7）</h2>
+<ul>
+<li>重构能否有效，与团队其他实践紧密相关。重构起源于<strong>极限编程（XP）</strong>——XP 融合了一组不太常见又彼此关联的实践（持续集成、自测试代码、重构）。XP 是最早的敏捷方法之一，曾引领敏捷崛起。</li>
+<li><strong>三大基石（强协同）</strong>：
+  1. <strong>自测试代码</strong>：一套能频繁运行的自动化测试，犯错就有测试挂掉（重要到作者专门用一章讲）；也是 CI 的关键环节。
+  2. <strong>持续集成</strong>：每个成员需会重构且<strong>不干扰他人</strong>；CI 让重构快速分享，避免「这边在调接口、那边已删接口」，一次重构若影响别人<strong>很快就会知道</strong>。
+  3. <strong>重构</strong>本身。<blockquote>
+<p>后两者——<strong>自测试代码 + 重构</strong>——融汇成 <strong>TDD（测试驱动开发）</strong>；持续集成是与之并列的第三大实践。</p>
+</blockquote>
+</li>
+<li>三大实践与 YAGNI <strong>双向增效</strong>：<strong>重构（及其前置实践）是 YAGNI 的基础</strong>；YAGNI 又让重构更易（简单系统比塞满想当然灵活性的系统好改）。在它们之间找到平衡点 → 进入<strong>良性循环</strong>（代码既牢固可靠又能快速响应变化）。</li>
+<li>再往上才谈得上<strong>持续交付</strong>：软件始终可发布（互联网团队可一天多次发布）；即便不需频繁发版，CI 也能降风险、按业务随时发版、<strong>减少耗在 bug 上的时间</strong>。</li>
+<li>提醒：软件开发涉及人与人、人与机器的复杂交互，<strong>说起来简单做起来难</strong>；作者描述的方法已被证明能应对这种复杂性，但对使用者的实践和技能有要求。「敏捷」大多徒有其名——真敏捷要求团队在重构上<strong>有能力、有热情</strong>，且开发过程须与持续重构匹配。</li>
+</ul>
+<hr />
+<h2 id="8-28">8. 重构与性能（2.8）</h2>
+<blockquote>
+<p>核心结论：<strong>先写「可调优」的软件，再在优化阶段定点调优</strong>。重构短期可能让软件变慢，但让后期优化更容易，最终更快。
+立场：作者<strong>不赞成为设计纯洁性忽视性能</strong>，也<strong>不赌更快的硬件</strong>（已有很多软件因太慢被弃用，硬件提速只略微放宽限制）。下面「先可调优再调优」是<strong>除硬实时系统外</strong>的普遍规则。</p>
+</blockquote>
+<h3 id="81">8.1 三种编写快速软件的方法</h3>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>做法</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>时间预算法</strong></td>
+<td><strong>分解设计时</strong>给每个组件预分配时间 + 空间预算，绝不超支（<strong>即便有组件间调度/预配机制也不行</strong>）</td>
+<td>硬实时系统（如心律调节器，迟到的数据=错误数据）</td>
+</tr>
+<tr>
+<td><strong>持续关注法</strong></td>
+<td>任何人任何时候都设法保持高性能</td>
+<td>很常见、很诱人，但<strong>通常没用</strong>：为性能的改动多使程序难维护、拖慢开发；改善又分散、基于狭隘视角和对<strong>编译器、运行时环境、硬件</strong>的误解；即便真变快这点损失才值，可惜常事与愿违</td>
+</tr>
+<tr>
+<td><strong>90% 统计法</strong> ✅</td>
+<td>平时不特别关注性能，写构造良好的程序；进<strong>优化阶段</strong>（通常开发后期）再用 profiler 定点优化，对热点用持续关注法的手段打磨</td>
+<td>绝大多数系统（企业信息系统等）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="82-90">8.2 90% 法的优化流程</h3>
+<ol>
+<li>用<strong>度量工具（profiler）</strong> 找出真正消耗时间/空间的<strong>性能热点</strong>（一小段代码）。</li>
+<li>只集中优化热点，用持续关注法的手段去打磨。</li>
+<li>像重构一样<strong>小步</strong>：每步编译、测试、再度量；没提升就<strong>撤销</strong>。</li>
+<li>循环「发现热点 → 去除热点」直到客户满意。</li>
+</ol>
+<h3 id="83">8.3 两条关键事实</h3>
+<ul>
+<li><strong>大半时间耗在一小半代码上</strong>：一视同仁优化所有代码，90% 是白费（那些代码很少被执行）；<strong>因缺乏对程序的清楚认识而花的优化时间都被浪费</strong>。</li>
+<li><strong>度量，别臆测</strong>（Ron Jeffries 的克莱斯勒综合薪资系统故事，支付过程太慢拖累测试）：</li>
+<li>Kent / Martin / Ron <strong>先凭全盘了解推测瓶颈、还凭空改设计</strong> —— 一度量发现<strong>全错</strong>（那次 Kent 和 Martin 谢绝参加）。</li>
+<li>度量结果分两步：① 一半时间花在创建 <strong>Date 实例</strong>（值都重复，且创建经一段<strong>无外部输入的字符串转换</strong>，只因写起来简单）；② <strong>追踪 Date 的用法</strong>才发现它们多用于构造 <strong>DateRange（起止日期）</strong>，而绝大多数 DateRange 是<strong>空的</strong>。</li>
+<li>为「起始日在结束日之后」的构造不清晰，<strong>先提炼出空区间工厂函数</strong>；改清晰后<strong>意外发现</strong>可固定一个不可变空对象、让工厂始终返回它（享元）→ 速度近翻倍，只花 5 分钟。</li>
+<li>教训：<strong>哪怕你完全了解系统，也要实际度量、不要臆测——臆测能让你学到东西，但十有八九是错的</strong>。</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="c1">// 故事两步：先 Extract Function（空区间工厂），再 Introduce Flyweight（固定 kEmpty）。</span>
+<span class="c1">// 关键：热点是「反复创建空区间」，所以只把【空区间】做成始终复用的单例。</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DateRange</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DateRange</span><span class="o">&amp;</span><span class="w"> </span><span class="n">emptyRange</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">           </span><span class="c1">// 工厂：始终返回同一个不可变空对象</span>
+<span class="w">        </span><span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">DateRange</span><span class="w"> </span><span class="n">kEmpty</span><span class="p">{</span><span class="cm">/*start*/</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="cm">/*end*/</span><span class="mi">0</span><span class="p">};</span><span class="w">  </span><span class="c1">// end &lt; start ⇒ 空</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">kEmpty</span><span class="p">;</span><span class="w">                                </span><span class="c1">// 不再每次 new</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">isEmpty</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">end_</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">start_</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="c1">// 非空区间是真正不同的值，照常按值构造；空区间一律走 emptyRange() 复用单例</span>
+<span class="w">    </span><span class="n">DateRange</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">s</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">start_</span><span class="p">(</span><span class="n">s</span><span class="p">),</span><span class="w"> </span><span class="n">end_</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">int</span><span class="w"> </span><span class="n">start_</span><span class="p">,</span><span class="w"> </span><span class="n">end_</span><span class="p">;</span>
+<span class="p">};</span>
+</code></pre></div>
+
+<blockquote>
+<p>两点助益（构造良好的程序对优化的帮助）：① <strong>时间</strong>——能更快加功能，就有更多时间投在性能上（准确度量保证投在恰当处）；② <strong>粒度</strong>——profiler 能把你带进更小的代码段，调整更容易、更清楚哪步起关键作用。</p>
+</blockquote>
+<hr />
+<h2 id="9-29211">9. 起源 / 自动化 / 延展阅读（2.9~2.11）</h2>
+<h3 id="91-29">9.1 重构起源（2.9）</h3>
+<ul>
+<li>作者曾想找「refactoring」一词的真正起源但失败了。重构不止于「清理代码」——本书把它视为<strong>整个软件开发过程的关键环节</strong>。</li>
+<li><strong>Ward Cunningham + Kent Beck</strong>：80 年代用 Smalltalk 摸索出适合该环境的开发过程（即后来的 XP），意识到重构对生产力的重要性。Smalltalk 适合重构的原因：动态、<strong>「编译-链接-执行」周期极短</strong>（当时很多环境一次编译要花整晚）、面向对象、强工具、修改影响被隐藏在定义良好的接口背后。其思想让重构成为 Smalltalk 文化的重要元素。</li>
+<li><strong>Ralph Johnson</strong>（UIUC 教授、GoF 之一）：揭示重构有助于开发灵活高效的框架。</li>
+<li><strong>Bill Opdyke</strong>（Ralph 博士生，背景是电话交换系统）：从<strong>工具构筑者</strong>视角研究重构、看到它可用于 Smalltalk 之外的语言；对 <strong>C++ 框架</strong> 的重构手法感兴趣，研究「<strong>语义保持的重构</strong>」如何证明、如何用工具实现。其博士论文是该领域<strong>第一部丰硕的研究成果</strong>。</li>
+<li><strong>John Brant + Don Roberts</strong>：开发第一个自动化重构工具 <strong>Refactoring Browser</strong>（得益于 Smalltalk 的环境）。</li>
+<li>作者自述：1992 OOPSLA 初见 Bill 时觉得「有趣但没那么重要」，后来完全改观；因无书可推荐遂写下第 1 版。此后「重构」被行业广泛接受、走进程序员词汇库、工具涌现（尤其 Java），也带来「随意滥用该词」的副作用，但终归成了主流实践。</li>
+</ul>
+<h3 id="92-210">9.2 自动化重构（2.10）</h3>
+<ul>
+<li>工具简史：Smalltalk 的 <strong>Refactoring Browser</strong>（首个）→ 21 世纪初 Java（<strong>IntelliJ IDEA</strong> 最亮眼、IBM VisualAge 能力被 <strong>Eclipse</strong> 继承）→ C#（先 <strong>ReSharper</strong> 插件，后 <strong>Visual Studio</strong> 内置）。各工具/语言对自动化重构的支持高低不一。</li>
+<li>两个层次：</li>
+<li><strong>文本操作</strong>（查找/替换式改名）：粗糙，做完必须重跑测试，但可作便捷起步（作者在 Emacs 里用宏加速）。</li>
+<li><strong>语法树操作</strong>：<strong>更可靠地</strong>保持行为，是「体面重构」的基础 → 依附原本就在语法树上做导航/静态检查的强大 IDE（还要能把改动写回编辑器视图，实现很有挑战）。</li>
+<li><strong>静态类型让很多手法更安全</strong>（原书以 Java 为例）：如 <code>Salesman::addClient</code> 和 <code>Server::addClient</code> 同名，静态类型工具能精确识别该改哪个类的调用点，完全自动安全；动态类型（Smalltalk）只能列出所有调用点让你手工选 → 不安全、需重跑测试。</li>
+<li>进阶工具：改名时连注释一起提醒改、提炼函数后找出重复片段建议替换——这是「用体面 IDE 而非死守文本编辑器」的理由。</li>
+<li><strong>信任边界</strong>：IDE 菜单式重构通常可信任、往往不必立刻跑全套测试；但<strong>反射调用</strong>（如 Java <code>Method.invoke</code>）会迷惑不成熟的工具（成熟工具能较好应对），加上常间杂手动重构，所以仍应<strong>经常跑测试</strong>。</li>
+<li><strong>Language Server</strong>：用软件生成语法树、给文本编辑器提供 API，让普通编辑器也能用上强重构（满足「想要 IDE 能力又想要文本编辑器灵活」的需求）。</li>
+</ul>
+<h3 id="93-211">9.3 延展阅读（2.11）</h3>
+<p>本书本身是<strong>参考书</strong>（非带你走学习过程的教材）、聚焦<strong>通用编程语言</strong>；入门看 Wake，专门领域见下表，更多更新见本书 Web 版与 refactoring.com。</p>
+<table>
+<thead>
+<tr>
+<th>书</th>
+<th>作者</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>《重构手册》(Refactoring Workbook)</td>
+<td>Bill Wake</td>
+<td><strong>入门教材</strong>，含大量练习</td>
+</tr>
+<tr>
+<td>《重构与模式》</td>
+<td>Josh Kerievsky</td>
+<td>审视 GoF 中部分高价值模式，展示如何通过重构<strong>演化到这些模式</strong></td>
+</tr>
+<tr>
+<td>《修改代码的艺术》</td>
+<td>Michael Feathers</td>
+<td>书名无「重构」二字，但讲<strong>缺测试的遗留代码</strong>怎么重构</td>
+</tr>
+<tr>
+<td>《数据库重构》</td>
+<td>Scott Ambler &amp; Pramod Sadalage</td>
+<td>数据库专门领域</td>
+</tr>
+<tr>
+<td>《重构 HTML》</td>
+<td>Elliotte Rusty Harold</td>
+<td>HTML 专门领域</td>
+</tr>
+<tr>
+<td>《重构》Ruby 版</td>
+<td>Jay Fields &amp; Shane Harvey</td>
+<td>针对 Ruby 的特定语言重构书（作者前同事）</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="10-c">10. 本章点名手法的 C++ 速记</h2>
+<p>本章只点名未展开，这里给最小 C++ 对照，建立第一印象（手法目录章会详讲）。</p>
+<h3 id="101-extract-function">10.1 提炼函数（Extract Function）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 重构前：一个函数里混了「计算」和「打印」</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printOwing</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Invoice</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">outstanding</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">o</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">inv</span><span class="p">.</span><span class="n">orders</span><span class="p">)</span><span class="w"> </span><span class="n">outstanding</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">o</span><span class="p">.</span><span class="n">amount</span><span class="p">;</span><span class="w">   </span><span class="c1">// 计算</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;outstanding: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">outstanding</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w">        </span><span class="c1">// 打印</span>
+<span class="p">}</span>
+
+<span class="c1">// 重构后：把计算提炼成独立函数，意图更清晰、可复用、可单测</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">calcOutstanding</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Invoice</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="w">    </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">o</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">inv</span><span class="p">.</span><span class="n">orders</span><span class="p">)</span><span class="w"> </span><span class="n">s</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">o</span><span class="p">.</span><span class="n">amount</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">s</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kt">void</span><span class="w"> </span><span class="nf">printOwing</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Invoice</span><span class="o">&amp;</span><span class="w"> </span><span class="n">inv</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;outstanding: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">calcOutstanding</span><span class="p">(</span><span class="n">inv</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="102-change-function-declaration">10.2 改变函数声明（Change Function Declaration）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 重构前：名字含糊</span>
+<span class="kt">bool</span><span class="w"> </span><span class="nf">circum</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">r</span><span class="p">);</span>
+
+<span class="c1">// 重构后：改名 + 让参数表达意图（published interface 时保留旧名转调，见 §5.2）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">circumference</span><span class="p">(</span><span class="kt">double</span><span class="w"> </span><span class="n">radius</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">3.14159</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">radius</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+</code></pre></div>
+
+<h3 id="103-parameterize-function">10.3 函数参数化（Parameterize Function）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 重构前：两个几乎一样的函数，只有字面量不同（重复代码）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">tenPercentRaise</span><span class="p">(</span><span class="n">Employee</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">salary</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.10</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">fivePercentRaise</span><span class="p">(</span><span class="n">Employee</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">salary</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.05</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// 重构后：抽出差异为参数，合并成一个</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">raise</span><span class="p">(</span><span class="n">Employee</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">factor</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">salary</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="mi">1</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">factor</span><span class="p">);</span><span class="w"> </span><span class="p">}</span>
+<span class="c1">// 调用：raise(e, 0.10) / raise(e, 0.05)</span>
+</code></pre></div>
+
+<h3 id="104-replace-conditional-with-polymorphism">10.4 以多态取代条件表达式（Replace Conditional with Polymorphism）</h3>
+<div class="highlight"><pre><span></span><code><span class="c1">// 重构前：按类型分支的 switch/if（新增类型要改这里）</span>
+<span class="kt">double</span><span class="w"> </span><span class="nf">payAmount</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">Employee</span><span class="o">&amp;</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">switch</span><span class="w"> </span><span class="p">(</span><span class="n">e</span><span class="p">.</span><span class="n">type</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">Type</span><span class="o">::</span><span class="no">Engineer</span><span class="p">:</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">base</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">Type</span><span class="o">::</span><span class="no">Manager</span><span class="p">:</span><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">bonus</span><span class="p">;</span>
+<span class="w">        </span><span class="k">case</span><span class="w"> </span><span class="no">Type</span><span class="o">::</span><span class="no">Sales</span><span class="p">:</span><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">commission</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// 重构后：把每个分支挪进子类的虚函数，消去条件分支</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">Employee</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">payAmount</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span><span class="w"> </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">Employee</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span><span class="w"> </span><span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">Engineer</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">Employee</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">payAmount</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">Manager</span><span class="w">  </span><span class="o">:</span><span class="w"> </span><span class="n">Employee</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">payAmount</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">bonus</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">};</span>
+<span class="k">struct</span><span class="w"> </span><span class="nc">Sales</span><span class="w">    </span><span class="o">:</span><span class="w"> </span><span class="n">Employee</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">payAmount</span><span class="p">()</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">base</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">commission</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="cm">/*...*/</span><span class="w"> </span><span class="p">};</span>
+</code></pre></div>
+
+<hr />
+<h2 id="11-slam-c">11. 给 SLAM / C++ 工程的迁移提示</h2>
+<blockquote>
+<p>结合你日常工作（OKVIS/VIO/重定位/标定）的几个落点，便于把原则用起来：</p>
+</blockquote>
+<ul>
+<li><strong>预备性重构</strong>：要给 VIO 加一种新传感器/新残差前，先把现有 factor 接口理顺，再加，比直接塞 if 快。</li>
+<li><strong>published interface</strong>：对外的标定/重定位 API 改名时，用 <code>[[deprecated]]</code> 薄包装转调，别直接破坏下游。</li>
+<li><strong>度量别臆测</strong>：优化 SLAM 前端/BA 性能前，先上 profiler（perf / VTune / gprof），别凭经验猜热点——和 §8.3 同理。</li>
+<li><strong>Branch By Abstraction</strong>：替换某个数学库/求解器（如换 Ceres 版本/换线代后端）时，先抽 <code>ISolver</code> 抽象层，调用方切完再换底层。</li>
+<li><strong>自测试 + CI</strong>：广泛改名（坐标系约定、变量命名）在没有 CI 的特性分支上极易语义冲突——这正是 §5.3 警告的场景。</li>
+</ul>
+<hr />
+<h2 id="12_1">12. 学习沉淀区（你来回填）</h2>
+<h3 id="121">12.1 我的复述（用自己的话讲一遍重构的「唯一目的」和「两顶帽子」）</h3>
+<p>-</p>
+<h3 id="122">12.2 我的疑问（哪里没懂 / 想深入）</h3>
+<p>-</p>
+<h3 id="123-c">12.3 我想补的 C++ 实战例子（结合你手上的代码）</h3>
+<p>-</p>
+<hr />
+<blockquote>
+<p>读完反馈给我：哪些小节想更细、哪些可快进、C++ 示例深度是否合适。我据此调整第 1 章（完整实例）和后续手法目录的讲法与示例粒度。</p>
+</blockquote>
+</div>
+</body>
+</html>
