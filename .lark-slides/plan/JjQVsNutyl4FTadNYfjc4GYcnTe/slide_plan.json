@@ -1,0 +1,44 @@
+{
+  "presentation_goal": "组内技术分享：讲透《重构》第2~5章（原则/坏味道/测试体系/名录）的核心 points，图多字少，展开靠人讲。",
+  "audience": "定位组 C++/SLAM 工程师，有编程经验但未系统读过《重构》。",
+  "theme_style": "沿用用户指定模板（工作汇报风）：浅色背景图 + 深色标题字 + 白色半透明圆角卡片(带阴影) + 紫(#7F3BF5)/红(#F54A45)强调色。",
+  "visual_system": {
+    "background_strategy": "封面用模板封面背景(HpMObecwsolt1Wx2KciceLVOnhf)；内容页统一用模板内容背景(PqenbBh5hoohbNxTSJncNxbSnCz)；结尾用模板结尾背景(KDPtbZu95oaDYvxfYUEcbTwznxc)。",
+    "motif": "顶部 headline(30-32pt 粗) + 英文/短 caption + 左侧紫色短竖条；内容用白色半透明圆角卡片(border white + soft shadow)、编号圆徽、彩色 pill。",
+    "color_roles": {
+      "primary": "深色文字 rgba(31,35,41,1) 承担正文与结构。",
+      "secondary": "白色半透明卡片 rgba(255,255,255,0.51) 做分区。",
+      "accent": "紫 #7F3BF5 / 红 #F54A45 只用于关键结论、编号、强调数字。"
+    },
+    "cover_content_relationship": "封面与内容页共用同一套深色标题字与紫/红强调色。",
+    "closing_relationship": "结尾页复用模板结尾背景，居中标题，与封面呼应。"
+  },
+  "typography_constraints": {
+    "title_max_lines": 2,
+    "body_max_lines_per_box": 3,
+    "footer_max_lines": 1,
+    "long_text_handling": "每页只放 points；展开写进演讲者备注(note)，不塞进正文框。"
+  },
+  "verification_plan": {"check_background_consistency": true, "check_text_fit": true, "check_visual_focus": true, "check_asset_rendering": true},
+  "slides": [
+    {"page":1,"title":"重构的原则与实践","key_message":"第2~5章 · C++视角 的组内分享封面","layout_type":"title-cover","visual_focus":"大标题+副标题","asset_need":{"asset_type":"none"},"text_density":"low","speaker_intent":"点题、建立视角"},
+    {"page":2,"title":"本次分享地图","key_message":"4章一条线：原则→坏味道→测试→名录","layout_type":"process-flow","visual_focus":"4张编号卡片","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"给全局导航"},
+    {"page":3,"title":"第2章 何谓重构 · 两顶帽子","key_message":"不改可观察行为，用微小步骤改善结构；同一时刻只戴一顶帽","layout_type":"comparison","visual_focus":"加功能帽 vs 重构帽 两栏","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"定义+核心纪律"},
+    {"page":4,"title":"第2章 为何重构","key_message":"4个目的最终归结到：让开发更快","layout_type":"big-number","visual_focus":"4卡片漏斗指向提速","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"讲经济驱动"},
+    {"page":5,"title":"第2章 何时重构","key_message":"三次法则 + 3种见机行事","layout_type":"process-flow","visual_focus":"三次法则+3张卡片","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"何时下手"},
+    {"page":6,"title":"第2章 重构的六个挑战","key_message":"知道取舍在哪：延缓/所有权/分支/测试/遗留/数据库","layout_type":"two-column","visual_focus":"2x3卡片网格","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"讲现实阻力"},
+    {"page":7,"title":"第2章 重构与性能","key_message":"度量别臆测，90%统计法：先可调优，再定点优化","layout_type":"big-number","visual_focus":"大数字90%+要点","asset_need":{"asset_type":"none"},"text_density":"low","speaker_intent":"纠正性能直觉"},
+    {"page":8,"title":"第2章 架构与 YAGNI","key_message":"先做高质量简单设计，需求清晰后再重构演化","layout_type":"two-column","visual_focus":"YAGNI两条决策规则","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"讲增量式设计"},
+    {"page":9,"title":"第3章 24种坏味道全景","key_message":"味道=直觉信号，按6组归纳","layout_type":"two-column","visual_focus":"2x3分组卡片","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"给坏味道地图"},
+    {"page":10,"title":"第3章 高价值味道速查","key_message":"信号→推荐手法","layout_type":"comparison","visual_focus":"三列行表","asset_need":{"asset_type":"none"},"text_density":"high","speaker_intent":"最常用几种速查"},
+    {"page":11,"title":"第3章 C++落点：基本类型偏执","key_message":"用领域类型收束约束与行为","layout_type":"comparison","visual_focus":"before→after 代码两栏","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"落到C++代码"},
+    {"page":12,"title":"第4章 自测试代码为什么提速","key_message":"找bug才是噩梦；自动检查+频繁运行→几分钟定位","layout_type":"two-column","visual_focus":"要点+对比","asset_need":{"asset_type":"none"},"text_density":"low","speaker_intent":"讲测试的收益"},
+    {"page":13,"title":"第4章 测什么 · 怎么测","key_message":"风险驱动 + 三段式 + 独立夹具","layout_type":"process-flow","visual_focus":"3张卡片","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"给测试原则"},
+    {"page":14,"title":"第4章 边界火力 · 程序公敌","key_message":"火力集中在边界：空/0/负/空串；bug先写复现测试","layout_type":"timeline","visual_focus":"4个边界 pill","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"讲边界测试"},
+    {"page":15,"title":"第4章 GoogleTest 映射","key_message":"把原书Mocha映射到GoogleTest","layout_type":"comparison","visual_focus":"两列映射行表","asset_need":{"asset_type":"none"},"text_density":"high","speaker_intent":"C++工具落地"},
+    {"page":16,"title":"第5章 手法的5段式","key_message":"名称→速写→动机→做法→范例","layout_type":"process-flow","visual_focus":"5节点流程","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"教怎么读名录"},
+    {"page":17,"title":"第5章 小步哲学 · 选录标准","key_message":"小步前进越复杂步子越小；名录只收最值得记的","layout_type":"two-column","visual_focus":"左右两组要点","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"讲名录方法论"},
+    {"page":18,"title":"落到我们的代码 (SLAM/C++)","key_message":"把4章原则迁到OKVIS/VIO/重定位","layout_type":"two-column","visual_focus":"2x2迁移卡片","asset_need":{"asset_type":"none"},"text_density":"medium","speaker_intent":"收敛到日常工作"},
+    {"page":19,"title":"讨论 & Q&A","key_message":"欢迎讨论","layout_type":"conclusion","visual_focus":"居中标题","asset_need":{"asset_type":"none"},"text_density":"low","speaker_intent":"收尾+讨论"}
+  ]
+}
